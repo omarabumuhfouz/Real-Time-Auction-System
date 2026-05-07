@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
-using FluentValidation;
+using AutoMapper;
 
 namespace MazadZone.Application;
 

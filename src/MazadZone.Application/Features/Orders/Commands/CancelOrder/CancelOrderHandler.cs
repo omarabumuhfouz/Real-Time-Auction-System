@@ -28,7 +28,7 @@ public class CancelOrderHandler : ICommandHandler<CancelOrderCommand, Unit>
 
         _logger.LogCancelOrderAttempt(request.OrderId);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId, ct);
+        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
 
         if (order is null) 
         {

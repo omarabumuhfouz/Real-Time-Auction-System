@@ -5,6 +5,7 @@ namespace MazadZone.Domain.Auctions;
 public partial struct BidId
 {
     public static BidId New() => From(Guid.CreateVersion7());
+    public static BidId Load(Guid guid) => From(guid);
 }
 
 

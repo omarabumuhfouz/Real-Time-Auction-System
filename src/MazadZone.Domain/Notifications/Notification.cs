@@ -40,7 +40,7 @@ public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISo
         return notification;
     }
 
-    Result ISoftDeletable.Delete()
+    public Result Delete()
     {
         if (!IsDeleted)
         {

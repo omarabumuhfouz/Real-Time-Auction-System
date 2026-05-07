@@ -27,7 +27,7 @@ public class ShipOrderHandler : ICommandHandler<ShipOrderCommand, Unit>
 
         _logger.LogShipOrderAttempt(request.OrderId);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId, ct);
+        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
 
         if (order is null) 
         {

@@ -6,7 +6,7 @@ namespace MazadZone.Infrastructure.Persistence;
 
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
-    public AppDbContextFactory CreateDbContext(string[] args)
+    AppDbContext IDesignTimeDbContextFactory<AppDbContext>.CreateDbContext(string[] args)
     {
         // Build configuration to read the connection string from the API project
         IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -15,10 +15,11 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             .Build();
 
         var builder = new DbContextOptionsBuilder<AppDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("MazadZoneDb");
 
         builder.UseSqlServer(connectionString);
 
         return new AppDbContext(builder.Options);
+
     }
 }

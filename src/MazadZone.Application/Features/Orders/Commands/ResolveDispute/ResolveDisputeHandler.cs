@@ -27,7 +27,7 @@ public class ResolveDisputeHandler : ICommandHandler<ResolveDisputeCommand, Unit
 
         _logger.LogResolveDisputeAttempt(request.OrderId, request.Resolution);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId, ct);
+        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
 
         if (order is null) 
         {

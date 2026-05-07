@@ -45,7 +45,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
         if (amount <= Money.Zero())
             return Result.Failure<Payment>(PaymentErrors.AmountMustBeGreaterThanZero);
 
-        var paymentId = PaymentId.From(Guid.NewGuid());       
+        var paymentId = PaymentId.New();       
         
         var payment = new Payment(paymentId, orderId, userId, amount);
         
@@ -62,8 +62,10 @@ public sealed class Payment : AggregateRoot<PaymentId>
         if (_transactions.Any(t => t.GatewayIntentId == gatewayIntentId))
             return Result.Failure(PaymentErrors.DuplicateTransaction);
 
-        var transaction = new Transaction(new TransactionId(Guid.NewGuid()), this.Id, gatewayIntentId, transactionType);
-        _transactions.Add(transaction);
+        var transactionResult =  Transaction.Create(this.Id, gatewayIntentId, transactionType);
+        if (transactionResult.IsFailure) return transactionResult.TopError;
+
+        _transactions.Add(transactionResult.Value);
 
         return Result.Success();
     }

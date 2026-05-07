@@ -1,4 +1,5 @@
 
+using MazadZone.Api.Endpoints;
 using MazadZone.Api.Middlewares;
 using Serilog;
 
@@ -51,6 +52,7 @@ try
 
     // Map endpoints
     app.MapNotificationEndpoints();
+    app.MapBidderEndpoints();
 
     app.Run();
 
@@ -63,10 +65,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-
-
-
-
-
-
