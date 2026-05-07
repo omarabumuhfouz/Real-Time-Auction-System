@@ -1,9 +1,12 @@
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Repositories;
 public interface IUserRepository : IGenericRepository<User>
 {
-    public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken);
-    public Task<User?> GetByUsernameAsync(UserName username, CancellationToken cancellationToken);
-    public Task<bool> IsEmailInUseAsync(Email email, CancellationToken cancellationToken);
+     Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken);
+     Task<bool> IsEmailInUseAsync(Email email, CancellationToken cancellationToken);
+    Task<User?> GetByIdWithTokensAsync(UserId id, CancellationToken cancellationToken);
+    Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+
 }

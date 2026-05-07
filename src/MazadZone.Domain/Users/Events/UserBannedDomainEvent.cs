@@ -1,8 +1,8 @@
 namespace MazadZone.Domain.Users.Events;
 
 using System;
-using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Primitives;
+using MazadZone.Domain.Users.ValueObjects;
 
 public sealed record UserBannedDomainEvent(UserId UserId) : IDomainEvent
 {

@@ -1,14 +1,14 @@
-using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Users.Entities;
 using MazadZone.Domain.Users.Errors;
 using MazadZone.Domain.Users.Events;
+using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Domain.ValueObjects;
-using MazadZone.Infrastructure.Authentication;
 
 namespace MazadZone.Domain.Users;
 
 public class User : AggregateRoot<UserId>, IAuditableEntity
 {
-    public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+    public IReadOnlyCollection<HashedRefreshToken> HashedRefreshTokens => _hashedRefreshTokens.AsReadOnly();
 
     private User() { }
 
@@ -37,10 +37,10 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public Reason? BanReason { get; private set; } = null;
     public DateTime? SuspensionUntil { get; private set; } = null;
 
-    public DateTime CreatedOnUtc { get ; set ; }
+    public DateTime CreatedOnUtc { get; set; }
     public DateTime? ModifiedOnUtc { get; set; }
 
-    private readonly List<RefreshToken> _refreshTokens = new();
+    private readonly List<HashedRefreshToken> _hashedRefreshTokens = new();
 
     public static Result<User> Create(
         string email,
@@ -104,7 +104,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         SuspensionUntil = until;
 
         RevokeAllRefreshTokens(); // Security rule enforced here!
-        
+
         RaiseDomainEvent(new UserSuspendedDomainEvent(this.Id));
 
         return Result.Success();
@@ -143,8 +143,9 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         return Result.Success();
     }
 
-    public Result AddRefreshToken(string token)
+    public Result AddRefreshToken(string hashedToken)
     {
+
         // Architect Rule: If user is Banned, they cannot get new tokens
         if (Status == UserStatus.Banned)
             return UserErrors.CannotAuthenticateBannedUser;
@@ -156,40 +157,86 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
                 return UserErrors.UserIsSuspended;
             }
 
+
             Status = UserStatus.Active;
             SuspensionUntil = null;
         }
 
-        var refreshTokenResult = RefreshToken.Create(token, this.Id);
+        _hashedRefreshTokens.RemoveAll(r => r.IsExpired);
+
+        var refreshTokenResult = HashedRefreshToken.Create(hashedToken, this.Id);
 
         if (refreshTokenResult.IsFailure)
             return refreshTokenResult.TopError;
 
-        _refreshTokens.Add(refreshTokenResult.Value);
+        _hashedRefreshTokens.Add(refreshTokenResult.Value);
 
         return Result.Success();
     }
 
     // 3. Logic to revoke all tokens (useful for "Logout everywhere" or "Password Change")
 
-    public void InvalidateSession(string tokenValue, bool invalidateAll)
+    public void InvalidateSession(string hashedToken, bool invalidateAll)
     {
         if (invalidateAll)
         {
             RevokeAllRefreshTokens();
         }
 
-        var token = _refreshTokens.FirstOrDefault(t => t.Token == tokenValue && t.IsActive);
+        var token = _hashedRefreshTokens.FirstOrDefault(t => t.Token == hashedToken && t.IsExpired);
 
         // If not found, we don't error; the goal of invalidation is already met.
         token?.Revoke();
     }
     private void RevokeAllRefreshTokens()
     {
-        foreach (var token in _refreshTokens.Where(t => t.IsActive))
+        foreach (var token in _hashedRefreshTokens.Where(t => t.IsActive))
         {
             token.Revoke();
         }
     }
- 
+
+    public Result<HashedRefreshToken> RotateRefreshToken(string hashedOldToken, string hashedNewToken)
+    {
+        var existingToken = _hashedRefreshTokens.FirstOrDefault(t => t.Token == hashedOldToken);
+
+        if (existingToken is null || !existingToken.IsActive)
+            return UserErrors.InvalidToken;
+
+        existingToken.Revoke();
+
+        var newTokenResult = HashedRefreshToken.Create(hashedNewToken, this.Id);
+        if (newTokenResult.IsFailure) return newTokenResult.TopError;
+
+        _hashedRefreshTokens.Add(newTokenResult.Value);
+
+        EnforceMaxActiveSessions();
+
+        return newTokenResult.Value;
+    }
+
+private void EnforceMaxActiveSessions()
+    {
+        // Get all tokens that are currently active
+        var activeTokens = _hashedRefreshTokens
+            .Where(t => t.IsActive)
+            .OrderBy(t => t.CreatedAt) // Oldest first
+            .ToList();
+
+        // If we have more than the limit, revoke the oldest ones
+        if (activeTokens.Count > UserPolicies.MaxActiveTokens)
+        {
+            int tokensToRevoke = activeTokens.Count - UserPolicies.MaxActiveTokens;
+            
+            for (int i = 0; i < tokensToRevoke; i++)
+            {
+                activeTokens[i].Revoke();
+            }
+        }
+        
+        // Optional Cleanup: Actually delete deeply expired tokens from the List to save DB space
+        _hashedRefreshTokens.RemoveAll(t => t.IsExpired && t.ExpiresAt < DateTime.UtcNow.AddDays(-30));
+    }
+
+
 }

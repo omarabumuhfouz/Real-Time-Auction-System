@@ -1,9 +1,6 @@
-using System;
 using MazadZone.Domain.Payments.ValueObjects;
 
 namespace MzadZone.Domain.Payments.Entities;
-
-public readonly record struct TransactionId(Guid Value);
 
 public sealed class Transaction : Entity<TransactionId>
 {
@@ -34,6 +31,11 @@ public sealed class Transaction : Entity<TransactionId>
     public string? FailureReason { get; private set; }
     public DateTime CreatedAtUtc { get; private init; }
     public DateTime? ProcessedAtUtc { get; private set; }
+
+    public static Result<Transaction> Create(PaymentId paymentId, string gatewayIntentId, TransactionType type)
+    {
+        return new Transaction(TransactionId.New(), paymentId, gatewayIntentId, type);
+    }
 
     internal void MarkAsSuccess()
     {

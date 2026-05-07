@@ -1,4 +1,3 @@
-
 namespace MazadZone.Domain.Auctions;
 
 [ValueObject<Guid>(conversions: Conversions.SystemTextJson | Conversions.TypeConverter )]

@@ -2,6 +2,7 @@ using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders.Events;
 using MazadZone.Domain.Common;
 using MazadZone.Domain.Entities.Users;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Bidders;
 
@@ -62,9 +63,9 @@ public sealed class Bidder : AggregateRoot<BidderId>, IAuditableEntity, IVerifia
         return Result.Success();
     }
     
-    public static Result<Bidder> CompleteProfile(Guid userId,string nationalId, Address defaultShippingAddress)
+    public static Result<Bidder> CompleteProfile(UserId userId,string nationalId, Address defaultShippingAddress)
     {
-        var bidderId = BidderId.Load(userId);
+        var bidderId = BidderId.Load(userId.Value);
 
         if (defaultShippingAddress is null) return BidderErrors.AddressMissing;
 

@@ -27,7 +27,7 @@ public class OpenDisputeHandler : ICommandHandler<OpenDisputeCommand, Unit>
 
         _logger.LogOpenDisputeAttempt(request.OrderId, request.Reason);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId, ct);
+        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
 
         if (order is null) 
         {

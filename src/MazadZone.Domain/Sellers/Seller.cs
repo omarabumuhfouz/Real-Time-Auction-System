@@ -16,7 +16,7 @@ public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity
         SellerId id, 
         string bankAccountNumber, 
         string nationalId,
-        string taxId = null) : base(id)
+        string? taxId = null) : base(id)
     {
         BankAccountNumber = bankAccountNumber;
         TaxIdentificationNumber = taxId;

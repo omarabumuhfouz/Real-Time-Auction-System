@@ -66,9 +66,14 @@ public static class UserErrors
             UserErrorCodes.CannotAuthenticateBannedUser,
             "The user account is banned and cannot perform authentication actions.");
 
-public static readonly Error UserIsSuspended = Error.Validation(
-    UserErrorCodes.UserIsSuspended,
-    "The user account is currently suspended and cannot start a new session.");
+    public static readonly Error UserIsSuspended = Error.Validation(
+        UserErrorCodes.UserIsSuspended,
+        "The user account is currently suspended and cannot start a new session.");
+
+    public static readonly Error InvalidToken = Error.Unauthorized(
+            "User.InvalidToken",
+            "The refresh token provided is invalid, expired, or has already been revoked."
+        );
 }
 
     

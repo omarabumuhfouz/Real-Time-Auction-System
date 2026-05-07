@@ -26,7 +26,7 @@ public class CreateOrderHandler : ICommandHandler<CreateOrderCommand, OrderId>
     {
         _logger.LogCreateOrderAttempt(request.WinningBidId);
 
-        var orderResult = CreateOrder(request);
+        var orderResult = _CreateOrder(request);
 
         if (orderResult.IsFailure)
         {
@@ -34,14 +34,14 @@ public class CreateOrderHandler : ICommandHandler<CreateOrderCommand, OrderId>
             return orderResult.TopError;
         }
 
-        await _orderRepository.AddAsync(orderResult.Value, cancellationToken);
+         _orderRepository.Add(orderResult.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogOrderCreatedSuccessfully(orderResult.Value.Id);
 
         return orderResult.Value.Id;
     }
-    private Result<Order> CreateOrder(CreateOrderCommand command)
+    private Result<Order> _CreateOrder(CreateOrderCommand command)
     {
         return Order.Create(
             command.BidderId,
