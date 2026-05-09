@@ -7,7 +7,7 @@ import axios, {
 import type { ApiError, ApiResponse } from "@/types/api.types";
 import { env } from "@/config/env";
 
-// ─── Create Axios Instance ──────────────────────────────────────
+// --- Create Axios Instance --------------------------------------
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: env.NEXT_PUBLIC_API_BASE_URL,
@@ -18,7 +18,7 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// ─── Request Interceptor ────────────────────────────────────────
+// --- Request Interceptor ----------------------------------------
 // Injects the Authorization header if a token exists.
 // We import lazily from the auth store to avoid circular dependencies.
 
@@ -41,7 +41,7 @@ apiClient.interceptors.request.use(
   (error: AxiosError) => Promise.reject(error),
 );
 
-// ─── Response Interceptor ───────────────────────────────────────
+// --- Response Interceptor ---------------------------------------
 // Normalizes error responses into a consistent ApiError shape.
 
 apiClient.interceptors.response.use(
@@ -68,7 +68,7 @@ apiClient.interceptors.response.use(
   },
 );
 
-// ─── Typed Helper Methods ───────────────────────────────────────
+// --- Typed Helper Methods ---------------------------------------
 
 export const api = {
   get: <T>(url: string, config?: AxiosRequestConfig) =>

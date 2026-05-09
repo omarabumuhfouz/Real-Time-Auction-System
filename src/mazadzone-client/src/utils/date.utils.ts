@@ -1,3 +1,5 @@
+import { format, formatDistanceToNowStrict } from "date-fns";
+
 /**
  * Date formatting and relative time utilities.
  * Pure functions — no side effects, no external dependencies.
@@ -10,15 +12,10 @@
  */
 export function formatDate(
   date: string | Date,
-  options?: Intl.DateTimeFormatOptions,
+  formatString: string = "MMM d, yyyy",
 ): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    ...options,
-  });
+  return format(d, formatString);
 }
 
 /**
@@ -27,11 +24,8 @@ export function formatDate(
  * @example formatDateTime("2024-01-15T10:30:00Z") // "Jan 15, 2024, 10:30 AM"
  */
 export function formatDateTime(date: string | Date): string {
-  return formatDate(date, {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const d = typeof date === "string" ? new Date(date) : date;
+  return format(d, "MMM d, yyyy, h:mm a");
 }
 
 /**
@@ -39,19 +33,7 @@ export function formatDateTime(date: string | Date): string {
  */
 export function getRelativeTime(date: string | Date): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  const now = new Date();
-  const diffMs = d.getTime() - now.getTime();
-  const diffSeconds = Math.round(diffMs / 1000);
-  const diffMinutes = Math.round(diffSeconds / 60);
-  const diffHours = Math.round(diffMinutes / 60);
-  const diffDays = Math.round(diffHours / 24);
-
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-  if (Math.abs(diffSeconds) < 60) return rtf.format(diffSeconds, "second");
-  if (Math.abs(diffMinutes) < 60) return rtf.format(diffMinutes, "minute");
-  if (Math.abs(diffHours) < 24) return rtf.format(diffHours, "hour");
-  return rtf.format(diffDays, "day");
+  return formatDistanceToNowStrict(d, { addSuffix: true });
 }
 
 /**

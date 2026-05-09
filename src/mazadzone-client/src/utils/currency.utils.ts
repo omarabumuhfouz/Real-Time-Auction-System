@@ -15,16 +15,19 @@ export function formatCurrency(
   amount: number,
   options?: { compact?: boolean },
 ): string {
-  const { code, locale } = APP_CONFIG.currency;
+  const { symbol, locale } = APP_CONFIG.currency;
 
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: code,
+  const formatted = new Intl.NumberFormat(locale, {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
     ...(options?.compact && {
       notation: "compact",
       maximumFractionDigits: 1,
     }),
   }).format(amount);
+
+  return `${formatted} ${symbol}`;
 }
 
 /**

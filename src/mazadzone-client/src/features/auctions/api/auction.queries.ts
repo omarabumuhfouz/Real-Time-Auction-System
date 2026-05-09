@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import type { PaginatedResult, PaginationParams } from "@/types/api.types";
 import type { Auction, AuctionSummary, AuctionFilters } from "../types/auction.types";
 
-// ─── Query Keys ──────────────────────────────────────────────────
+// --- Query Keys --------------------------------------------------
 
 /**
  * Centralized query key factory for the auctions feature.
@@ -18,7 +18,7 @@ export const auctionKeys = {
   detail: (id: string) => [...auctionKeys.details(), id] as const,
 };
 
-// ─── Query Hooks ─────────────────────────────────────────────────
+// --- Query Hooks -------------------------------------------------
 
 /**
  * Fetches a paginated list of auctions with optional filters.

@@ -5,6 +5,9 @@
  * real-time bid updates via SignalR, and bidding hooks.
  */
 
+// Components
+export { PlaceBidButton } from "./components/PlaceBidButton";
+
 // Placeholder exports — uncomment as implementations are added:
 // export { BidForm } from "./components/bid-form";
 // export { BidHistory } from "./components/bid-history";

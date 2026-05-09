@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-// ─── Types ───────────────────────────────────────────────────────
+// --- Types -------------------------------------------------------
 
 export type NotificationType = "success" | "error" | "warning" | "info";
 
@@ -25,7 +25,7 @@ interface NotificationActions {
 
 type NotificationStore = NotificationState & NotificationActions;
 
-// ─── Store ───────────────────────────────────────────────────────
+// --- Store -------------------------------------------------------
 
 let notificationCounter = 0;
 

@@ -45,7 +45,7 @@ function createQueryClient(): QueryClient {
   });
 }
 
-// ─── Singleton for Browser ───────────────────────────────────────
+// --- Singleton for Browser ---------------------------------------
 
 let browserQueryClient: QueryClient | undefined;
 
