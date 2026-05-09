@@ -1,6 +1,5 @@
 namespace MazadZone.Application.Features.Categories.Queries.GetCategoryTree;
 
-
 internal sealed class GetCategoryTreeQueryHandler : IQueryHandler<GetCategoryTreeQuery, IReadOnlyList<CategoryTreeResponse>>
 {
     private readonly ICategoryQueries _categoryQueries;
