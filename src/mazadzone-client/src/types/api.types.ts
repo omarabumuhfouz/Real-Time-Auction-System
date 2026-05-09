@@ -5,7 +5,7 @@
  * ASP.NET Core Web API. Keep them in sync with the backend contracts.
  */
 
-// ─── Success Response ────────────────────────────────────────────
+// --- Success Response --------------------------------------------
 
 /** Standard success wrapper returned by most API endpoints */
 export interface ApiResponse<T> {
@@ -15,7 +15,7 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
-// ─── Pagination ──────────────────────────────────────────────────
+// --- Pagination --------------------------------------------------
 
 /** Parameters sent to the API for paginated list requests */
 export interface PaginationParams {
@@ -38,7 +38,7 @@ export interface PaginatedResult<T> {
   hasPreviousPage: boolean;
 }
 
-// ─── Errors ──────────────────────────────────────────────────────
+// --- Errors ------------------------------------------------------
 
 /** Normalized error shape produced by the API client interceptor */
 export interface ApiError {
@@ -49,7 +49,7 @@ export interface ApiError {
   originalError?: unknown;
 }
 
-// ─── Utility Types ───────────────────────────────────────────────
+// --- Utility Types -----------------------------------------------
 
 /** A type that represents either a successful response or an error */
 export type ApiResult<T> =

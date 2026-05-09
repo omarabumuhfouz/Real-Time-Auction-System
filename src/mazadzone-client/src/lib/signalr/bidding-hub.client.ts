@@ -5,7 +5,7 @@ import {
   stopConnection,
 } from "./connection-factory";
 
-// ─── Event Types (server → client) ──────────────────────────────
+// --- Event Types (server → client) ------------------------------
 
 export interface BidPlacedEvent {
   auctionId: string;
@@ -27,14 +27,14 @@ export interface CountdownTickEvent {
   remainingSeconds: number;
 }
 
-// ─── Invocation Payloads (client → server) ───────────────────────
+// --- Invocation Payloads (client → server) -----------------------
 
 export interface PlaceBidPayload {
   auctionId: string;
   amount: number;
 }
 
-// ─── Bidding Hub Client ──────────────────────────────────────────
+// --- Bidding Hub Client ------------------------------------------
 
 /**
  * Typed client for the Bidding SignalR hub.
@@ -54,11 +54,11 @@ export function createBiddingHubClient() {
     /** The underlying SignalR connection (for advanced use) */
     connection,
 
-    // ── Lifecycle ──────────────────────────────────────────
+    // -- Lifecycle ------------------------------------------
     start: () => startConnection(connection),
     stop: () => stopConnection(connection),
 
-    // ── Subscribe to server events ─────────────────────────
+    // -- Subscribe to server events -------------------------
     onBidPlaced: (callback: (event: BidPlacedEvent) => void) => {
       connection.on("BidPlaced", callback);
       return () => connection.off("BidPlaced", callback);
@@ -74,7 +74,7 @@ export function createBiddingHubClient() {
       return () => connection.off("CountdownTick", callback);
     },
 
-    // ── Invoke server methods ──────────────────────────────
+    // -- Invoke server methods ------------------------------
     placeBid: (payload: PlaceBidPayload) =>
       connection.invoke("PlaceBid", payload),
 

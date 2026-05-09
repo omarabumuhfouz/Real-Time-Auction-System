@@ -5,7 +5,7 @@
  * Keep them in sync with the backend DTOs.
  */
 
-// ─── Enums ───────────────────────────────────────────────────────
+// --- Enums -------------------------------------------------------
 
 export const AuctionStatus = {
   DRAFT: "Draft",
@@ -30,7 +30,7 @@ export const AuctionCategory = {
 export type AuctionCategory =
   (typeof AuctionCategory)[keyof typeof AuctionCategory];
 
-// ─── Domain Models ───────────────────────────────────────────────
+// --- Domain Models -----------------------------------------------
 
 export interface Auction {
   id: string;
@@ -76,7 +76,7 @@ export interface AuctionSummary {
   sellerName: string;
 }
 
-// ─── Input Types ─────────────────────────────────────────────────
+// --- Input Types -------------------------------------------------
 
 export interface CreateAuctionInput {
   title: string;
@@ -96,7 +96,7 @@ export interface UpdateAuctionInput {
   endDate?: string;
 }
 
-// ─── Filter Types ────────────────────────────────────────────────
+// --- Filter Types ------------------------------------------------
 
 export interface AuctionFilters {
   search?: string;

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { clearTokens, setTokens, getAccessToken } from "@/lib/auth/token";
 
-// ─── Types ───────────────────────────────────────────────────────
+// --- Types -------------------------------------------------------
 
 export type UserRole = "bidder" | "seller" | "admin";
 
@@ -30,7 +30,7 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions;
 
-// ─── Store ───────────────────────────────────────────────────────
+// --- Store -------------------------------------------------------
 
 /**
  * Global auth store.
@@ -45,13 +45,13 @@ type AuthStore = AuthState & AuthActions;
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
-      // ── State ──
+      // -- State --
       user: null,
       accessToken: null,
       isAuthenticated: false,
       isHydrated: false,
 
-      // ── Actions ──
+      // -- Actions --
       login: (user, accessToken, refreshToken) => {
         setTokens(accessToken, refreshToken);
         set({

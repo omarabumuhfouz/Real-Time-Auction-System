@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { PageWrapper } from "@/components/layout/page-wrapper";
-import { EmptyState } from "@/components/status/empty-state";
+import { AuctionCard } from "./AuctionCard";
 
 /**
  * Auctions page-level component.
@@ -12,6 +13,11 @@ import { EmptyState } from "@/components/status/empty-state";
  * TODO: Wire up useGetAuctions, filters, and AuctionCard grid.
  */
 export function AuctionsPage() {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // Stable demo date: 2 days from May 9th, 2026
+  const demoEndDate = "2026-05-11T12:00:00Z";
+
   return (
     <PageWrapper>
       <div className="space-y-6">
@@ -24,13 +30,21 @@ export function AuctionsPage() {
         </div>
 
         {/* TODO: Filter bar */}
-        {/* TODO: Auction grid */}
 
-        {/* Placeholder until auction list is wired up */}
-        <EmptyState
-          title="No auctions yet"
-          description="Auctions will appear here once the feature is fully wired up."
-        />
+        {/* Demo: AuctionCard with Luxury watch 2020 data */}
+        <div className="flex flex-wrap gap-6">
+          <AuctionCard
+            id="auction-001"
+            sellerId="seller-xyz"
+            title="Luxury watch 2020"
+            imageUrl="/mock-images/auctions/auction_num_1.jpg"
+            currentBid={38500}
+            bidCount={25}
+            endDate={demoEndDate}
+            isFavorite={isFavorite}
+            onFavoriteClick={() => setIsFavorite((prev) => !prev)}
+          />
+        </div>
       </div>
     </PageWrapper>
   );

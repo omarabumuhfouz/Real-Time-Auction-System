@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-// ─── Types ───────────────────────────────────────────────────────
+// --- Types -------------------------------------------------------
 
 export type AuctionSortField = "endDate" | "price" | "bids" | "createdAt";
 
@@ -25,7 +25,7 @@ interface AuctionFilterActions {
 
 type AuctionFilterStore = AuctionFilterState & AuctionFilterActions;
 
-// ─── Defaults ────────────────────────────────────────────────────
+// --- Defaults ----------------------------------------------------
 
 const DEFAULT_FILTERS: AuctionFilterState = {
   searchQuery: "",
@@ -37,7 +37,7 @@ const DEFAULT_FILTERS: AuctionFilterState = {
   sortDirection: "asc",
 };
 
-// ─── Store ───────────────────────────────────────────────────────
+// --- Store -------------------------------------------------------
 
 /**
  * Auction filter/search state.

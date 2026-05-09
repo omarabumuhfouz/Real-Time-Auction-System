@@ -20,8 +20,8 @@ export const APP_CONFIG = {
 
   /** Currency used across the platform */
   currency: {
-    code: "JD",
-    symbol: "$",
-    locale: "en-US",
+    code: "JOD",
+    symbol: "JD",
+    locale: "en-JO",
   },
 } as const;

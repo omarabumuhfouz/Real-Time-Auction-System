@@ -7,8 +7,8 @@
 
 // Components
 export { AuctionsPage } from "./components/auctions-page";
-export { AuctionCard } from "./components/auction-card";
-export { AuctionTimer } from "./components/auction-timer";
+export { AuctionCard } from "./components/AuctionCard";
+export { CountdownTimer } from "./components/CountdownTimer";
 
 // API hooks
 export { useGetAuctions, useGetAuctionById } from "./api";
@@ -23,6 +23,8 @@ export type {
   UpdateAuctionInput,
 } from "./types/auction.types";
 export { AuctionStatus, AuctionCategory } from "./types/auction.types";
+
+export type { AuctionCardProps } from "./components/AuctionCard";
 
 // Hooks
 export { useAuctionCountdown } from "./hooks/use-auction-countdown";

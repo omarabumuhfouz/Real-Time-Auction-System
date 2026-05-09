@@ -6,42 +6,42 @@
  */
 
 export const ROUTES = {
-  // ─── Public ────────────────────────────────────────────
+  // --- Public --------------------------------------------
   HOME: "/",
 
-  // ─── Auth (route group: (auth)) ────────────────────────
+  // --- Auth (route group: (auth)) ------------------------
   AUTH: {
     LOGIN: "/login",
     REGISTER: "/register",
     FORGOT_PASSWORD: "/forgot-password",
   },
 
-  // ─── Auctions ──────────────────────────────────────────
+  // --- Auctions ------------------------------------------
   AUCTIONS: {
     LIST: "/auctions",
     DETAIL: (id: string) => `/auctions/${id}` as const,
   },
 
-  // ─── Orders ────────────────────────────────────────────
+  // --- Orders --------------------------------------------
   ORDERS: {
     LIST: "/orders",
     DETAIL: (id: string) => `/orders/${id}` as const,
   },
 
-  // ─── Seller ────────────────────────────────────────────
+  // --- Seller --------------------------------------------
   SELLER: {
     DASHBOARD: "/seller",
     AUCTIONS: "/seller/auctions",
     CREATE_AUCTION: "/seller/auctions/create",
   },
 
-  // ─── Profile ───────────────────────────────────────────
+  // --- Profile -------------------------------------------
   PROFILE: {
     VIEW: "/profile",
     EDIT: "/profile/edit",
   },
 
-  // ─── Admin ─────────────────────────────────────────────
+  // --- Admin ---------------------------------------------
   ADMIN: {
     DASHBOARD: "/admin",
     USERS: "/admin/users",
