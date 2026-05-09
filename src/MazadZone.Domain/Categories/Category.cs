@@ -58,10 +58,11 @@ public sealed class Category : AggregateRoot<CategoryId>, ISoftDeletable
     }
     public Result Restore()
     {
-        if (!IsDeleted) return Result.Failure(CategoryErrors.NotDeleted);
+        if (!IsDeleted) return Result.Success();
 
         IsDeleted = false;
         DeletedOnUtc = null;
+
         return Result.Success();
     }
 
@@ -80,7 +81,7 @@ public sealed class Category : AggregateRoot<CategoryId>, ISoftDeletable
     public Result AddSubCategory(Category subCategory)
     {
         if (subCategory.ParentCategoryId != this.Id)
-            return Result.Failure(CategoryErrors.InvalidParent);
+            return CategoryErrors.InvalidParent;
 
         // HashSet automatically handles duplicates efficiently!
         // .Add() returns true if it was added, false if it was already there.
@@ -89,18 +90,17 @@ public sealed class Category : AggregateRoot<CategoryId>, ISoftDeletable
         if (!wasAdded)
         {
             // Optional: Return a specific error, or just return Success if you don't care.
-            return Result.Failure(CategoryErrors.AlreadyExists);
+            return CategoryErrors.AlreadyExists;
         }
 
         return Result.Success();
     }
 
-    public Result MakeRootCategory()
+    public void MakeRootCategory()
     {
-        if (IsRootCategory) return Result.Failure(CategoryErrors.AlreadyRoot);
+        if (IsRootCategory) return;
 
         ParentCategoryId = null;
-        return Result.Success();
     }
 
     public void Update(Name newName, Description newDescription)

@@ -28,18 +28,7 @@ internal sealed class MakeRootCategoryCommandHandler : ICommandHandler<MakeRootC
             return CategoryErrors.NotFound;
         }
 
-        var result = category.MakeRootCategory();
-
-        if (result.IsFailure)
-        {
-            MakeRootCategoryLogs.LogDomainRuleViolation(
-                _logger,
-                request.CategoryId,
-                result.TopError.Code,
-                result.TopError.Message);
-
-            return result.TopError;
-        }
+        category.MakeRootCategory();
 
         await _unitOfWork.SaveChangesAsync(ct);
 

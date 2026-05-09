@@ -28,12 +28,7 @@ internal sealed class RestoreCategoryCommandHandler : ICommandHandler<RestoreCat
             return CategoryErrors.NotFound;
         }
 
-        var result = category.Restore();
-        if (result.IsFailure)
-        {
-            RestoreCategoryLogs.LogDomainRuleViolation(_logger,request.CategoryId, result.TopError.Code, result.TopError.Message);
-            return result.TopError;
-        }
+        category.Restore();
 
         await _unitOfWork.SaveChangesAsync(ct);
 
