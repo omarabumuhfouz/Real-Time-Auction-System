@@ -2,16 +2,16 @@ using MazadZone.Domain.Entities.Orders;
 
 namespace MazadZone.Application.Features.Orders.Commands.AddFeedback;
 
-public class AddFeedbackHandler : ICommandHandler<AddFeedbackCommand, Unit>
+public class AddFeedbackCommandHandler : ICommandHandler<AddFeedbackCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<AddFeedbackHandler> _logger;
+    private readonly ILogger<AddFeedbackCommandHandler> _logger;
 
-    public AddFeedbackHandler(
+    public AddFeedbackCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<AddFeedbackHandler> logger)
+        ILogger<AddFeedbackCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;

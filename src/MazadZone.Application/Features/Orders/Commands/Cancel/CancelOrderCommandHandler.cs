@@ -2,16 +2,16 @@ using MazadZone.Domain.Entities.Orders;
 
 namespace MazadZone.Application.Features.Orders.Commands.CancelOrder;
 
-public class CancelOrderHandler : ICommandHandler<CancelOrderCommand, Unit>
+public class CancelOrderCommandHandler : ICommandHandler<CancelOrderCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<CancelOrderHandler> _logger;
+    private readonly ILogger<CancelOrderCommandHandler> _logger;
 
-    public CancelOrderHandler(
+    public CancelOrderCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<CancelOrderHandler> logger)
+        ILogger<CancelOrderCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;

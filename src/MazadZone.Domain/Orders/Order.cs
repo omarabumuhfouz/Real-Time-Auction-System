@@ -12,13 +12,11 @@ namespace MazadZone.Domain.Orders;
 /// </summary>
 public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 {
-    #pragma warning disable CS8618 
-    #pragma warning disable CS0519
     private Order() { }
-    #pragma warning restore CS8618
 
     private Order(
         OrderId id,
+        AuctionId auctionId,
         BidderId bidderId,
         BidId winningBidId,
         Address receiptAddressId,
@@ -40,6 +38,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 
     /// <summary>Gets the unique identifier of the winning bid associated with this order.</summary>
     public BidId WinningBidId { get; private init; }
+    public AuctionId AuctionId { get; private init; }
 
     /// <summary>Gets the delivery address identifier for the order.</summary>
     public Address ReceiptAddress { get; private set; }
@@ -91,6 +90,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <param name="depositCaptureTransactionId">The financial reference for the deposit.</param>
     /// <returns>A newly initialized <see cref="Order"/>.</returns>
     public static Result<Order> Create(
+        AuctionId auctionId,
         BidderId bidderId,
         BidId winningBidId,
         Address receiptAddress,
@@ -102,6 +102,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 
         var order = new Order(
             OrderId.New(),
+            auctionId,
             bidderId,
             winningBidId,
             receiptAddress,
@@ -121,7 +122,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     {
         if (Status != OrderStatus.Confirmed) return OrderErrors.CannotShipped;
         Status = OrderStatus.Shipped;
-        RaiseDomainEvent(new OrderShippedDomainEvent(Id));
+        RaiseDomainEvent(new OrderShippedDomainEvent(Id, BidderId));
         return Result.Success();
     }
 
@@ -131,7 +132,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     {
         if (Status != OrderStatus.Pending) return OrderErrors.CannotConfirm;
         Status = OrderStatus.Confirmed;
-        RaiseDomainEvent(new OrderConfirmedDomainEvent(Id));
+        RaiseDomainEvent(new OrderConfirmedDomainEvent(Id, AuctionId));
         return Result.Success();
     }
 
@@ -141,7 +142,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     {
         if (Status != OrderStatus.Shipped) return OrderErrors.CannotDeliver;
         Status = OrderStatus.Delivered;
-        RaiseDomainEvent(new OrderDeliveredDomainEvent(Id));
+        RaiseDomainEvent(new OrderDeliveredDomainEvent(Id, AuctionId, BidderId));
         return Result.Success();
     }
 
@@ -173,7 +174,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 
         Feedback = feedbackResult.Value;
         FeedbackId = feedbackResult.Value.Id;
-        RaiseDomainEvent(new FeedbackLeftDomainEvent(Id, feedbackResult.Value.Id));
+        RaiseDomainEvent(new FeedbackLeftDomainEvent(Id, AuctionId, ratingValue, comment));
         return Result.Success();
     }
 
@@ -205,7 +206,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 
         var resolutionResult = Dispute.Resolve(resolutionText);
         if (resolutionResult.IsFailure) return resolutionResult.TopError;
-        RaiseDomainEvent(new DisputeResolvedDomainEvent(Id, Dispute.Id));
+        RaiseDomainEvent(new DisputeResolvedDomainEvent(Id, Dispute.Id, resolutionText));
         return Result.Success();
     }
 
