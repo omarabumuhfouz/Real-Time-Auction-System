@@ -3,16 +3,16 @@ using MazadZone.Domain.Entities.Orders;
 
 namespace MazadZone.Application.Features.Orders.Commands.DeliverOrder;
 
-public class DeliverOrderHandler : ICommandHandler<DeliverOrderCommand, Unit>
+public class DeliverOrderCommandHandler : ICommandHandler<DeliverOrderCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<DeliverOrderHandler> _logger;
+    private readonly ILogger<DeliverOrderCommandHandler> _logger;
 
-    public DeliverOrderHandler(
+    public DeliverOrderCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<DeliverOrderHandler> logger)
+        ILogger<DeliverOrderCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;

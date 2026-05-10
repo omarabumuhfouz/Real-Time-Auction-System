@@ -1,18 +1,18 @@
 using MazadZone.Domain.Entities.Orders;
 using MazadZone.Application.Features.Orders.Commands.CreateOrder;
 
-namespace MazadZone.Application.Orders.CreateOrder;
+namespace MazadZone.Application.Features.Orders.Commands.Create;
 
-public class CreateOrderHandler : ICommandHandler<CreateOrderCommand, OrderId>
+public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, OrderId>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<CreateOrderHandler> _logger;
+    private readonly ILogger<CreateOrderCommandHandler> _logger;
 
-    public CreateOrderHandler(
+    public CreateOrderCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<CreateOrderHandler> logger)
+        ILogger<CreateOrderCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
@@ -42,6 +42,7 @@ public class CreateOrderHandler : ICommandHandler<CreateOrderCommand, OrderId>
     private Result<Order> _CreateOrder(CreateOrderCommand command)
     {
         return Order.Create(
+            command.AuctionId,
             command.BidderId,
             command.WinningBidId,
             command.ReceiptAddressId,

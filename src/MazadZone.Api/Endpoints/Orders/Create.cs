@@ -1,12 +1,13 @@
-using MazadZone.Application.Features.Orders.Commands.CreateOrder;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Entities.Users;
 using AutoMapper;
+using MazadZone.Application.Features.Orders.Commands.Create;
 
 namespace MazadZone.Api.Endpoints.Orders;
 
 public record CreateOrderRequest(
+    AuctionId AuctionId,
     BidderId BidderId,
     BidId WinningBidId,
     AddressDto ReceiptAddress,
@@ -14,6 +15,7 @@ public record CreateOrderRequest(
     string DepositCaptureTransactionId)
 {
     public CreateOrderCommand ToCommand(IMapper mapper) => new(
+        AuctionId,
         BidderId,
         WinningBidId,
         mapper.Map<Address>(ReceiptAddress),

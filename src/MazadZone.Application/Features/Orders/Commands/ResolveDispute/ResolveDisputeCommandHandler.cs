@@ -2,16 +2,16 @@ using MazadZone.Domain.Entities.Orders;
 
 namespace MazadZone.Application.Features.Orders.Commands.ResolveDispute;
 
-public class ResolveDisputeHandler : ICommandHandler<ResolveDisputeCommand, Unit>
+public class ResolveDisputeCommandHandler : ICommandHandler<ResolveDisputeCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<ResolveDisputeHandler> _logger;
+    private readonly ILogger<ResolveDisputeCommandHandler> _logger;
 
-    public ResolveDisputeHandler(
+    public ResolveDisputeCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<ResolveDisputeHandler> logger)
+        ILogger<ResolveDisputeCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;

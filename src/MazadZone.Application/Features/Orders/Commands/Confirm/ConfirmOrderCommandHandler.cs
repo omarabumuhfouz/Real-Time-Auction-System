@@ -2,16 +2,16 @@ using MazadZone.Domain.Entities.Orders;
 
 namespace MazadZone.Application.Features.Orders.Commands.ConfirmOrder;
 
-public class ConfirmOrderHandler : ICommandHandler<ConfirmOrderCommand, Unit>
+public class ConfirmOrderCommandHandler : ICommandHandler<ConfirmOrderCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<ConfirmOrderHandler> _logger;
+    private readonly ILogger<ConfirmOrderCommandHandler> _logger;
 
-    public ConfirmOrderHandler(
+    public ConfirmOrderCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<ConfirmOrderHandler> logger)
+        ILogger<ConfirmOrderCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;

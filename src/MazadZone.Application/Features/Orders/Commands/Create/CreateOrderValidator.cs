@@ -1,6 +1,4 @@
-using MazadZone.Application.Features.Orders.Commands.CreateOrder;
-
-namespace MazadZone.Application.Orders.CreateOrder;
+namespace MazadZone.Application.Features.Orders.Commands.Create;
 
 public class CreateOrderValidator : AbstractValidator<CreateOrderCommand>
 {

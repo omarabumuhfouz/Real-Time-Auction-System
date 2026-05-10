@@ -3,16 +3,16 @@ using MazadZone.Domain.Entities.Orders;
 
 namespace MazadZone.Application.Features.Orders.Commands.OpenDispute;
 
-public class OpenDisputeHandler : ICommandHandler<OpenDisputeCommand, Unit>
+public class OpenDisputeCommandHandler : ICommandHandler<OpenDisputeCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<OpenDisputeHandler> _logger;
+    private readonly ILogger<OpenDisputeCommandHandler> _logger;
 
-    public OpenDisputeHandler(
+    public OpenDisputeCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<OpenDisputeHandler> logger)
+        ILogger<OpenDisputeCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
