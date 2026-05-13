@@ -27,7 +27,7 @@ export function useGetAuctions(params: PaginationParams & AuctionFilters) {
   return useQuery({
     queryKey: auctionKeys.list(params),
     queryFn: () =>
-      api.get<PaginatedResult<AuctionSummary>>("/auctions", { ...params }),
+      api.get<PaginatedResult<AuctionSummary>>("/auctions", { params }),
   });
 }
 
