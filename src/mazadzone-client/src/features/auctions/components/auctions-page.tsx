@@ -3,9 +3,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PageWrapper } from "@/components/layout/page-wrapper";
-import { AuctionCard } from "./AuctionCard";
-import { AuctionCardSkeleton } from "@/features/auctions/components/AuctionCardSkeleton";
+import { AuctionCard, AuctionCardSkeleton } from "./auction-card";
 import { AuctionFilterBar } from "./auction-filter-bar";
+import { AuctionPagination } from "./auction-pagination";
 import { useGetAuctions } from "../api";
 import { AuctionFilters } from "../types/auction.types";
 
@@ -39,10 +39,15 @@ export function AuctionsPage() {
         }
       }
     });
+    // Ensure page is at least 1
+    if (!f.page) f.page = 1;
+    if (!f.pageSize) f.pageSize = 12;
     return f as AuctionFilters;
   }, [searchParams]);
 
-  const { data: auctions, isLoading, isError, refetch } = useGetAuctions(filters);
+  const { data: response, isLoading, isError, refetch } = useGetAuctions(filters);
+  const auctions = response?.items;
+  const pagination = response;
 
   const handleFilterChange = useCallback((newFilters: AuctionFilters) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -55,6 +60,17 @@ export function AuctionsPage() {
       }
     });
 
+    // Reset to page 1 when filters change (unless only page changed)
+    if (newFilters.page === undefined) {
+      params.set("page", "1");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  const handlePageChange = useCallback((page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(page));
     router.replace(`${pathname}?${params.toString()}`);
   }, [searchParams, pathname, router]);
 
@@ -146,6 +162,18 @@ export function AuctionsPage() {
                 />
               ))}
             </div>
+
+            {/* Pagination */}
+            {pagination && (
+              <AuctionPagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                hasPreviousPage={pagination.hasPreviousPage}
+                hasNextPage={pagination.hasNextPage}
+                className="mt-12 mb-8"
+              />
+            )}
           </>
         )}
       </div>

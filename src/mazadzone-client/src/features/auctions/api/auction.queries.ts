@@ -4,6 +4,7 @@ import type {
   AuctionSummary,
   AuctionCategory,
   AuctionFilters,
+  PaginatedResponse,
 } from "../types/auction.types";
 
 import {
@@ -35,11 +36,10 @@ export const auctionKeys = {
 /**
  * Fetches active auctions with optional filters and sorting.
  *
- * Currently backed by mock data via `fetchActiveAuctions`.
- * When the backend is ready, only `auctions.api.ts` needs to change.
+ * Returns a paginated response.
  */
 export function useGetAuctions(filters?: AuctionFilters) {
-  return useQuery<AuctionSummary[]>({
+  return useQuery<PaginatedResponse<AuctionSummary>>({
     queryKey: auctionKeys.list(filters),
     queryFn: () => fetchActiveAuctions(filters),
   });
@@ -60,7 +60,7 @@ export function useGetAuctionById(id: string) {
  * Fetches auctions by category.
  */
 export function useGetAuctionsByCategory(category: AuctionCategory) {
-  return useQuery<AuctionSummary[]>({
+  return useQuery<PaginatedResponse<AuctionSummary>>({
     queryKey: auctionKeys.category(category),
     queryFn: () => fetchAuctionsByCategory(category),
     enabled: !!category,

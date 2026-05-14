@@ -21,6 +21,7 @@ import type {
   AuctionCategory,
   AuctionFilters,
   AuctionSortBy,
+  PaginatedResponse,
 } from "../types/auction.types";
 import { AuctionStatus, AuctionSortBy as SortByValues } from "../types/auction.types";
 
@@ -45,13 +46,16 @@ function simulateDelay(): Promise<void> {
 
 /**
  * Fetches active auctions, optionally filtered and sorted.
- *
- * TODO: Replace with: `api.get<AuctionSummary[]>("/auctions", { params: filters })`
+ * 
+ * Returns a paginated response.
  */
 export async function fetchActiveAuctions(
   filters?: AuctionFilters,
-): Promise<AuctionSummary[]> {
+): Promise<PaginatedResponse<AuctionSummary>> {
   await simulateDelay();
+
+  const page = filters?.page || 1;
+  const pageSize = filters?.pageSize || 12;
 
   // If status filter is provided, use it. Otherwise, default to ACTIVE.
   let results = mockAuctions;
@@ -62,51 +66,63 @@ export async function fetchActiveAuctions(
     results = results.filter((a) => a.status === AuctionStatus.ACTIVE);
   }
 
-  if (!filters) return results;
+  if (filters) {
+    // --- Text search
+    if (filters.search) {
+      const query = filters.search.toLowerCase();
+      results = results.filter((a) =>
+        a.title.toLowerCase().includes(query),
+      );
+    }
 
-  // --- Text search
-  if (filters.search) {
-    const query = filters.search.toLowerCase();
-    results = results.filter((a) =>
-      a.title.toLowerCase().includes(query),
-    );
+    // --- Category filter
+    if (filters.category) {
+      results = results.filter((a) => a.category === filters.category);
+    }
+    
+    // --- Subcategory filter
+    if (filters.subcategory) {
+      results = results.filter((a) => a.subcategory === filters.subcategory);
+    }
+
+    // --- Condition filter
+    if (filters.condition) {
+      results = results.filter((a) => a.condition === filters.condition);
+    }
+
+    // --- Price range (use currentBid, fallback to startingPrice)
+    if (filters.minPrice != null) {
+      results = results.filter(
+        (a) => (a.pricing.currentBid ?? a.pricing.startingPrice) >= filters.minPrice!,
+      );
+    }
+    if (filters.maxPrice != null) {
+      results = results.filter(
+        (a) => (a.pricing.currentBid ?? a.pricing.startingPrice) <= filters.maxPrice!,
+      );
+    }
+
+    // --- Sorting
+    if (filters.sortBy) {
+      results = sortAuctions(results, filters.sortBy, filters.sortDirection);
+    }
   }
 
-  // --- Category filter
-  if (filters.category) {
-    results = results.filter((a) => a.category === filters.category);
-  }
-  
-  // --- Subcategory filter
-  if (filters.subcategory) {
-    results = results.filter((a) => a.subcategory === filters.subcategory);
-  }
+  // --- Pagination
+  const totalCount = results.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const startIndex = (page - 1) * pageSize;
+  const paginatedItems = results.slice(startIndex, startIndex + pageSize);
 
-  // --- Condition filter
-  if (filters.condition) {
-    results = results.filter((a) => a.condition === filters.condition);
-  }
-
-
-
-  // --- Price range (use currentBid, fallback to startingPrice)
-  if (filters.minPrice != null) {
-    results = results.filter(
-      (a) => (a.pricing.currentBid ?? a.pricing.startingPrice) >= filters.minPrice!,
-    );
-  }
-  if (filters.maxPrice != null) {
-    results = results.filter(
-      (a) => (a.pricing.currentBid ?? a.pricing.startingPrice) <= filters.maxPrice!,
-    );
-  }
-
-  // --- Sorting
-  if (filters.sortBy) {
-    results = sortAuctions(results, filters.sortBy, filters.sortDirection);
-  }
-
-  return results;
+  return {
+    items: paginatedItems,
+    totalCount,
+    page,
+    pageSize,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
 }
 
 /**
@@ -128,7 +144,7 @@ export async function fetchAuctionById(
  */
 export async function fetchAuctionsByCategory(
   category: AuctionCategory,
-): Promise<AuctionSummary[]> {
+): Promise<PaginatedResponse<AuctionSummary>> {
   return fetchActiveAuctions({ category });
 }
 

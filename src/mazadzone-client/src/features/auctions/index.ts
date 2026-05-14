@@ -7,9 +7,7 @@
 
 // Components
 export { AuctionsPage } from "./components/auctions-page";
-export { AuctionCard } from "./components/AuctionCard";
-export { AuctionCardSkeleton } from "./components/AuctionCardSkeleton";
-export { CountdownTimer } from "./components/CountdownTimer";
+export { AuctionCard, AuctionCardSkeleton, CountdownTimer } from "./components/auction-card";
 export { AuctionFilterBar } from "./components/auction-filter-bar";
 
 // TanStack Query hooks

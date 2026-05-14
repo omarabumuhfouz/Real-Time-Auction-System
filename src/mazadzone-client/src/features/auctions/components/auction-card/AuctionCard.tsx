@@ -9,7 +9,7 @@ import { ROUTES } from "@/config/routes.config";
 import { formatCurrency } from "@/utils/currency.utils";
 import { CountdownTimer } from "./CountdownTimer";
 import { PlaceBidButton } from "@/features/bidding";
-import type { AuctionCardProps } from "../types/auction.types";
+import type { AuctionCardProps } from "../../types/auction.types";
 
 export function AuctionCard({
   auction,

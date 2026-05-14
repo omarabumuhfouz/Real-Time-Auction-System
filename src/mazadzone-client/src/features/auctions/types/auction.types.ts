@@ -166,4 +166,18 @@ export interface AuctionFilters {
   maxPrice?: number;
   sortBy?: AuctionSortBy;
   sortDirection?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+// --- Response Types ----------------------------------------------
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
