@@ -9,7 +9,7 @@
 export { AuctionsPage } from "./components/auctions-page";
 export { AuctionCard, AuctionCardSkeleton, CountdownTimer } from "./components/auction-card";
 export { AuctionFilterBar } from "./components/auction-filter-bar";
-export { ClosingSoonSection } from "./components/Home-Sections";
+export { ClosingSoonSection, HomeHero } from "./components/Home-Sections";
 
 // TanStack Query hooks
 export {
