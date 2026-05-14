@@ -148,6 +148,21 @@ export async function fetchAuctionsByCategory(
   return fetchActiveAuctions({ category });
 }
 
+/**
+ * Fetches auctions that are ending soonest.
+ */
+export async function fetchClosingSoonAuctions(
+  limit: number = 4,
+): Promise<AuctionSummary[]> {
+  const response = await fetchActiveAuctions({
+    status: AuctionStatus.ACTIVE,
+    sortBy: SortByValues.END_TIME,
+    sortDirection: "asc",
+    pageSize: limit,
+  });
+  return response.items;
+}
+
 
 
 // ---------------------------------------------------------------------------
