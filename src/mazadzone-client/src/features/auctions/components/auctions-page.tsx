@@ -3,8 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PageWrapper } from "@/components/layout/page-wrapper";
-import { AuctionCard } from "./AuctionCard";
-import { AuctionCardSkeleton } from "@/features/auctions/components/AuctionCardSkeleton";
+import { AuctionCard, AuctionCardSkeleton } from "./auction-card";
 import { AuctionFilterBar } from "./auction-filter-bar";
 import { useGetAuctions } from "../api";
 import { AuctionFilters } from "../types/auction.types";
