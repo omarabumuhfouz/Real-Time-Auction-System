@@ -11,6 +11,7 @@ import {
   fetchActiveAuctions,
   fetchAuctionById,
   fetchAuctionsByCategory,
+  fetchClosingSoonAuctions,
 } from "./auctions.api";
 
 // --- Query Keys --------------------------------------------------
@@ -64,6 +65,16 @@ export function useGetAuctionsByCategory(category: AuctionCategory) {
     queryKey: auctionKeys.category(category),
     queryFn: () => fetchAuctionsByCategory(category),
     enabled: !!category,
+  });
+}
+
+/**
+ * Hook to get auctions ending soon.
+ */
+export function useGetClosingSoonAuctions(limit: number = 4) {
+  return useQuery<AuctionSummary[]>({
+    queryKey: [...auctionKeys.all, "closing-soon", limit],
+    queryFn: () => fetchClosingSoonAuctions(limit),
   });
 }
 
