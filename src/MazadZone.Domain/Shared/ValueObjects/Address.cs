@@ -1,4 +1,4 @@
-namespace MazadZone.Domain.Entities.Users;
+namespace MazadZone.Domain.Shared.ValueObjects;
 
 using MazadZone.Domain.Shared;
 using MazadZone.Domain.Shared.Errors;

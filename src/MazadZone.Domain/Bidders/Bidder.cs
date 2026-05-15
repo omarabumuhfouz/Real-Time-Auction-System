@@ -1,7 +1,7 @@
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders.Events;
 using MazadZone.Domain.Common;
-using MazadZone.Domain.Entities.Users;
+using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Bidders;
