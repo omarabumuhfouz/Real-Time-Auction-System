@@ -9,6 +9,12 @@ internal static partial class ConfirmOrderLogs
     public static partial void LogAttempt(ILogger logger, OrderId orderId);
 
     [LoggerMessage(
+        EventId = MazadLogEvents.Orders.OrderNotFound,
+        Level = LogLevel.Warning,
+        Message = "Order {OrderId} not found during confirmation.")]
+    public static partial void LogOrderNotFound(ILogger logger, OrderId orderId);
+
+    [LoggerMessage(
         EventId = MazadLogEvents.Orders.ConfirmDomainViolation, 
         Level = LogLevel.Warning, 
         Message = "Domain logic prevented confirmation for Order {OrderId}. Reason: {Reason}")]
@@ -19,4 +25,6 @@ internal static partial class ConfirmOrderLogs
         Level = LogLevel.Information, 
         Message = "Order {OrderId} successfully confirmed and persisted.")]
     public static partial void LogSuccess(ILogger logger, OrderId orderId);
+
+
 }

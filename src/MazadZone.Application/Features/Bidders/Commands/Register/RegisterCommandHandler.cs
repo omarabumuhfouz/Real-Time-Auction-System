@@ -4,8 +4,8 @@ using MazadZone.Application.Features.Authentication.DTOs;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
-using MazadZone.Domain.Entities.Users;
 using MazadZone.Domain.Repositories;
+using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;

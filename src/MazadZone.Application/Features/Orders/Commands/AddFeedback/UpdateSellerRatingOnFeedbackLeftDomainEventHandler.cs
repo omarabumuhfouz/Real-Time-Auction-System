@@ -8,6 +8,14 @@ public sealed class UpdateSellerRatingOnFeedbackLeftDomainEventHandler : INotifi
     private readonly ISellerRepository _sellerRepository;
     private readonly IUnitOfWork _unitOfWork;
 
+    public UpdateSellerRatingOnFeedbackLeftDomainEventHandler(
+        ISellerRepository sellerRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _sellerRepository = sellerRepository;
+        _unitOfWork = unitOfWork;
+    }
+
     public async Task Handle(FeedbackLeftDomainEvent notification, CancellationToken ct)
     {
         var seller = await _sellerRepository.GetByAuctionIdAsync(notification.AuctionId, ct);
