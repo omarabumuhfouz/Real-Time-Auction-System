@@ -2,7 +2,7 @@ using MazadZone.Domain.Primitives.Results;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace MechanicShop.Api.Extensions;
+namespace MazadZone.Api.Extensions;
 
 public static class ProblemExtensions
 {

@@ -9,6 +9,7 @@ using MazadZone.Application.Features.Notifications.Queries.GetNotificationById;
 using MazadZone.Application.Features.Notifications.Queries.DTOs;
 using MazadZone.Api.Contracts.Notifications;
 using MazadZone.Domain.Notifications;
+using MazadZone.Api.Extensions;
 
 namespace MazadZone.Api.Endpoints;
 
@@ -84,12 +85,10 @@ public static class NotificationEndpoints
 
             var result = await sender.Send(command, cancellationToken);
 
-            if (result.IsFailure)
-            {
-                return Results.BadRequest(result.TopError);
-            }
-
-            return Results.Created($"/api/notifications/{result.Value.Value}", result.Value.Value);
+            return result.Match(
+                success => Results.Created($"/api/notifications/{success.Value}", success.Value),
+                errors => errors.ToProblem()
+            );
         }
         catch (Exception)
         {
@@ -122,12 +121,10 @@ public static class NotificationEndpoints
 
             var result = await sender.Send(query, cancellationToken);
 
-            if (result.IsFailure)
-            {
-                return Results.BadRequest(result.TopError);
-            }
-
-            return Results.Ok(result.Value);
+            return result.Match(
+                success => Results.Ok(success),
+                errors => errors.ToProblem()
+            );
         }
         catch (Exception)
         {
@@ -162,15 +159,10 @@ public static class NotificationEndpoints
 
             var result = await sender.Send(query, cancellationToken);
 
-            if (result.IsFailure)
-            {
-                if (result.TopError.Code == "Notification.NotFound")
-                    return Results.NotFound(new { Error = result.TopError });
-
-                return Results.BadRequest(new { Error = result.TopError });
-            }
-
-            return Results.Ok(result.Value);
+            return result.Match(
+                success => Results.Ok(success),
+                errors => errors.ToProblem()
+            );
         }
         catch (Exception)
         {
@@ -202,15 +194,10 @@ public static class NotificationEndpoints
 
             var result = await sender.Send(command, cancellationToken);
 
-            if (result.IsFailure)
-            {
-                if (result.TopError.Code == "Notification.NotFound")
-                    return Results.NotFound(new { Error = result.TopError });
-
-                return Results.BadRequest(new { Error = result.TopError });
-            }
-
-            return Results.NoContent();
+            return result.Match(
+                _ => Results.NoContent(),
+                errors => errors.ToProblem()
+            );
         }
         catch (Exception)
         {
@@ -242,15 +229,10 @@ public static class NotificationEndpoints
 
             var result = await sender.Send(command, cancellationToken);
 
-            if (result.IsFailure)
-            {
-                if (result.TopError.Code == "Notification.NotFound")
-                    return Results.NotFound(new { Error = result.TopError });
-
-                return Results.BadRequest(new { Error = result.TopError });
-            }
-
-            return Results.NoContent();
+            return result.Match(
+                _ => Results.NoContent(),
+                errors => errors.ToProblem()
+            );
         }
         catch (Exception)
         {
