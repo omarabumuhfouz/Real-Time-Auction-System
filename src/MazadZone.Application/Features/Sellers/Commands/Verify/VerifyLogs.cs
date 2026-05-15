@@ -1,4 +1,5 @@
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 using Microsoft.Extensions.Logging;
 
 namespace MazadZone.Application.Features.Sellers.Commands.Verify;

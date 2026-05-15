@@ -2,6 +2,7 @@ using MazadZone.Application.Features.Sellers.Queries.GetPrivateDetails;
 using MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 using MazadZone.Application.Features.Sellers.Queries.GetUnverifiedSellers;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 
 namespace MazadZone.Application.Features.Sellers.Queries;
 

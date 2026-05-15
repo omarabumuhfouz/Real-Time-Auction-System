@@ -11,6 +11,16 @@ public sealed class NotifySellerOnDisputeResolvedDomainEventHandler
     private readonly ISellerRepository _sellerRepository;
     private readonly INotificationRepository _notificationRepository;
 
+    public NotifySellerOnDisputeResolvedDomainEventHandler(
+        IOrderRepository orderRepository,
+        ISellerRepository sellerRepository,
+        INotificationRepository notificationRepository)
+    {
+        _orderRepository = orderRepository;
+        _sellerRepository = sellerRepository;
+        _notificationRepository = notificationRepository;
+    }
+
     public async Task Handle(DisputeResolvedDomainEvent notification, CancellationToken ct)
     {
         var order = await _orderRepository.GetByIdAsync(notification.OrderId.Value, ct);

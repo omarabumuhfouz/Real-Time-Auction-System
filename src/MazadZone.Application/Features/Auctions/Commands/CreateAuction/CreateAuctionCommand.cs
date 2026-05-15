@@ -1,6 +1,7 @@
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Entities.Users;
-using MazadZone.Domain.Items;
+using MazadZone.Domain.Auctions.ValueObjects;
+using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.ValueObjects;
 
 namespace MazadZone.Application.Features.Auctions.Commands.CreateAuction;
