@@ -7,7 +7,7 @@ import { differenceInSeconds } from "date-fns";
 /**
  * Hook that provides a real-time countdown to an auction's end date.
  */
-export function useAuctionCountdown(endDate: string) {
+export function useAuctionCountdown(endDate: Date) {
 
   const isMounted = useMounted();
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
@@ -38,6 +38,6 @@ export function useAuctionCountdown(endDate: string) {
   };
 }
 
-function calculateRemaining(endDate: string): number {
-  return differenceInSeconds(new Date(endDate), new Date());
+function calculateRemaining(endDate: Date): number {
+  return differenceInSeconds(endDate, new Date());
 }

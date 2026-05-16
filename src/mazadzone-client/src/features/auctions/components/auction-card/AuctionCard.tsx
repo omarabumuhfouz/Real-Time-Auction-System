@@ -17,7 +17,9 @@ export function AuctionCard({
   priority = false,
   className,
 }: AuctionCardProps) {
-  const { id, title, imageUrl, pricing, timing, isFavorite, isOwner } = auction;
+  const { id, title, imageUrl, pricing, timing, isFavorite, isOwner, status } = auction;
+  const isUpcoming = status === "Upcoming";
+  const isEnded = status === "Ended";
   const displayPrice = pricing.currentBid ?? pricing.startingPrice;
   const auctionDetailsHref = ROUTES.AUCTIONS.DETAIL(id);
 
@@ -74,7 +76,12 @@ export function AuctionCard({
 
       <div className="mt-auto pt-3">
         <div className="mt-2">
-          <CountdownTimer endDate={timing.endDate} />
+          <CountdownTimer 
+            startDate={timing.startDate}
+            endDate={timing.endDate} 
+            status={status}
+            label={isUpcoming ? "UPCOMING IN" : undefined}
+          />
         </div>
 
 
@@ -88,11 +95,11 @@ export function AuctionCard({
                 aria-hidden="true"
               />
               <span className="text-xs font-semibold text-foreground">
-                Current Bid:
+                {pricing.bidCount > 0 ? "Current Bid:" : "Start Price:"}
               </span>
             </div>
 
-            <span className="text-lg font-bold text-primary">
+            <span className={cn("text-lg font-bold text-primary", isEnded && "text-muted-foreground")}>
               {formatCurrency(displayPrice)}
             </span>
           </div>
@@ -118,7 +125,7 @@ export function AuctionCard({
         </div>
 
 
-        <PlaceBidButton auctionId={id} isOwner={isOwner} />
+        <PlaceBidButton auctionId={id} isOwner={isOwner} status={status} />
       </div>
     </article >
   );
