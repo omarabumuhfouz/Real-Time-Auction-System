@@ -1,9 +1,9 @@
 using MazadZone.Application.Features.Orders.Commands.OpenDispute;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Entities.Users;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Shared.ValueObjects;
 
 namespace Tests.Application.Features.Orders.Events;
 

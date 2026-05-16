@@ -1,5 +1,5 @@
 
-using MazadZone.Domain.Entities.Users;
+using MazadZone.Domain.Users;
 
 namespace MazadZone.Domain.Auctions.Events;
 

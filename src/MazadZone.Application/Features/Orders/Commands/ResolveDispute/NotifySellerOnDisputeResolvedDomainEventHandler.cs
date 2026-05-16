@@ -9,7 +9,7 @@ public sealed class NotifySellerOnDisputeResolvedDomainEventHandler
     private readonly ISellerRepository _sellerRepository;
     private readonly INotificationRepository _notificationRepository;
 
-    public NotifySellerOnDisputeResolvedDomainEventHandler( ISellerRepository sellerRepository, INotificationRepository notificationRepository)
+    public NotifySellerOnDisputeResolvedDomainEventHandler(ISellerRepository sellerRepository, INotificationRepository notificationRepository)
     {
         _sellerRepository = sellerRepository;
         _notificationRepository = notificationRepository;

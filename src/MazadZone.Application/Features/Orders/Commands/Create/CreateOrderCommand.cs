@@ -1,6 +1,6 @@
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Entities.Users;
+using MazadZone.Domain.Shared.ValueObjects;
 
 namespace MazadZone.Application.Features.Orders.Commands.Create;
 

@@ -1,3 +1,4 @@
+using MazadZone.Application.Features.Payments.Commands.CaptureRemainingAmount;
 using MazadZone.Domain.Repositories;
 
 namespace MazadZone.Application.Features.Orders.Commands.Confirm;
@@ -7,15 +8,19 @@ public class ConfirmOrderCommandHandler : ICommandHandler<ConfirmOrderCommand, U
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ConfirmOrderCommandHandler> _logger;
+    private readonly ISender _sender;
 
     public ConfirmOrderCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
-        ILogger<ConfirmOrderCommandHandler> logger)
+        ILogger<ConfirmOrderCommandHandler> logger,
+        ISender sender
+        )
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _sender = sender;
     }
 
     public async Task<Result<Unit>> Handle(ConfirmOrderCommand request, CancellationToken ct)
@@ -26,8 +31,16 @@ public class ConfirmOrderCommandHandler : ICommandHandler<ConfirmOrderCommand, U
 
         if (order is null) 
         {
-            GlobalLogs.LogOrderNotFound(_logger, request.OrderId);
+            ConfirmOrderLogs.LogOrderNotFound(_logger, request.OrderId);
             return OrderErrors.NotFound;
+        }
+
+        // Use the CaptureRemainingAmountCommand to handle payment logic
+        var result = await _sender.Send(new CaptureRemainingAmountCommand(request.OrderId), ct);
+        
+        if (result.IsFailure)        {
+            CaptureRemainingAmountLogs.LogFailure(_logger, request.OrderId, result.TopError.Message);
+            return result.TopError;
         }
 
         var confirmationResult = order.Confirm();

@@ -2,6 +2,7 @@ using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Shared.Interfaces;
+using MzadZone.Domain.Payments;
 
 namespace MazadZone.Application.Services;
 
@@ -19,4 +20,9 @@ public interface IOrderQueries : IScopedService
     // --- Analytics & Dashboard ---
     Task<SellerOrderStatsDto> GetSellerStatsAsync(SellerId sellerId, CancellationToken ct = default);
     Task<AdminGlobalStatsDto> GetGlobalStatsAsync(CancellationToken ct = default);
+
+    // --- Payment Queries ---
+    Task<Payment?> GetPaymentByOrderIdAsync(OrderId orderId, CancellationToken ct = default);
+
+    Task<AuctionId> GetAuctionIdByOrderIdAsync(OrderId orderId, CancellationToken ct = default);
 }

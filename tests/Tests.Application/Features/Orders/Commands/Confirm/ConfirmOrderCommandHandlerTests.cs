@@ -1,14 +1,22 @@
 using MazadZone.Application.Features.Orders.Commands.Confirm;
+using MazadZone.Application.Features.Payments.Commands.CaptureRemainingAmount;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Entities.Users;
 using MazadZone.Domain.Orders;
+using MazadZone.Domain.Primitives.Results;
+using MazadZone.Domain.Shared.ValueObjects;
 using MediatR;
 
 namespace Tests.Application.Features.Orders.Commands.Confirm;
 
 public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommandHandler>
 {
-    // Notice: NO CONSTRUCTOR NEEDED! AutoMocker handles everything behind the scenes.
+    private readonly ISender _sender;
+
+    public ConfirmOrderCommandHandlerTests()
+    {
+        // Extract the mocked MediatR sender instance from the AutoMocker container
+        _sender = AutoMocker.GetSubstituteFor<ISender>();
+    }
 
     [Fact]
     public async Task Handle_Should_ReturnNotFound_When_OrderDoesNotExist()
@@ -16,7 +24,6 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         // Arrange
         var command = new ConfirmOrderCommand(OrderId.New());
         
-        // Setup the mock inherited from the AutoMocker base class
         _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
@@ -27,25 +34,53 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         result.IsFailure.ShouldBeTrue();
         result.TopError.ShouldBe(OrderErrors.NotFound);
         
-        // Verify we didn't try to save anything to the database
+        // Verify payment logic was completely bypassed
+        await _sender.DidNotReceive().Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_Should_ReturnPaymentError_When_CaptureRemainingAmountFails()
+    {
+        // Arrange
+        var order = CreateValidOrder(); 
+        var command = new ConfirmOrderCommand(order.Id);
+        var paymentError =  Error.Failure("Payment.CaptureFailed", "Insufficient funds to capture remaining balance.");
+
+        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+            .Returns(order);
+
+        // Mock MediatR sub-command payment failure
+        _sender.Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure<Unit>(paymentError));
+
+        // Act
+        var result = await Handler.Handle(command, default);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.TopError.ShouldBe(paymentError);
+
+        // Verify that aggregate confirmation state change and persistence were blocked
+        order.Status.ShouldBe(OrderStatus.Pending); 
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_Should_ReturnDomainError_When_ConfirmFails()
     {
-        // 1. Arrange - Create a fresh order
+        // Arrange - Create a fresh order and force an invalid status transition
         var order = CreateValidOrder(); 
+        order.Cancel(); // Cancelled orders cannot transition to Confirmed
         
-        // IMPORTANT: Move the order out of the 'Pending' state to force a domain failure.
-        // A cancelled order cannot be confirmed.
-        order.Cancel(); 
-        
-        // 2. Arrange - Map the exact ID to the command
         var command = new ConfirmOrderCommand(order.Id);
         
         _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
             .Returns(order);
+
+        // Mock payment success so it reaches the domain logic step
+        _sender.Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Unit.Value));
 
         // Act
         var result = await Handler.Handle(command, default);
@@ -54,21 +89,22 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         result.IsFailure.ShouldBeTrue();
         result.TopError.ShouldBe(OrderErrors.CannotConfirm);
         
-        // Verify we didn't try to save the invalid state to the database
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnSuccess_When_OrderIsConfirmed()
+    public async Task Handle_Should_ReturnSuccess_When_PaymentSucceeds_And_OrderIsConfirmed()
     {
         // Arrange
         var order = CreateValidOrder(); 
-        // A fresh order is naturally in the 'Pending' state, which ALLOWS confirmation.
-
         var command = new ConfirmOrderCommand(order.Id);
         
         _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
             .Returns(order);
+
+        // Mock successful balance capture
+        _sender.Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Unit.Value));
 
         // Act
         var result = await Handler.Handle(command, default);
@@ -77,16 +113,18 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         result.IsSuccess.ShouldBeTrue();
         result.Value.ShouldBe(Unit.Value);
         
-        // Verify the database transaction was committed
+        // Assert state mutation actually executed on aggregate root
+        order.Status.ShouldBe(OrderStatus.Confirmed);
+        
+        // Verify sub-command call correctness with value matching
+        await _sender.Received(1).Send(
+            Arg.Is<CaptureRemainingAmountCommand>(c => c.OrderId.Value == command.OrderId.Value), 
+            Arg.Any<CancellationToken>());
+
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     // --- Helper Methods ---
-
-    /// <summary>
-    /// Centralizes the creation of a valid order for testing purposes, 
-    /// fulfilling all required Domain constraints.
-    /// </summary>
     private static Order CreateValidOrder()
     {
         var address = new Address("123 Test St", "Amman", "11118", "Jordan");
