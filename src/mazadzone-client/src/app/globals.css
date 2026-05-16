@@ -51,6 +51,8 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --color-creamey: oklch(0.9796 0.0158 73.68);
+  --color-upcoming: var(--upcoming);
+  --color-upcoming-foreground: var(--upcoming-foreground);
 }
 
 /*
@@ -125,6 +127,10 @@
   --sidebar-accent-foreground: oklch(0.3731 0.0343 260.17);
   --sidebar-border: oklch(0.9142 0.0076 264.54);
   --sidebar-ring: oklch(0.7049 0.1989 45.77);
+
+  /* Status — Upcoming/Pending */
+  --upcoming: oklch(0.9677 0.0827 104.13);
+  --upcoming-foreground: oklch(0.7694 0.1604 101.42);
 }
 
 /*
@@ -178,6 +184,10 @@
   --sidebar-accent-foreground: oklch(0.96 0.005 95);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.7049 0.1989 45.77);
+
+  /* Status — Upcoming/Pending */
+  --upcoming: oklch(0.9677 0.0827 104.13);
+  --upcoming-foreground: oklch(0.7694 0.1604 101.42);
 }
 
 @layer base {

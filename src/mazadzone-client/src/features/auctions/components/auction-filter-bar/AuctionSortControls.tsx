@@ -47,7 +47,7 @@ export function AuctionSortControls({
                 value={field}
                 className="focus:bg-orange-50 focus:text-orange-900 cursor-pointer py-2.5"
               >
-                {field.replace(/([A-Z])/g, " $1").trim()}
+                {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1").trim()}
               </SelectItem>
             ))}
           </SelectContent>

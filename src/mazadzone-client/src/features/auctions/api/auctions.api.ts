@@ -19,14 +19,16 @@
 import type {
   AuctionSummary,
   AuctionCategory,
+  AuctionSubcategory,
   AuctionFilters,
   AuctionSortBy,
   PaginatedResponse,
 } from "../types/auction.types";
 import { AuctionStatus, AuctionSortBy as SortByValues } from "../types/auction.types";
+import { api } from "@/lib/api/client";
 
 import {
-  mockAuctions,
+  getMockAuctions,
   getMockAuctionById,
 } from "../testing/mock-auctions";
 
@@ -54,11 +56,19 @@ export async function fetchActiveAuctions(
 ): Promise<PaginatedResponse<AuctionSummary>> {
   await simulateDelay();
 
+  /**
+   * --- REAL API CALL (Uncomment when backend is ready) ---
+   * const { data } = await api.get<PaginatedResponse<AuctionSummary>>("/auctions", { 
+   *   params: filters 
+   * });
+   * return data;
+   */
+
   const page = filters?.page || 1;
   const pageSize = filters?.pageSize || 12;
 
   // If status filter is provided, use it. Otherwise, default to ACTIVE.
-  let results = mockAuctions;
+  let results = getMockAuctions();
   
   if (filters?.status) {
     results = results.filter((a) => a.status === filters.status);
@@ -134,6 +144,13 @@ export async function fetchAuctionById(
   id: string,
 ): Promise<AuctionSummary | undefined> {
   await simulateDelay();
+
+  /**
+   * --- REAL API CALL (Uncomment when backend is ready) ---
+   * const { data } = await api.get<AuctionSummary>(`/auctions/${id}`);
+   * return data;
+   */
+
   return getMockAuctionById(id);
 }
 
@@ -146,6 +163,27 @@ export async function fetchAuctionsByCategory(
   category: AuctionCategory,
 ): Promise<PaginatedResponse<AuctionSummary>> {
   return fetchActiveAuctions({ category });
+}
+
+/**
+ * Fetches bid history for a specific auction.
+ * Bid history is embedded directly on the AuctionSummary object.
+ *
+ * TODO: Replace with: `api.get<BidHistoryEntry[]>(`/auctions/${auctionId}/bids`)`
+ */
+export async function fetchBidHistory(
+  auctionId: string
+): Promise<import("../types/auction.types").BidHistoryEntry[]> {
+  await simulateDelay();
+
+  /**
+   * --- REAL API CALL (Uncomment when backend is ready) ---
+   * const { data } = await api.get<import("../types/auction.types").BidHistoryEntry[]>(`/auctions/${auctionId}/bids`);
+   * return data;
+   */
+
+  const auction = getMockAuctionById(auctionId);
+  return auction?.bidHistory ?? [];
 }
 
 /**
@@ -163,6 +201,59 @@ export async function fetchClosingSoonAuctions(
   return response.items;
 }
 
+/**
+ * Fetches similar auctions based on category/subcategory.
+ * Priority: 
+ * 1. Subcategory (if not "Others")
+ * 2. Category
+ */
+export async function fetchSimilarAuctions(
+  auctionId: string,
+  category: AuctionCategory,
+  subcategory: AuctionSubcategory,
+  limit: number = 4
+): Promise<AuctionSummary[]> {
+  await simulateDelay();
+
+  /**
+   * --- REAL API CALL (Uncomment when backend is ready) ---
+   * const data = await api.get<AuctionSummary[]>(`/auctions/${auctionId}/similar`, { 
+   *   params: { limit } 
+   * });
+   * return data;
+   */
+
+  // --- MOCK IMPLEMENTATION ---
+  const useCategoryOnly = subcategory === "Others";
+  const allAuctions = getMockAuctions();
+  
+  let results = allAuctions.filter((a) => {
+    // Exclude current auction and must be active
+    if (a.id === auctionId || a.status !== AuctionStatus.ACTIVE) return false;
+
+    if (useCategoryOnly) {
+      return a.category === category;
+    } else {
+      return a.subcategory === subcategory;
+    }
+  });
+
+  // If subcategory search yielded less than limit, fallback to category for more items
+  if (!useCategoryOnly && results.length < limit) {
+    const categoryFallbacks = allAuctions.filter((a) => {
+      return (
+        a.id !== auctionId && 
+        a.status === AuctionStatus.ACTIVE && 
+        a.category === category &&
+        !results.some(r => r.id === a.id)
+      );
+    });
+    results = [...results, ...categoryFallbacks];
+  }
+
+  return results.slice(0, limit);
+}
+
 
 
 // ---------------------------------------------------------------------------
@@ -178,17 +269,15 @@ function sortAuctions(
 
   const getPrice = (a: AuctionSummary) =>
     a.pricing.currentBid ?? a.pricing.startingPrice;
-  const getTime = (date: string) => new Date(date).getTime();
+  const getTime = (date: string | Date) => new Date(date).getTime();
 
   const strategy: Record<AuctionSortBy, (a: AuctionSummary, b: AuctionSummary) => number> = {
     [SortByValues.CREATION_DATE]: (a, b) =>
-      getTime(a.timing.createdAt) - getTime(b.timing.createdAt),
+      getTime(a.timing.creationDate) - getTime(b.timing.creationDate),
     [SortByValues.PRICE]: (a, b) =>
       getPrice(a) - getPrice(b),
     [SortByValues.START_TIME]: (a, b) =>
-      getTime(a.timing.createdAt) - getTime(b.timing.createdAt),
-    [SortByValues.START_AMOUNT]: (a, b) =>
-      a.pricing.startingPrice - b.pricing.startingPrice,
+      getTime(a.timing.startDate) - getTime(b.timing.startDate),
     [SortByValues.END_TIME]: (a, b) =>
       getTime(a.timing.endDate) - getTime(b.timing.endDate),
   };

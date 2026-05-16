@@ -5,6 +5,8 @@ export {
   useGetAuctionById,
   useGetAuctionsByCategory,
   useGetClosingSoonAuctions,
+  useGetBidHistory,
+  useGetSimilarAuctions,
 } from "./auction.queries";
 
 // Mutations

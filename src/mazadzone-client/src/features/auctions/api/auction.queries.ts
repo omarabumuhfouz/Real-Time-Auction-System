@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type {
   AuctionSummary,
   AuctionCategory,
+  AuctionSubcategory,
   AuctionFilters,
   PaginatedResponse,
 } from "../types/auction.types";
@@ -12,6 +13,8 @@ import {
   fetchAuctionById,
   fetchAuctionsByCategory,
   fetchClosingSoonAuctions,
+  fetchBidHistory,
+  fetchSimilarAuctions,
 } from "./auctions.api";
 
 // --- Query Keys --------------------------------------------------
@@ -27,9 +30,9 @@ export const auctionKeys = {
     [...auctionKeys.lists(), filters ?? {}] as const,
   details: () => [...auctionKeys.all, "detail"] as const,
   detail: (id: string) => [...auctionKeys.details(), id] as const,
-  categories: () => [...auctionKeys.all, "category"] as const,
   category: (category: AuctionCategory) =>
-    [...auctionKeys.categories(), category] as const,
+    [...auctionKeys.all, "category", category] as const,
+  bids: (id: string) => [...auctionKeys.detail(id), "bids"] as const,
 };
 
 // --- Query Hooks -------------------------------------------------
@@ -75,6 +78,33 @@ export function useGetClosingSoonAuctions(limit: number = 4) {
   return useQuery<AuctionSummary[]>({
     queryKey: [...auctionKeys.all, "closing-soon", limit],
     queryFn: () => fetchClosingSoonAuctions(limit),
+  });
+}
+
+/**
+ * Hook to get bid history for a specific auction.
+ */
+export function useGetBidHistory(auctionId: string) {
+  return useQuery({
+    queryKey: auctionKeys.bids(auctionId),
+    queryFn: () => fetchBidHistory(auctionId),
+    enabled: !!auctionId,
+  });
+}
+
+/**
+ * Hook to get similar auctions.
+ */
+export function useGetSimilarAuctions(
+  auctionId: string,
+  category: AuctionCategory,
+  subcategory: AuctionSubcategory,
+  limit: number = 4
+) {
+  return useQuery<AuctionSummary[]>({
+    queryKey: [...auctionKeys.all, "similar", auctionId, category, subcategory, limit],
+    queryFn: () => fetchSimilarAuctions(auctionId, category, subcategory, limit),
+    enabled: !!auctionId && !!category,
   });
 }
 

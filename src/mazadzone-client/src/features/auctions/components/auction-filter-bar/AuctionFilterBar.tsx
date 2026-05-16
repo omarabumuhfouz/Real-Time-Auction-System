@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Tag, Layers, Clock, Sparkles } from "lucide-react";
+import { Tag, Layers, Calendar, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -44,7 +44,7 @@ export function AuctionFilterBar({
     initialFilters.status || AuctionStatus.ACTIVE,
   );
   const [sortBy, setSortBy] = useState<string>(
-    initialFilters.sortBy || AuctionSortBy.PRICE,
+    initialFilters.sortBy || AuctionSortBy.CREATION_DATE,
   );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
     initialFilters.sortDirection || "desc",
@@ -58,7 +58,7 @@ export function AuctionFilterBar({
     setSubcategory(initialFilters.subcategory || "all");
     setCondition(initialFilters.condition || "all");
     setStatus(initialFilters.status || AuctionStatus.ACTIVE);
-    setSortBy(initialFilters.sortBy || AuctionSortBy.PRICE);
+    setSortBy(initialFilters.sortBy || AuctionSortBy.CREATION_DATE);
     setSortDirection(initialFilters.sortDirection || "desc");
   }, [
     initialFilters.search,
@@ -132,7 +132,7 @@ export function AuctionFilterBar({
       case AuctionStatus.ACTIVE:
         return { bg: "bg-green-500/10", icon: "text-green-600", text: "text-green-700" };
       case AuctionStatus.UPCOMING:
-        return { bg: "bg-blue-500/10", icon: "text-blue-600", text: "text-blue-700" };
+        return { bg: "bg-upcoming", icon: "text-upcoming-foreground", text: "text-upcoming-foreground" };
       case AuctionStatus.ENDED:
         return { bg: "bg-destructive/10", icon: "text-destructive", text: "text-destructive" };
       default:
@@ -190,7 +190,7 @@ export function AuctionFilterBar({
         />
 
         <AuctionSelectFilter
-          icon={Clock}
+          icon={Calendar}
           placeholder="Status"
           value={status}
           onValueChange={setStatus}
