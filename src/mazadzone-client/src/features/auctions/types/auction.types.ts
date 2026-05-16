@@ -1,9 +1,7 @@
 /**
  * Auction-specific TypeScript types and enums.
- *
- * These types represent the domain model for the auction feature.
- * Keep them in sync with the backend DTOs.
  */
+import type { AuthUser } from "@/stores/auth.store";
 
 // --- Enums -------------------------------------------------------
 
@@ -42,6 +40,7 @@ export const AuctionSubcategory = {
   // Home
   FURNITURE: "Furniture",
   DECOR: "Decor",
+  OTHERS: "Others",
 } as const;
 
 export type AuctionSubcategory =
@@ -58,10 +57,9 @@ export type AuctionCondition =
   (typeof AuctionCondition)[keyof typeof AuctionCondition];
 
 export const AuctionSortBy = {
-  CREATION_DATE: "CreationDate",
+  CREATION_DATE: "creationDate",
   PRICE: "Price",
   START_TIME: "StartTime",
-  START_AMOUNT: "StartAmount",
   END_TIME: "EndTime",
 } as const;
 
@@ -81,8 +79,8 @@ export interface Auction {
   startingPrice: number;
   currentBid: number | null;
   bidCount: number;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
 
   seller: {
     id: string;
@@ -90,7 +88,7 @@ export interface Auction {
     avatarUrl: string | null;
   };
 
-  createdAt: string;
+  creationDate: string;
   updatedAt: string;
 }
 
@@ -117,13 +115,36 @@ export interface AuctionSummary {
   };
 
   timing: {
-    endDate: string;
-    createdAt: string;
+    startDate: Date;
+    endDate: Date;
+    creationDate: string;
   };
 
   isFavorite: boolean;
   isOwner: boolean;
+
+  /** Gallery images — primary image is always first. Between 1 and 20 items. */
+  images: string[];
+  /** Pre-loaded bid history for this auction. Empty array if no bids yet. */
+  bidHistory: BidHistoryEntry[];
 }
+
+export interface BidHistoryEntry {
+  id: string;
+  bidderName: string;
+  bidderInitial: string;
+  amount: number;
+  timeAgo: string;
+  isHighest: boolean;
+}
+
+export interface Seller extends AuthUser {
+  isVerified: boolean;
+  avatarInitial: string;
+  reviews: number;
+  rating: number;
+}
+
 
 // --- Component Props ---------------------------------------------
 
