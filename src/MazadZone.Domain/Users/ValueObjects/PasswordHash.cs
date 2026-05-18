@@ -1,5 +1,4 @@
-namespace MazadZone.Domain.Users;
-
+namespace MazadZone.Domain.Users.ValueObjects;
 
 public sealed record PasswordHash
 {

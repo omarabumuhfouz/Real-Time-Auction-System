@@ -1,4 +1,4 @@
-namespace MazadZone.Domain.Users;
+namespace MazadZone.Domain.Users.ValueObjects;
 
 using System.Text.RegularExpressions;
 using AuthService.Domain.Constants;

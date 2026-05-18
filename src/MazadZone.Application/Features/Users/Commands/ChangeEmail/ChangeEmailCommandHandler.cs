@@ -1,6 +1,6 @@
 using MazadZone.Domain.Repositories;
-using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.Errors;
+using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Features.Users.ChangeEmail;
 
 namespace MazadZone.Application.Features.Users.Commands.ChangeEmail;

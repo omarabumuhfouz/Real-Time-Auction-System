@@ -7,6 +7,7 @@ using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;
 

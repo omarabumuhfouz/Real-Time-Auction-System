@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

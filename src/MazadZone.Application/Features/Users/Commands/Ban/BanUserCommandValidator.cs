@@ -9,6 +9,5 @@ public class BanUserCommandValidator : AbstractValidator<BanUserCommand>
         RuleFor(x => x.UserId).MustBeValidUserId();
 
         RuleFor(x => x.Reason).MustBeValidReason();
-
     }
 }
