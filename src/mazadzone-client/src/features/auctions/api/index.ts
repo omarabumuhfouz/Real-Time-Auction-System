@@ -18,4 +18,6 @@ export {
   fetchAuctionById,
   fetchAuctionsByCategory,
   fetchClosingSoonAuctions,
+  createAuctionApi,
+  updateAuctionApi,
 } from "./auctions.api";
