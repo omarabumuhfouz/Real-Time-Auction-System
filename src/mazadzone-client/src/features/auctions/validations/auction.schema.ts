@@ -73,39 +73,48 @@ export const createAuctionSchema = z
       .string()
       .min(3, "Shipping location is required"),
 
-    startDate: z.string().min(1, "Start date is required"),
-    endDate: z.string().min(1, "End date is required"),
+    startDate: z
+      .string()
+      .min(1, "Start date is required")
+      .refine(
+        (val) => {
+          const start = new Date(val);
+          if (isNaN(start.getTime())) return true; // Skip if invalid format (let other validations catch)
+          const now = new Date();
+          now.setMinutes(now.getMinutes() - 1);
+          return start >= now;
+        },
+        { message: "Start date and time must be in the future" }
+      ),
+
+    endDate: z
+      .string()
+      .min(1, "End date is required"),
     
     images: z
       .array(z.any())
       .min(1, "At least one auction image is required")
       .max(10, "You can upload up to 10 images"),
   })
+  // Comparison validation between start and end dates
   .refine(
     (data) => {
-      if (!data.startDate || !data.endDate) return true;
+      if (!data.startDate || data.startDate.trim() === "" || !data.endDate || data.endDate.trim() === "") {
+        return true; // Handle required checks at field level
+      }
+
       const start = new Date(data.startDate);
       const end = new Date(data.endDate);
-      return !isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start;
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return true;
+      }
+
+      return end > start;
     },
     {
       message: "End date and time must be after the start date and time",
       path: ["endDate"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (!data.startDate) return true;
-      const start = new Date(data.startDate);
-      if (isNaN(start.getTime())) return false;
-      const now = new Date();
-      // 1-minute buffer for form latency
-      now.setMinutes(now.getMinutes() - 1);
-      return start >= now;
-    },
-    {
-      message: "Start date and time must be in the future",
-      path: ["startDate"],
     }
   );
 
