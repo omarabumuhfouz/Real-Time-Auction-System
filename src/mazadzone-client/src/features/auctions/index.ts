@@ -12,6 +12,7 @@ export { AuctionCard, AuctionCardSkeleton, CountdownTimer } from "./components/a
 export { AuctionFilterBar } from "./components/auction-filter-bar";
 export { ClosingSoonSection, HomeHero } from "./components/Home-Sections";
 export { CreateAuctionPage } from "./components/create-auction/CreateAuctionPage";
+export { EditAuctionPage } from "./components/edit-auction/EditAuctionPage";
 
 // TanStack Query hooks
 export {

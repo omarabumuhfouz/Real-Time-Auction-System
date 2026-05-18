@@ -185,8 +185,15 @@ export interface UpdateAuctionInput {
   title?: string;
   description?: string;
   category?: AuctionCategory;
+  subcategory?: AuctionSubcategory;
+  condition?: AuctionCondition;
+  conditionDescription?: string;
+  startingPrice?: number;
+  minimumIncrement?: number;
+  shippingLocation?: string;
   startDate?: string;
   endDate?: string;
+  images?: (string | File)[];
 }
 
 // --- Filter Types ------------------------------------------------

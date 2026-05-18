@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Upload, X } from "lucide-react";
 
-interface ImagePreview {
+export interface ImagePreview {
   id: string;
   url: string;
-  file: File;
+  file?: File;
 }
 
 interface AuctionImageUploaderProps {
