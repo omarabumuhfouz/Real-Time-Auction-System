@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search, Gavel, Package, Bell, User, ChevronDown, LayoutDashboard } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ export interface DesktopHeaderProps {
   handleCategoryClick: (category: string) => void;
   handleSellClick: () => void;
   isSeller: boolean;
+  pathname: string;
 }
 
 export const DesktopHeader = ({
@@ -34,6 +36,7 @@ export const DesktopHeader = ({
   handleCategoryClick,
   handleSellClick,
   isSeller,
+  pathname,
 }: DesktopHeaderProps) => {
   const user = useAuthStore((state) => state.user);
   const { data: unreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
@@ -71,12 +74,12 @@ export const DesktopHeader = ({
               </div>
             ) : (
               <>
-                <Link href={ROUTES.BIDDING.MY_BIDS} className="hidden lg:flex items-center gap-2 text-xl font-medium hover:text-primary transition-colors">
+                <Link href={ROUTES.BIDDING.MY_BIDS} className={cn("hidden lg:flex items-center gap-2 text-xl font-medium transition-colors hover:text-primary", pathname === ROUTES.BIDDING.MY_BIDS ? "text-primary" : "")}>
                   <Gavel className="h-7 w-7" />
                   My Bids
                 </Link>
 
-                <Link href={ROUTES.ORDERS.LIST} className="hidden lg:flex items-center gap-2 text-xl font-medium hover:text-primary transition-colors">
+                <Link href={ROUTES.ORDERS.LIST} className={cn("hidden lg:flex items-center gap-2 text-xl font-medium transition-colors hover:text-primary", pathname === ROUTES.ORDERS.LIST ? "text-primary" : "")}>
                   <Package className="h-7 w-7" />
                   My Orders
                 </Link>
