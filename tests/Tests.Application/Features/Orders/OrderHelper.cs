@@ -75,6 +75,14 @@ public static class OrderHelper
         return order;
     }
 
+public static Order CreateOrderWithFeedback()
+    {
+        var order = CreateDeliveredOrder();
+
+        order.AddFeedback(5, "Great seller Testing!");
+        return order;
+    }
+
     /// <summary>
     /// Centralizes the creation of a dummy FeedbackLeftDomainEvent for testing purposes.
     /// </summary>

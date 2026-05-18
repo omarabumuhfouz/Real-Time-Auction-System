@@ -7,14 +7,14 @@ public static class Deliver
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{id:guid}/deliver", DeliverOrderAsync)
+        app.MapPost("/{id:guid}/deliver", HandleAsync)
            .WithTags("Order Commands")
            .WithSummary("Delivers an Order")
            .Produces(StatusCodes.Status204NoContent)
            .Produces(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<IResult> DeliverOrderAsync(
+    private static async Task<IResult> HandleAsync(
         OrderId id,
         [FromServices] ISender sender,
         CancellationToken ct)

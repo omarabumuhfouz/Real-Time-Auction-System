@@ -156,7 +156,9 @@ public static partial class MazadLogEvents
         // SearchOrders: 3085
         public const int SearchingOrders = 3085;
 
-        
+ public const int ReplyToFeedbackAttempt = 3090;
+    public const int ReplyToFeedbackDomainViolation = 3091;
+    public const int ReplyToFeedbackSuccess = 3092;       
 
     }
 
