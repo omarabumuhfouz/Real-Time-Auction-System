@@ -43,6 +43,15 @@ All colors use the OKLCH color space. They are defined as CSS custom properties 
 | `--muted` | `oklch(0.9683 0.0069 247.9)` | `bg-muted` | Disabled/muted backgrounds |
 | `--muted-foreground` | `oklch(0.5544 0.0407 257.42)` | `text-muted-foreground` | Secondary text, placeholders, captions |
 
+### Semantic Status Palette
+
+| Token | OKLCH Value | Tailwind Class | Usage |
+|---|---|---|---|
+| `--success` | `oklch(0.9624 0.0434 156.74)` | `bg-success` / `text-success-foreground` | Success states, Delivered or Leading status backgrounds/text |
+| `--info` | `oklch(0.9319 0.0316 255.59)` | `bg-info` / `text-info-foreground` | Information surfaces, Shipped or Transit status backgrounds/text |
+| `--warning` | `oklch(0.9365 0.032 17.74)` | `bg-warning` / `text-warning-foreground` | Warnings/alerts, Outbid or Cancelled status backgrounds/text |
+| `--upcoming` | `oklch(0.9677 0.0827 104.13)` | `bg-upcoming` / `text-upcoming-foreground` | Upcoming actions, Pending checkout status backgrounds/text |
+
 ### Interactive & Structural
 
 | Token | OKLCH Value | Tailwind Class | Usage |
