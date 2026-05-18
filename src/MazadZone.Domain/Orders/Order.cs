@@ -24,6 +24,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
         string depositCaptureTransactionId) : base(id)
     {
         BidderId = bidderId;
+        AuctionId = auctionId;
         WinningBidId = winningBidId;
         ReceiptAddress = receiptAddressId;
         TotalAmount = totalAmount;
@@ -222,7 +223,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
         var replyResult = Feedback.AddReply(replyText);
         if (replyResult.IsFailure) return replyResult.TopError;
 
-        RaiseDomainEvent(new FeedbackRepliedDomainEvent(Id, Feedback.Id));
+        RaiseDomainEvent(new FeedbackRepliedDomainEvent(Id, BidderId));
 
         return Result.Success();
     }

@@ -1,3 +1,5 @@
+using MazadZone.Application.Features.Orders.Commands.ReplyToFeedback;
+
 namespace MazadZone.Api.Endpoints.Orders;
 
 public static class OrderEndpoints
@@ -21,6 +23,7 @@ public static class OrderEndpoints
         OpenDispute.MapEndpoint(orderGroup);
         ResolveDispute.MapEndpoint(orderGroup);
         AddFeedback.MapEndpoint(orderGroup);
+        ReplyToFeedback.MapEndpoint(orderGroup);
 
         GetDetails.MapEndpoint(orderGroup);
         Search.MapEndpoint(orderGroup);

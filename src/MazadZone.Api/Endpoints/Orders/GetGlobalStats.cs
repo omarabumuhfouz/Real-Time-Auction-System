@@ -7,14 +7,14 @@ public static class GetGlobalStats
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/stats/global", GetGlobalStatsAsync)
+        app.MapGet("/stats/global", HandleAsync)
            .WithTags("Order Queries")
            .WithName("GetGlobalStats")
            .Produces<AdminGlobalStatsDto>(StatusCodes.Status200OK)
            .RequireAuthorization("AdminOnly");
     }
 
-    private static async Task<IResult> GetGlobalStatsAsync(
+    private static async Task<IResult> HandleAsync(
         ISender sender,
         CancellationToken ct)
     {

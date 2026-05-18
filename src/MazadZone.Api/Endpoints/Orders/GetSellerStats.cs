@@ -8,13 +8,13 @@ public static class GetSellerStats
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/stats/seller/{sellerId:guid}", GetSellerStatsAsync)
+        app.MapGet("/stats/seller/{sellerId:guid}", HandleAsync)
            .WithTags("Order Queries")
            .WithName("GetSellerStats")
            .Produces<SellerOrderStatsDto>(StatusCodes.Status200OK);
     }
 
-    private static async Task<IResult> GetSellerStatsAsync(
+    private static async Task<IResult> HandleAsync(
         SellerId sellerId,
         ISender sender,
         CancellationToken ct)
