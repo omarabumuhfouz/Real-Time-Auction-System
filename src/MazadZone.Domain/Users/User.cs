@@ -1,4 +1,4 @@
-using MazadZone.Domain.Users.Entities;
+using System.Reflection.Metadata.Ecma335;
 using MazadZone.Domain.Users.Errors;
 using MazadZone.Domain.Users.Events;
 using MazadZone.Domain.Users.ValueObjects;
@@ -142,9 +142,11 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     /// </summary>
     public Result Activate()
     {
+
+        if (Status == UserStatus.Active) return Result.Success();    
+
         if (Status == UserStatus.Banned) return UserErrors.CannotActivateBannedUser;
 
-        if (Status == UserStatus.Active) return UserErrors.AlreadyActive;
 
         Status = UserStatus.Active;
         SuspensionUntil = null;
@@ -158,8 +160,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     {
 
         // Architect Rule: If user is Banned, they cannot get new tokens
-        if (Status == UserStatus.Banned)
-            return UserErrors.CannotAuthenticateBannedUser;
+        if (Status == UserStatus.Banned) return UserErrors.CannotAuthenticateBannedUser;
 
         if (Status == UserStatus.Suspended)
         {
@@ -193,7 +194,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
             RevokeAllRefreshTokens();
         }
 
-        var token = _hashedRefreshTokens.FirstOrDefault(t => t.Token == hashedToken && t.IsExpired);
+        var token = _hashedRefreshTokens.FirstOrDefault(t => t.Token == hashedToken && !t.IsExpired);
 
         // If not found, we don't error; the goal of invalidation is already met.
         token?.Revoke();
@@ -261,6 +262,13 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         if (Roles.Contains(UserRole.Seller)) return;
 
         Roles.Add(UserRole.Seller);
+    }
+
+    public void AddBidderRole()
+    {
+        if (Roles.Contains(UserRole.Bidder)) return;
+
+        Roles.Add(UserRole.Bidder);
     }
 
     public void RemoveRole(UserRole role)

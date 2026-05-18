@@ -4,7 +4,6 @@ using MazadZone.Domain.Categories;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Users;
-using MazadZone.Domain.Users.Entities;
 using MazadZone.Infrastructure.Authentication;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,17 +1,11 @@
-using System.Linq;
 using AuthService.Domain.Constants;
 using MazadZone.Domain.Users.Errors;
 
-namespace MazadZone.Domain.ValueObjects;
+namespace MazadZone.Domain.Users.ValueObjects;
 
 public record PhoneNumber
 {
-
-    #pragma warning disable CS8618 
-    #pragma warning disable CS0519
     private PhoneNumber() { } 
-    #pragma warning restore CS8618
-
 
     private PhoneNumber(string value)
         => Value = value;

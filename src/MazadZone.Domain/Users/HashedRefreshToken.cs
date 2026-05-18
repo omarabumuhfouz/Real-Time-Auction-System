@@ -1,5 +1,5 @@
 using MazadZone.Domain.Users.ValueObjects;
-namespace MazadZone.Domain.Users.Entities; 
+namespace MazadZone.Domain.Users; 
 
 public class HashedRefreshToken : Entity<HashedRefreshTokenId>
 {

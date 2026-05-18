@@ -1,7 +1,7 @@
 
 using MazadZone.Application.Features.Auctions.Queries.GetAuctionById;
 using MazadZone.Domain.Shared.ValueObjects;
-using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Services;
 
