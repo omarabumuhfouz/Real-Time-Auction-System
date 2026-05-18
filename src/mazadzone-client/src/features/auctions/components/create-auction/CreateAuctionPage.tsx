@@ -55,6 +55,7 @@ export function CreateAuctionPage() {
 
   const methods = useForm<CreateAuctionFormValues>({
     resolver: zodResolver(createAuctionSchema),
+    mode: "onSubmit",
     defaultValues: {
       title: "",
       description: "",
