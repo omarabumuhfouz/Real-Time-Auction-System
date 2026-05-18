@@ -32,7 +32,7 @@ export function SellerInfo({ seller }: SellerInfoProps) {
                 </div>
               )}
               <div className="flex items-center gap-2 text-[11px] text-foreground font-bold">
-                <Mail className="size-3 flex-shrink-0 text-muted-foreground" />
+                <Mail className="size-3 shrink-0 text-muted-foreground" />
                 <span>{seller.email}</span>
               </div>
             </div>

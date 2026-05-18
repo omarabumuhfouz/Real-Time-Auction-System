@@ -29,7 +29,7 @@ export function AuctionSortControls({
     <div className="flex items-center gap-3">
       <div className="flex items-center">
         <Select value={sortBy} onValueChange={onSortByChange}>
-          <SelectTrigger className="!w-52 !h-14 bg-card border-primary/20 hover:border-primary/40 rounded-xl px-4 flex items-center justify-between group transition-all shadow-sm">
+          <SelectTrigger className="w-52! h-14! bg-card border-primary/20 hover:border-primary/40 rounded-xl px-4 flex items-center justify-between group transition-all shadow-sm">
             <div className="flex flex-col items-start gap-0">
               <span className="text-[10px] uppercase tracking-wider font-bold text-primary/80 mb-0.5">
                 Sort By

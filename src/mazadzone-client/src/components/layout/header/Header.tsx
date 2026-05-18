@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ROUTES } from "@/config/routes.config";
 import { useAuthStore } from "@/stores/auth.store";
 import { DesktopHeader, DesktopBottomRow } from "./DesktopHeader";
@@ -16,6 +16,7 @@ import { MobileHeader } from "./MobileHeader";
  */
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
 
   // Auth state
   let { isAuthenticated, user, logout } = useAuthStore();
@@ -76,6 +77,7 @@ export function Header() {
           handleCategoryClick={handleCategoryClick}
           handleSellClick={handleSellClick}
           isSeller={isSeller}
+          pathname={pathname}
         />
 
         {/* Mobile View Components */}
@@ -90,6 +92,7 @@ export function Header() {
           handleCategoryClick={handleCategoryClick}
           handleSellClick={handleSellClick}
           logout={logout}
+          pathname={pathname}
         />
       </div>
 
