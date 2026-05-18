@@ -12,8 +12,30 @@ export function useCreateAuction() {
 
   return useMutation({
     mutationFn: (input: CreateAuctionInput) => {
-      // TODO: Handle multipart form data for image uploads
-      return api.post<Auction>("/auctions", input);
+      const formData = new FormData();
+      formData.append("title", input.title);
+      formData.append("description", input.description);
+      formData.append("category", input.category);
+      formData.append("subcategory", input.subcategory);
+      formData.append("condition", input.condition);
+      if (input.conditionDescription) {
+        formData.append("conditionDescription", input.conditionDescription);
+      }
+      formData.append("startingPrice", input.startingPrice.toString());
+      formData.append("minimumIncrement", input.minimumIncrement.toString());
+      formData.append("shippingLocation", input.shippingLocation);
+      formData.append("startDate", input.startDate);
+      formData.append("endDate", input.endDate);
+
+      input.images.forEach((image) => {
+        formData.append("images", image);
+      });
+
+      return api.post<Auction>("/auctions", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: auctionKeys.lists() });

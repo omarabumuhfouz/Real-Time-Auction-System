@@ -19,7 +19,8 @@ export function Header() {
   const pathname = usePathname();
 
   // Auth state
-  let { isAuthenticated, user, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  let { isAuthenticated } = useAuthStore();
 
   // NOTE: Hardcoded for testing by user.
   // In production, this should use user?.role and isAuthenticated from the store.
@@ -33,7 +34,10 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleCategoryClick = (category: string) => {

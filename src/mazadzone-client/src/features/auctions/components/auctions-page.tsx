@@ -27,7 +27,7 @@ export function AuctionsPage() {
   const pathname = usePathname();
 
   const filters = useMemo<AuctionFilters>(() => {
-    const f: any = {};
+    const f: Record<string, string | number> = {};
     searchParams.forEach((value, key) => {
       if (value) {
         const num = Number(value);

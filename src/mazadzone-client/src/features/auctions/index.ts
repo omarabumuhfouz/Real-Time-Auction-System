@@ -11,6 +11,7 @@ export { AuctionDetailPage } from "./components/auction-detail";
 export { AuctionCard, AuctionCardSkeleton, CountdownTimer } from "./components/auction-card";
 export { AuctionFilterBar } from "./components/auction-filter-bar";
 export { ClosingSoonSection, HomeHero } from "./components/Home-Sections";
+export { CreateAuctionPage } from "./components/create-auction/CreateAuctionPage";
 
 // TanStack Query hooks
 export {
@@ -60,3 +61,7 @@ export {
   isAuctionEditable,
   getAuctionStatusLabel,
 } from "./utils/auction.utils";
+
+// Validations
+export { createAuctionSchema } from "./validations/auction.schema";
+export type { CreateAuctionFormValues } from "./validations/auction.schema";
