@@ -150,7 +150,7 @@ export function CreateAuctionPage() {
       setTimeout(() => {
         router.push(ROUTES.SELLER.AUCTIONS);
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn("Backend creation failed, running premium testing simulation...", err);
 
       // Simulate successful local testing workflow

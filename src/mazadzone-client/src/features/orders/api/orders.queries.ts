@@ -3,7 +3,10 @@ import { fetchMyOrders } from "./orders.api";
 
 export const ORDERS_KEYS = {
   all: ["orders"] as const,
-  myOrders: (userId: string, params: any) => [...ORDERS_KEYS.all, "my-orders", userId, params] as const,
+  myOrders: (
+    userId: string,
+    params: { filter?: string; sortBy?: string; page?: number; pageSize?: number }
+  ) => [...ORDERS_KEYS.all, "my-orders", userId, params] as const,
 };
 
 /**

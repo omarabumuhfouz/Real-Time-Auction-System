@@ -52,14 +52,17 @@ export function AuctionFilterBar({
 
   // Sync internal state with initialFilters
   useEffect(() => {
-    setSearch(initialFilters.search || "");
-    setPriceRange([initialFilters.minPrice ?? 20, initialFilters.maxPrice ?? 5000]);
-    setCategory(initialFilters.category || "all");
-    setSubcategory(initialFilters.subcategory || "all");
-    setCondition(initialFilters.condition || "all");
-    setStatus(initialFilters.status || AuctionStatus.ACTIVE);
-    setSortBy(initialFilters.sortBy || AuctionSortBy.CREATION_DATE);
-    setSortDirection(initialFilters.sortDirection || "desc");
+    const timer = setTimeout(() => {
+      setSearch(initialFilters.search || "");
+      setPriceRange([initialFilters.minPrice ?? 20, initialFilters.maxPrice ?? 5000]);
+      setCategory(initialFilters.category || "all");
+      setSubcategory(initialFilters.subcategory || "all");
+      setCondition(initialFilters.condition || "all");
+      setStatus(initialFilters.status || AuctionStatus.ACTIVE);
+      setSortBy(initialFilters.sortBy || AuctionSortBy.CREATION_DATE);
+      setSortDirection(initialFilters.sortDirection || "desc");
+    }, 0);
+    return () => clearTimeout(timer);
   }, [
     initialFilters.search,
     initialFilters.minPrice,

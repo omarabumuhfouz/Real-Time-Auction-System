@@ -21,7 +21,7 @@ const formatPriceOnBlur = (val: string): string => {
   if (!val) return "";
   
   // Clean all non-digit and non-dot characters
-  let cleanVal = val.replace(/[^0-9.]/g, "");
+  const cleanVal = val.replace(/[^0-9.]/g, "");
   
   let [integerPart, decimalPart] = cleanVal.split(".");
   

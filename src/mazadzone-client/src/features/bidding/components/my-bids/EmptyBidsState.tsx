@@ -19,7 +19,7 @@ export function EmptyBidsState() {
       </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-2">No Bids Yet</h3>
       <p className="text-gray-500 max-w-sm mb-8 text-lg leading-relaxed">
-        You haven't placed any bids on active auctions yet. Discover premium items and place your first bid!
+        You haven&apos;t placed any bids on active auctions yet. Discover premium items and place your first bid!
       </p>
       <Link
         href={ROUTES.AUCTIONS?.LIST || "/auctions"}

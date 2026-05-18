@@ -25,14 +25,17 @@ export function PayoutDrawer({ isOpen, onClose, onSave }: PayoutDrawerProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsMounted(true);
-      document.body.style.overflow = "hidden"; // Disable page scrolling
-    } else {
-      setIsMounted(false);
-      document.body.style.overflow = "unset";
-    }
+    const timer = setTimeout(() => {
+      if (isOpen) {
+        setIsMounted(true);
+        document.body.style.overflow = "hidden"; // Disable page scrolling
+      } else {
+        setIsMounted(false);
+        document.body.style.overflow = "unset";
+      }
+    }, 0);
     return () => {
+      clearTimeout(timer);
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
@@ -73,8 +76,13 @@ export function PayoutDrawer({ isOpen, onClose, onSave }: PayoutDrawerProps) {
   // Client mount check to support SSR/Next.js hydration safety
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      setMounted(false);
+    };
   }, []);
 
   if (!isOpen || !mounted) return null;
