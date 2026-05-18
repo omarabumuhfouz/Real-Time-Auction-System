@@ -16,7 +16,7 @@ export function BidStatusBadge({ status, className }: BidStatusBadgeProps) {
       variant="outline"
       className={cn(
         "rounded-full font-medium border-none w-24 h-8 text-lg flex items-center justify-center shrink-0",
-        isEnded && "bg-gray-100 text-gray-600",
+        isEnded && "bg-muted text-muted-foreground",
         isLeading && "bg-success text-success-foreground",
         isOutbid && "bg-warning text-warning-foreground",
         className

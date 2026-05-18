@@ -17,7 +17,9 @@ interface OrderStatusBadgeProps {
  */
 export function OrderStatusBadge({ status, className }: OrderStatusBadgeProps) {
   const isDelivered = status === "Delivered";
+  const isConfirmed = status === "Confirmed";
   const isShipped = status === "Shipped";
+  const isProcessing = status === "Processing";
   const isPending = status === "Pending";
   const isCancelled = status === "Cancelled";
 
@@ -27,7 +29,9 @@ export function OrderStatusBadge({ status, className }: OrderStatusBadgeProps) {
       className={cn(
         "rounded-full font-medium border-none px-4 h-8 text-sm flex items-center justify-center shrink-0",
         isDelivered && "bg-success text-success-foreground",
+        isConfirmed && "bg-success text-success-foreground",
         isShipped && "bg-info text-info-foreground",
+        isProcessing && "bg-info text-info-foreground",
         isPending && "bg-upcoming text-upcoming-foreground",
         isCancelled && "bg-warning text-warning-foreground",
         className
