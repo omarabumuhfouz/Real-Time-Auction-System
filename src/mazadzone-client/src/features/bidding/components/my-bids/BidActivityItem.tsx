@@ -66,12 +66,12 @@ export function BidActivityItem({ activity }: BidActivityItemProps) {
       </div>
 
       {/* 4. Right: CTA Button */}
-      <ActivityItemActions>
+      <ActivityItemActions className="md:pr-6">
         <Button
           asChild
           variant={isOutbid ? "default" : "secondary"}
           className={cn(
-            "font-semibold rounded-xl text-lg w-52 h-14 cursor-pointer transition-colors",
+            "font-semibold rounded-xl text-lg w-full md:w-48 h-14 cursor-pointer transition-colors",
             isOutbid
               ? "bg-primary text-white hover:bg-primary/90"
               : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-none"

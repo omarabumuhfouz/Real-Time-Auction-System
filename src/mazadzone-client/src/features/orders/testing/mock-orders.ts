@@ -69,8 +69,8 @@ export const MOCK_ORDERS: OrderActivity[] = [
   {
     id: "ord-6",
     orderNumber: "MZ-90312-C",
-    status: "Pending",
-    deliveryStatus: "Processing checkout",
+    status: "Confirmed",
+    deliveryStatus: "Order confirmed by seller",
     finalBid: 110,
     date: "2026-05-01T13:40:00Z",
     auction: {

@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ROUTES } from "@/config/routes.config";
 import { OrderStatusBadge } from "./OrderStatusBadge";
-import { Package } from "lucide-react";
 import { format } from "date-fns";
 import {
   ActivityListItem,
@@ -35,7 +34,8 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
 
   return (
     <ActivityListItem className="py-6">
-      <div className="flex items-center gap-6 w-full md:w-[50%] shrink-0">
+      {/* Column 1: Item Meta Info (55% Width) */}
+      <div className="flex items-center gap-6 w-full md:w-[55%] shrink-0">
         <ActivityItemImage
           src={activity.auction.imageUrl}
           alt={activity.auction.title}
@@ -45,37 +45,38 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
         <ActivityItemMeta
           title={activity.auction.title}
           titleHref={detailHref}
-          className="gap-2"
+          className="gap-1"
           subtitle={
-            <>
-              <span>
-                Final Bid: <span className="font-semibold text-primary">{formatCurrency(activity.finalBid)}</span>
-              </span>
-              <span>
+            <div className="flex flex-col gap-1.5 text-sm md:text-base text-gray-500 w-full">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span>
+                  Final Bid: <span className="font-semibold text-primary">{formatCurrency(activity.finalBid)}</span>
+                </span>
+                <span className="text-gray-300 font-light">|</span>
+                <span>
+                  Date: <span className="font-medium text-gray-700">{format(new Date(activity.date), "MMM dd, yyyy")}</span>
+                </span>
+              </div>
+              <div>
                 Order #: <span className="font-medium text-gray-700">{activity.orderNumber}</span>
-              </span>
-              <span>
-                Date: <span className="font-medium text-gray-700">{format(new Date(activity.date), "MMM dd, yyyy")}</span>
-              </span>
-            </>
+              </div>
+            </div>
           }
         />
       </div>
 
-      <div className="flex justify-start md:justify-center items-center gap-6 w-full md:w-auto md:flex-1 mt-4 md:mt-0">
+      {/* Column 2: Order Status Badge (20% Width) */}
+      <div className="flex justify-start md:justify-center items-center w-full md:w-[20%] shrink-0 mt-4 md:mt-0">
         <OrderStatusBadge status={activity.status} />
-        <div className="flex items-center gap-2 text-gray-500 font-medium">
-          <Package className="h-5 w-5" />
-          <span>{activity.deliveryStatus}</span>
-        </div>
       </div>
 
-      <ActivityItemActions className="mt-4 md:mt-0">
+      {/* Column 3: Action Buttons (25% Width) */}
+      <ActivityItemActions className="mt-4 md:mt-0 w-full md:w-[25%] shrink-0 flex justify-start md:justify-end md:pr-6">
         <Button
           asChild
           variant={isPending ? "default" : "secondary"}
           className={cn(
-            "font-semibold rounded-xl text-lg w-52 h-14 cursor-pointer transition-colors",
+            "font-semibold rounded-xl text-lg w-full md:w-48 h-14 cursor-pointer transition-colors",
             isPending
               ? "bg-primary text-white hover:bg-primary/90"
               : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-none"
