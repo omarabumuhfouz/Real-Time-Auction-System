@@ -19,7 +19,7 @@ export function EmptyOrdersState() {
       </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-2">No Orders Yet</h3>
       <p className="text-gray-500 max-w-sm mb-8 text-lg leading-relaxed">
-        You haven't won any auctions yet. Start bidding to win exciting items!
+        You haven&apos;t won any auctions yet. Start bidding to win exciting items!
       </p>
       <Link
         href={ROUTES.AUCTIONS?.LIST || "/auctions"}

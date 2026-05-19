@@ -32,7 +32,7 @@ export function HomeHero() {
           </div>
 
           <p className="text-xs md:text-sm text-slate-200 max-w-sm leading-relaxed">
-            Access the world's most unique collectibles, rare art, luxury cars,
+            Access the world&apos;s most unique collectibles, rare art, luxury cars,
             fine furniture, and more, all in one place.
           </p>
 

@@ -125,7 +125,7 @@ export const DesktopBottomRow = ({
   isSeller: boolean;
   handleCategoryClick: (category: string) => void;
   handleSellClick: () => void;
-  router: any;
+  router: { push: (path: string) => void };
 }) => {
   return (
     <div className="hidden md:flex mx-auto h-14 max-w-[1408px] items-center justify-between pt-4 ">

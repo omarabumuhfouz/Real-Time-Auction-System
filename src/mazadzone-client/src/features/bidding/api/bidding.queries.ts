@@ -3,7 +3,10 @@ import { fetchMyBids } from "./bidding.api";
 
 export const BIDDING_KEYS = {
   all: ["bidding"] as const,
-  myBids: (userId: string, params: any) => [...BIDDING_KEYS.all, "my-bids", userId, params] as const,
+  myBids: (
+    userId: string,
+    params: { filter?: string; sortBy?: string; page?: number; pageSize?: number }
+  ) => [...BIDDING_KEYS.all, "my-bids", userId, params] as const,
 };
 
 /**

@@ -40,6 +40,15 @@ export const AuctionSubcategory = {
   // Home
   FURNITURE: "Furniture",
   DECOR: "Decor",
+  // Collectibles & Art
+  PAINTINGS: "Paintings",
+  ANTIQUES: "Antiques",
+  SCULPTURES: "Sculptures",
+  // Hobbies & Leisure
+  BOOKS: "Books",
+  MUSICAL_INSTRUMENTS: "Musical Instruments",
+  SPORTS_EQUIPMENT: "Sports Equipment",
+  // Others
   OTHERS: "Others",
 } as const;
 
@@ -161,7 +170,12 @@ export interface CreateAuctionInput {
   title: string;
   description: string;
   category: AuctionCategory;
+  subcategory: AuctionSubcategory;
+  condition: AuctionCondition;
+  conditionDescription?: string;
   startingPrice: number;
+  minimumIncrement: number;
+  shippingLocation: string;
   startDate: string;
   endDate: string;
   images: File[];
@@ -171,8 +185,15 @@ export interface UpdateAuctionInput {
   title?: string;
   description?: string;
   category?: AuctionCategory;
+  subcategory?: AuctionSubcategory;
+  condition?: AuctionCondition;
+  conditionDescription?: string;
+  startingPrice?: number;
+  minimumIncrement?: number;
+  shippingLocation?: string;
   startDate?: string;
   endDate?: string;
+  images?: (string | File)[];
 }
 
 // --- Filter Types ------------------------------------------------

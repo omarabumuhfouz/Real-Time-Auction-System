@@ -203,7 +203,7 @@ export function BecomeSellerPage() {
                 Activate Selling Privileges
               </h2>
               <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                You're just one step away from listing your first auction. MazadZone will use your verified account information.
+                You&apos;re just one step away from listing your first auction. MazadZone will use your verified account information.
               </p>
             </div>
 
@@ -248,7 +248,7 @@ export function BecomeSellerPage() {
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground font-semibold">
                 <Lock className="h-3.5 w-3.5" />
                 <span>
-                  By continuing, you agree to MazadZone's{" "}
+                  By continuing, you agree to MazadZone&apos;s{" "}
                   <a href="#" className="text-primary hover:underline font-bold">
                     Terms of Service
                   </a>{" "}
