@@ -3,8 +3,8 @@ using MazadZone.Application.Features.Authentication.Commands.Login;
 using MazadZone.Application.Features.Authentication.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Repositories;
-using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.Errors;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Users.Commands.Login;
 

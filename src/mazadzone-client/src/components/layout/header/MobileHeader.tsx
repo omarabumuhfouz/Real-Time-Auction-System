@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search, Gavel, Package, User, ChevronDown, LayoutDashboard, Menu, X } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORIES } from "./header.constants";
@@ -18,6 +19,7 @@ export interface MobileHeaderProps {
   handleCategoryClick: (category: string) => void;
   handleSellClick: () => void;
   logout: () => void;
+  pathname: string;
 }
 
 export const MobileHeader = ({
@@ -31,6 +33,7 @@ export const MobileHeader = ({
   handleCategoryClick,
   handleSellClick,
   logout,
+  pathname,
 }: MobileHeaderProps) => {
   const user = useAuthStore((state) => state.user);
   const { data: unreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
@@ -93,18 +96,18 @@ export const MobileHeader = ({
               <div className="grid grid-cols-2 gap-4">
                 <Link
                   href={ROUTES.BIDDING.MY_BIDS}
-                  className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                  className={cn("flex flex-col items-center justify-center p-4 rounded-xl transition-colors", pathname === ROUTES.BIDDING.MY_BIDS ? "bg-white/10 text-primary" : "bg-white/5 hover:bg-white/10 text-white")}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Gavel className="h-6 w-6 text-primary mb-2" />
+                  <Gavel className={cn("h-6 w-6 mb-2", pathname === ROUTES.BIDDING.MY_BIDS ? "text-primary" : "text-gray-400")} />
                   <span className="text-sm font-medium">My Bids</span>
                 </Link>
                 <Link
                   href={ROUTES.ORDERS.LIST}
-                  className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                  className={cn("flex flex-col items-center justify-center p-4 rounded-xl transition-colors", pathname === ROUTES.ORDERS.LIST ? "bg-white/10 text-primary" : "bg-white/5 hover:bg-white/10 text-white")}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Package className="h-6 w-6 text-primary mb-2" />
+                  <Package className={cn("h-6 w-6 mb-2", pathname === ROUTES.ORDERS.LIST ? "text-primary" : "text-gray-400")} />
                   <span className="text-sm font-medium">My Orders</span>
                 </Link>
                 {isSeller && (

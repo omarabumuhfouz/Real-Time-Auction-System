@@ -39,7 +39,6 @@ public class BanUserCommandHandler : ICommandHandler<BanUserCommand, Unit>
             return result.TopError;
         }
 
-        _userRepo.Update(user);
         await _unitOfWork.SaveChangesAsync(ct);
 
         BanUserLogs.LogSuccess(_logger, request.UserId, request.Reason);

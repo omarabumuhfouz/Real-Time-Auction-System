@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ROUTES } from "@/config/routes.config";
 import { useAuthStore } from "@/stores/auth.store";
 import { DesktopHeader, DesktopBottomRow } from "./DesktopHeader";
@@ -16,9 +16,11 @@ import { MobileHeader } from "./MobileHeader";
  */
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
 
   // Auth state
-  let { isAuthenticated, user, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  let { isAuthenticated } = useAuthStore();
 
   // NOTE: Hardcoded for testing by user.
   // In production, this should use user?.role and isAuthenticated from the store.
@@ -32,7 +34,10 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleCategoryClick = (category: string) => {
@@ -49,7 +54,7 @@ export function Header() {
     } else if (role === "seller") {
       router.push(ROUTES.SELLER.CREATE_AUCTION);
     } else {
-      router.push(ROUTES.PROFILE.VIEW);
+      router.push(ROUTES.SELLER.BECOME);
     }
   };
 
@@ -76,6 +81,7 @@ export function Header() {
           handleCategoryClick={handleCategoryClick}
           handleSellClick={handleSellClick}
           isSeller={isSeller}
+          pathname={pathname}
         />
 
         {/* Mobile View Components */}
@@ -90,6 +96,7 @@ export function Header() {
           handleCategoryClick={handleCategoryClick}
           handleSellClick={handleSellClick}
           logout={logout}
+          pathname={pathname}
         />
       </div>
 

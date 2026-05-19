@@ -148,14 +148,14 @@ export function CountdownTimer({
       <div className="flex w-full items-center justify-between">
         {startDate ? (
           <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-            <Play className="size-3 flex-shrink-0" aria-hidden="true" />
+            <Play className="size-3 shrink-0" aria-hidden="true" />
             <span>{format(startDate, "yyyy/MM/dd , hh:mm a")}</span>
           </div>
         ) : (
           <div />
         )}
         <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-          <Flag className="size-3 flex-shrink-0" aria-hidden="true" />
+          <Flag className="size-3 shrink-0" aria-hidden="true" />
           <span>{format(endDate, "yyyy/MM/dd , hh:mm a")}</span>
         </div>
       </div>

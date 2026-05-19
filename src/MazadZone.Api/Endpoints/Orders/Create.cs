@@ -27,7 +27,7 @@ public static class Create
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", CreateOrderAsync)
+        app.MapPost("/", HandleAsync)
            .WithTags("Order Commands")
            .WithSummary("Creates a new Order")
            .WithDescription("Initiates a post-auction order transaction.")
@@ -35,7 +35,7 @@ public static class Create
            .Produces(StatusCodes.Status400BadRequest);
     }
 
-    private static async Task<IResult> CreateOrderAsync(
+    private static async Task<IResult> HandleAsync(
         [FromBody] CreateOrderRequest? request,
         [FromServices] ISender sender,
         CancellationToken ct)

@@ -18,8 +18,8 @@ export function ItemDetailsTab({
   return (
     <div className="flex flex-col">
       {/* Tabs Header */}
-      <div className="flex border-b border-black/40 border-b-2 mb-6">
-        <button className="relative px-4 py-2 text-sm font-bold text-foreground border-b-2 border-primary -mb-[2px] transition-colors">
+      <div className="flex border-black/40 border-b-2 mb-6">
+        <button className="relative px-4 py-2 text-sm font-bold text-foreground border-b-2 border-primary mb-[2px] transition-colors">
           Item Details
         </button>
       </div>

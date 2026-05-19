@@ -1,4 +1,4 @@
-using MazadZone.Domain.Users.Entities;
+using MazadZone.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

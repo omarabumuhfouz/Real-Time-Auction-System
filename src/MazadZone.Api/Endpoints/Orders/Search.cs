@@ -8,13 +8,13 @@ public static class Search
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/search", SearchOrdersAsync)
+        app.MapPost("/search", HandleAsync)
            .WithTags("Order Queries")
            .WithName("SearchOrders")
            .Produces<PagedList<OrderSummaryDto>>(StatusCodes.Status200OK);
     }
 
-    private static async Task<IResult> SearchOrdersAsync(
+    private static async Task<IResult> HandleAsync(
         [FromBody] OrderSearchFilter filter,
         ISender sender,
         CancellationToken ct)

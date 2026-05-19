@@ -1,5 +1,4 @@
 using MazadZone.Application.Common.Validation;
-using MazadZone.Domain.Users.Errors;
 
 namespace MazadZone.Application.Features.Users.Commands.Suspend;
 

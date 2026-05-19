@@ -7,14 +7,14 @@ public static class Ship
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{id:guid}/ship", ShipOrderAsync)
+        app.MapPost("/{id:guid}/ship", HandleAsync)
            .WithTags("Order Commands")
            .WithSummary("Ships an Order")
            .Produces(StatusCodes.Status204NoContent)
            .Produces(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<IResult> ShipOrderAsync(
+    private static async Task<IResult> HandleAsync(
         OrderId id,
         [FromServices] ISender sender,
         CancellationToken ct)

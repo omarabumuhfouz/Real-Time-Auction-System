@@ -7,14 +7,14 @@ public static class Cancel
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{id:guid}/cancel", CancelOrderAsync)
+        app.MapPost("/{id:guid}/cancel", HandleAsync)
            .WithTags("Order Commands")
            .WithSummary("Cancels an Order")
            .Produces(StatusCodes.Status204NoContent)
            .Produces(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<IResult> CancelOrderAsync(
+    private static async Task<IResult> HandleAsync(
         OrderId id,
         [FromServices] ISender sender,
         CancellationToken ct)
