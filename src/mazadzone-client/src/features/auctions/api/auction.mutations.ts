@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Auction, CreateAuctionInput, UpdateAuctionInput } from "../types/auction.types";
 import { auctionKeys } from "./auction.queries";
-import { createAuctionApi, updateAuctionApi, deleteAuctionApi } from "./auctions.api";
+import { createAuctionApi, updateAuctionApi, deleteAuctionApi } from "./auctions-mutation.api";
 
 /**
  * Creates a new auction.

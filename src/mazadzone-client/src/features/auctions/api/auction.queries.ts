@@ -16,7 +16,7 @@ import {
   fetchBidHistory,
   fetchSimilarAuctions,
   fetchSellerAuctions,
-} from "./auctions.api";
+} from "./auctions-query.api";
 
 // --- Query Keys --------------------------------------------------
 

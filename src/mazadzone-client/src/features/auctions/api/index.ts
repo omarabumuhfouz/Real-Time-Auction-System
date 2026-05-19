@@ -19,8 +19,11 @@ export {
   fetchAuctionById,
   fetchAuctionsByCategory,
   fetchClosingSoonAuctions,
+  fetchSellerAuctions,
+} from "./auctions-query.api";
+
+export {
   createAuctionApi,
   updateAuctionApi,
-  fetchSellerAuctions,
   deleteAuctionApi,
-} from "./auctions.api";
+} from "./auctions-mutation.api";
