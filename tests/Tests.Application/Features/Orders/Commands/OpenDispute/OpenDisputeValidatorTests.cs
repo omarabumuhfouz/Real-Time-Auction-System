@@ -44,7 +44,7 @@ public class OpenDisputeValidatorTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Validate_ReasonIsNullOrWhitespace_FailsValidation(string invalidReason)
+    public void Validate_ReasonIsNullOrWhitespace_FailsValidation(string? invalidReason)
     {
         // Arrange
         var command = new OpenDisputeCommand(OrderId.New(), invalidReason);

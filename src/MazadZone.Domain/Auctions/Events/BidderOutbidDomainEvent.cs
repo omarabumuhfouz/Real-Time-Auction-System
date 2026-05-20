@@ -1,4 +1,6 @@
 
+using MazadZone.Domain.Bidders;
+
 namespace MazadZone.Domain.Auctions.Events;
 
 // CRITICAL: Triggered to release the hold on the loser's credit card immediately

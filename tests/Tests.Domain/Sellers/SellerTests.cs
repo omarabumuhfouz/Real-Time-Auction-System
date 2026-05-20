@@ -1,4 +1,5 @@
-using MazadZone.Domain.Auctions; 
+using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Sellers.Events;
 using Shouldly;

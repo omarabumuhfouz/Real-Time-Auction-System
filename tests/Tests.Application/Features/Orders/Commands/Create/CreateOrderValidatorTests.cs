@@ -1,6 +1,7 @@
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Features.Orders.Commands.Create;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 
 namespace Tests.Application.Features.Orders.Commands.Create;
 

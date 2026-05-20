@@ -1,4 +1,5 @@
 
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Auctions.Enums;
 
 namespace MazadZone.Domain.Auctions;

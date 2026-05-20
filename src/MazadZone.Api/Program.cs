@@ -1,4 +1,5 @@
 
+using MazadZone.Api;
 using MazadZone.Api.Endpoints;
 using MazadZone.Api.Endpoints.Bidders;
 using MazadZone.Api.Endpoints.Notifications;
@@ -15,10 +16,12 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+
     builder.Services.AddSerilog((services, lc) => lc
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services));
 
+    builder.Services.AddMazadZoneServices(builder.Configuration);
 
     builder.Services.AddOpenApi();
 

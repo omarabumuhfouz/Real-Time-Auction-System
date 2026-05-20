@@ -1,4 +1,3 @@
-
 namespace MazadZone.Application.Features.Bidders.DTOs;
 
 public record AddressDto

@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Sellers.Commands.Verify;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 
 namespace Tests.Application.Features.Sellers.Commands.Verify;
 

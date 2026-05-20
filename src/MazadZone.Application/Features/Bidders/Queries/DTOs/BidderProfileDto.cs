@@ -1,4 +1,4 @@
-using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Application.Features.Bidders.DTOs;
 
@@ -10,5 +10,6 @@ public record BidderProfileDto(
     AddressDto Address,
     int TotalBidsPlaced,      // Stats increase engagement
     decimal ReliabilityScore, // Based on completed payments/wins
+    string NationalId,
     DateTime MemberSince
 );

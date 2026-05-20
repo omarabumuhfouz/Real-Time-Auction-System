@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Sellers.Queries.GetPrivateDetails;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 
 namespace Tests.Application.Features.Sellers.Queries.GetPrivateDetails;
 

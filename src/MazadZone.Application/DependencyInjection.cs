@@ -18,7 +18,8 @@ public static class DependencyInjection
 
         // Register FluentValidation
         services.AddValidatorsFromAssembly(assembly);
-
+        ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
+        
         return services;
     }
 }

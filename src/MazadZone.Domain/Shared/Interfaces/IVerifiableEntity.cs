@@ -7,4 +7,6 @@ public interface IVerifiableEntity
 {
     bool IsVerified { get; }
     string NationalId { get; }
+
+    void Verify();
 }

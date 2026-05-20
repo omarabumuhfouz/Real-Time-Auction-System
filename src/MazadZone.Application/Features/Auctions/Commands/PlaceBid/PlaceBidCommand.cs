@@ -1,4 +1,5 @@
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Users;
 using MazadZone.Domain.ValueObjects;
 

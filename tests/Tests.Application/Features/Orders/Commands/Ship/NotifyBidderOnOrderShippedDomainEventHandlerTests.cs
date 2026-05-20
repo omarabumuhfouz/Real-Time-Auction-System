@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Orders.Commands.Ship;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 
