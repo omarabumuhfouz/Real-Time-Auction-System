@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Infrastructure.Persistence.Converters;
 

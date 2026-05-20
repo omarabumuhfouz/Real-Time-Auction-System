@@ -1,6 +1,6 @@
 using MazadZone.Application.Features.Bidders.Queries.GetBidderProfile;
 using MazadZone.Application.Features.Bidders.DTOs;
-using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Api.Endpoints.Bidders;
 
@@ -8,14 +8,16 @@ public static class GetProfile
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:guid}", GetBidderProfileAsync)
+        app.MapGet("/{id:guid}", HandleAsync)
            .WithSummary("Retrieves a Bidder's Profile")
            .WithDescription("Gets detailed profile information for a specific bidder.")
            .Produces<BidderProfileDto>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status404NotFound);
+           .Produces(StatusCodes.Status400BadRequest)
+           .Produces(StatusCodes.Status404NotFound)
+           .Produces(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> GetBidderProfileAsync(
+    private static async Task<IResult> HandleAsync(
         BidderId id,
         [FromServices] ISender sender,
         CancellationToken ct)

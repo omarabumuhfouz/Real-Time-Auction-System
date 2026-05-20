@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Orders.Queries.GetSellerStats;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 
 namespace Tests.Application.Features.Orders.Queries.GetSellerStats;
 

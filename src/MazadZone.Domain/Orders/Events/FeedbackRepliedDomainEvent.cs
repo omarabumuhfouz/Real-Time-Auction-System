@@ -1,4 +1,4 @@
-using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Domain.Orders.Events;
 

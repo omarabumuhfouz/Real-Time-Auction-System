@@ -13,9 +13,9 @@ public static class UserValidationExtensions
         @"^[a-zA-Z\u0600-\u06FF\s'-]+$", // Supports English, Arabic, spaces, hyphens, and apostrophes
         RegexOptions.Compiled);
 
-    private static readonly Regex PhoneRegex = new(
-        @"^\+?[1-9]\d{1,14}$", // International E.164 format
-        RegexOptions.Compiled);
+    // private static readonly Regex PhoneRegex = new(
+    //     @"^\+?[1-9]\d{1,14}$", // International E.164 format
+    //     RegexOptions.Compiled);
 
     public static IRuleBuilderOptions<T, string> ValidateEmail<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
@@ -27,6 +27,7 @@ public static class UserValidationExtensions
     public static IRuleBuilderOptions<T, string> ValidatePassword<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder
+        .NotNull().WithMessage("Password is required.")
             .NotEmpty().WithMessage("Password is required.")
             .MinimumLength(UserConstants.PasswordMinLength).WithMessage("Password must be at least 8 characters.")
             .Must(password => password.Any(char.IsUpper)).WithMessage("Password must contain at least one uppercase letter.")
@@ -69,6 +70,6 @@ public static class UserValidationExtensions
     {
         return ruleBuilder
             .NotEmpty().WithMessage("Phone number is required.")
-            .Matches(PhoneRegex).WithMessage("Invalid phone number format. Use E.164 (e.g., +9627XXXXXXXX).");
+            .Length(UserConstants.PhoneNumberLength).WithMessage($"Phone number must be exactly {UserConstants.PhoneNumberLength} digits.");
     }
 }

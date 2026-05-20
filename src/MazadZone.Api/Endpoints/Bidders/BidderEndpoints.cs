@@ -17,5 +17,6 @@ public static class BidderEndpoints
         // Register Slices
         Register.MapEndpoint(bidderGroup);
         GetProfile.MapEndpoint(bidderGroup);
+        Verify.MapEndpoint(bidderGroup);
     }
 }

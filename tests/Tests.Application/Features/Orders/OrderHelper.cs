@@ -9,6 +9,7 @@ using MazadZone.Application.Features.Orders.Commands.ShipOrder;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Application.Features.Orders.Queries.GetOrderByWinningBid;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Shared.ValueObjects;

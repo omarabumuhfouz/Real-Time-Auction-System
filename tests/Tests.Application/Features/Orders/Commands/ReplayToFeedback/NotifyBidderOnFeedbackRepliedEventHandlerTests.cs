@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Orders.Events.NotifyBidderOnFeedbackReplied;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 

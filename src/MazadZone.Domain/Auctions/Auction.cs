@@ -2,6 +2,7 @@
 using System.Runtime;
 using MazadZone.Domain.Auctions.Events;
 using MazadZone.Domain.Auctions.ValueObjects;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.ValueObjects;

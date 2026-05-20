@@ -1,4 +1,6 @@
 
+using MazadZone.Domain.Bidders;
+
 namespace MazadZone.Domain.Auctions;
 
 public sealed class Bid : Entity<BidId>

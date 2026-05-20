@@ -1,18 +1,17 @@
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
-using MazadZone.Domain.Repositories;
 
 namespace MazadZone.Application.Features.Bidders.Queries.GetBidderProfile;
 
-public class GetBidderProfileHandler : IQueryHandler<GetBidderProfileQuery, BidderProfileDto>
+public class GetBidderProfileQueryHandler : IQueryHandler<GetBidderProfileQuery, BidderProfileDto>
 {
     private readonly IBidderQueries _bidderRepository;
     private readonly ILogger _logger;
 
-    public GetBidderProfileHandler(
+    public GetBidderProfileQueryHandler(
         IBidderQueries bidderRepository,
-        ILogger<GetBidderProfileHandler> logger
+        ILogger<GetBidderProfileQueryHandler> logger
     )
     {
         _bidderRepository = bidderRepository;

@@ -3,6 +3,7 @@ using MazadZone.Domain.Auctions;
 using AutoMapper;
 using MazadZone.Application.Features.Orders.Commands.Create;
 using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Api.Endpoints.Orders;
 

@@ -17,15 +17,16 @@ public static class Register
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/register", RegisterBidderAsync)
+        app.MapPost("/register", HandleAsync)
            .WithSummary("Registers a new bidder")
            .WithDescription("Creates a bidder profile with personal details and address.")
            .Produces(StatusCodes.Status201Created)
            .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status409Conflict);
+           .Produces(StatusCodes.Status409Conflict)
+           .Produces(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> RegisterBidderAsync(
+    private static async Task<IResult> HandleAsync(
         [FromBody] RegisterBidderRequest request,
         [FromServices] ISender sender,
         CancellationToken ct)

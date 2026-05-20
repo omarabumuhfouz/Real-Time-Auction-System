@@ -1,6 +1,7 @@
 using MazadZone.Application.Features.Users.Commands.Suspend.Events;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Users.ValueObjects;
 using Tests.Application.Features.Auctions;
 

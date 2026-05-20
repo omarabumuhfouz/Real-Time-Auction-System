@@ -5,6 +5,7 @@ using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Orders;
+using MazadZone.Domain.Sellers;
 using MzadZone.Domain.Payments;
 using Polly;
 

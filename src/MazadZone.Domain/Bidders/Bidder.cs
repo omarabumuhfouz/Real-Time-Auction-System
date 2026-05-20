@@ -83,4 +83,10 @@ public sealed class Bidder : AggregateRoot<BidderId>, IAuditableEntity, IVerifia
         DefaultShippingAddress = newAddress;
         return Result.Success();
     }
+
+    public void Verify()
+    {
+        IsVerified = true;
+        RaiseDomainEvent(new BidderVerifiedDomainEvent(this.Id));
+    }
 }

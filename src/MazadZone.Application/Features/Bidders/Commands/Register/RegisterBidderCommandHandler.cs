@@ -3,9 +3,9 @@ using AutoMapper;
 using MazadZone.Application.Features.Authentication.DTOs;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Services;
+using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Repositories;
-using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.ValueObjects;
 
@@ -19,7 +19,6 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
     private readonly IPasswordService _passwordService;
     private readonly ITokenProvider _tokenProvider;
     private readonly ILogger<RegisterBidderCommandHandler> _logger;
-    private readonly IMapper _mapper;
 
     public RegisterBidderCommandHandler(
         IUnitOfWork unitOfWork,
@@ -37,10 +36,9 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         _passwordService = passwordService;
         _tokenProvider = tokenProvider;
         _logger = logger;
-        _mapper = mapper;
     }
 
-    async Task<Result<RegisterBidderDto>> IRequestHandler<RegisterBidderCommand, Result<RegisterBidderDto>>.Handle(
+    public async Task<Result<RegisterBidderDto>> Handle(
         RegisterBidderCommand request, CancellationToken ct)
     {
         var emailResult = Email.Create(request.Email);
@@ -60,7 +58,7 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
 
         var newUser = newUserResult.Value;
 
-        var bidderResult = Bidder.CompleteProfile(newUser.Id,request.NationalId, _mapper.Map<Address>(request.Address));
+        var bidderResult = Bidder.CompleteProfile(newUser.Id,request.NationalId, request.Address.ToAddress());
         if (bidderResult.IsFailure)
         {
             return bidderResult.TopError;
@@ -111,9 +109,10 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
             user.FullName.GetDisplayName(),
             user.Email.Value,
             user.PhoneNumber.Value,
-             _mapper.Map<AddressDto>(bidder.DefaultShippingAddress),
+             AddressDto.FromAddress(bidder.DefaultShippingAddress),
             0,
             0,
+            bidder.NationalId,
             user.CreatedOnUtc);
 
     }

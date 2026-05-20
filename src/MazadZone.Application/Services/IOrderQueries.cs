@@ -1,6 +1,7 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Shared.Interfaces;
 using MzadZone.Domain.Payments;
 

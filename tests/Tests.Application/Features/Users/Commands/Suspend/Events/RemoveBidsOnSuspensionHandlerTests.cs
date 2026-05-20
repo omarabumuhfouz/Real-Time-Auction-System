@@ -1,5 +1,7 @@
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Users.ValueObjects;
 using Tests.Application.Features.Auctions;
 

@@ -1,4 +1,4 @@
-namespace MazadZone.Domain.Auctions;
+namespace MazadZone.Domain.Bidders;
 
 [ValueObject<Guid>(conversions: Conversions.SystemTextJson | Conversions.TypeConverter )]
 public partial struct BidderId
