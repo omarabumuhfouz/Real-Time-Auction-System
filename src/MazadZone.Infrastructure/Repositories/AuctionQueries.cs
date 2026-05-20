@@ -115,6 +115,11 @@ public partial class AuctionQueries (
     
     }
 
+    public Task<Money> GetRemainingBalanceAsync(Payment payment, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<Money> GetWinningBidAmountByOrderIdAsync(Guid orderId, CancellationToken ct)
     {
         return await _context.Orders
