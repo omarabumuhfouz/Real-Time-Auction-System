@@ -1,11 +1,10 @@
 /**
  * Admin feature — public API.
- *
- * TODO: Implement admin dashboard, user management,
- * auction moderation, dispute resolution, and analytics.
  */
 
-// Placeholder exports — uncomment as implementations are added:
-// export { AdminDashboard } from "./components/admin-dashboard";
-// export { UserManagement } from "./components/user-management";
-// export { useGetAdminStats } from "./api";
+export { AdminLayout } from "./components/AdminLayout";
+export { AdminDashboardPage } from "./components/AdminDashboardPage";
+export { AdminHeader } from "./components/AdminHeader";
+export { DashboardOverviewSkeleton } from "./components/skeletons";
+export { useGetAdminOverviewStats, useGetAuctionActivityTrend, useGetUserGrowthTrend } from "./api/queries";
+export type * from "./types/admin.types";
