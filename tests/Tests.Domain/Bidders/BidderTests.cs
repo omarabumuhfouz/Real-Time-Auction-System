@@ -119,7 +119,7 @@ public class BidderTests
         var bidder = CreateValidBidder();
 
         // Act
-        bidder.RecordPaymentSuccess();
+        bidder.RecordPaymentSuccess(Money.Create(100, Currency.Jod).Value);
 
         // Assert
         bidder.SuccessfulPayments.ShouldBe(1);

@@ -68,18 +68,6 @@ public class CreateOrderValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.Amount);
     }
 
-    [Fact]
-    public void Validate_TransactionIdIsEmpty_FailsValidation()
-    {
-        // Arrange
-        var command = OrderHelper.CreateOrderCommand() with { DepositCaptureTransactionId = string.Empty };
-
-        // Act
-        var result = _validator.TestValidate(command);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DepositCaptureTransactionId);
-    }
 
     [Fact]
     public void Validate_AddressIsInvalid_FailsValidation()

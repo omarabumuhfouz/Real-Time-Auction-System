@@ -22,7 +22,7 @@ public static class OrderHelper
     /// Centralizes the creation of a pending order for testing purposes, 
     /// fulfilling all required Domain constraints.
     /// </summary>
-    public static Order CreatePendingOrder(decimal? amount = null)
+    public static Order CreatePendingOrder()
     {
         var address = new Address("123 Test St", "Amman", "11118", "Jordan");
 
@@ -31,8 +31,7 @@ public static class OrderHelper
             BidderId.New(),
             BidId.New(),
             address,
-            amount ?? 150.00m,
-            "txn_deposit_123"
+             150.00m
         ).Value;
     }
 
@@ -134,8 +133,7 @@ public static Order CreateOrderWithFeedback()
             BidderId.New(),
             BidId.New(),
             address, // Assuming your command accepts the Address Value Object here
-            150.00m,
-            "txn_deposit_123"
+            150.00m
         );
     }
 
@@ -212,6 +210,7 @@ public static Order CreateOrderWithFeedback()
             Currency: "JOD",
             BidderId: Guid.NewGuid(),
             WinningBidId: Guid.NewGuid(), // Generates a random baseline Guid
+            AuctionId: Guid.NewGuid(),
             HasActiveDispute: false,
             IsDisputable: true,
             CanLeaveFeedback: false

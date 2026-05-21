@@ -17,8 +17,7 @@ public class OrderTests
             BidderId.New(),
             BidId.New(),
             address,
-            150.00m, 
-            "txn_123").Value;
+            150.00m).Value;
     }
 
 
@@ -29,7 +28,7 @@ public class OrderTests
         var address = new Address("123 Test St", "Amman", "11118", "Jordan");
 
         // Act
-        var result = Order.Create(AuctionId.New(), BidderId.New(), BidId.New(), address, -10m, "txn");
+        var result = Order.Create(AuctionId.New(), BidderId.New(), BidId.New(), address, -10m);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -204,7 +203,7 @@ public class OrderTests
         var result = order.AddFeedback(5, "Perfect");
 
         result.IsSuccess.ShouldBeTrue();
-        order.FeedbackId.ShouldNotBeNull();
+        order.Feedback.ShouldNotBeNull();
         order.DomainEvents.OfType<FeedbackLeftDomainEvent>().ShouldHaveSingleItem();
     }
 
@@ -275,7 +274,7 @@ public class OrderTests
         var result = order.OpenDispute("Never arrived");
 
         result.IsSuccess.ShouldBeTrue();
-        order.DisputeId.ShouldNotBeNull();
+        order.Dispute.ShouldNotBeNull();
         order.DomainEvents.OfType<DisputeOpenedDomainEvent>().ShouldHaveSingleItem();
     }
 
