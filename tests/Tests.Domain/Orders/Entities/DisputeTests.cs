@@ -49,7 +49,7 @@ public class DisputeTests
         dispute.Reason.Text.ShouldBe(reasonText); // Assuming Reason has a Value property
         dispute.Status.ShouldBe(DisputeStatus.Open);
         dispute.IsResolved.ShouldBeFalse();
-        dispute.Resolution.ShouldBeNull();
+        dispute.Resolution.ShouldBeEquivalentTo(Resolution.Empty);
         dispute.ResolvedAtUtc.ShouldBeNull();
         
         // Ensure CreatedAtUtc was set recently

@@ -78,7 +78,7 @@ public class FeedbackTests
         feedback.OrderId.ShouldBe(orderId);
         feedback.Rating.Value.ShouldBe(ratingValue);
         feedback.Comment.Value.ShouldBe(commentText);
-        feedback.Reply.ShouldBeNull();
+        feedback.Reply.ShouldBeEquivalentTo(Comment.Empty);
         feedback.RepliedAtUtc.ShouldBeNull();
         
         // Ensure CreatedAtUtc was set properly
