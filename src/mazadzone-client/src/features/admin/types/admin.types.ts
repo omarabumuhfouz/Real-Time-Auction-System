@@ -136,6 +136,33 @@ export interface ModerateUser {
   lastActive: string; // "Today 10:24 AM", "Yesterday 6:47 PM", etc.
 }
 
+// ─── Auction Moderation Types ─────────────────────────────────────────────
+
+export type AuctionStatus = "Active" | "Pending" | "Ended" | "Cancelled";
+
+export interface ModerateAuction {
+  id: string;
+  title: string;
+  imageUrl?: string;
+  sellerName: string;
+  sellerEmail: string;
+  category: string;
+  status: AuctionStatus;
+  currentBid: number;
+  currency: string;
+  bidCount: number;
+  startDate: string; // ISO date string
+  endDate: string;   // ISO date string
+}
+
+export interface ModerateAuctionsResponse {
+  data: ModerateAuction[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface ModerateUsersResponse {
   data: ModerateUser[];
   totalCount: number;

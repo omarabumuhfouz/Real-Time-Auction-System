@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import type { AdminDashboardOverviewData, AuctionActivityTrend, UserGrowthTrend, ModerateUsersResponse, ModerateUserRole, ModerateUserStatus, ModerateUser } from "../types/admin.types";
+import type {
+  AdminDashboardOverviewData,
+  AuctionActivityTrend,
+  UserGrowthTrend,
+  ModerateUsersResponse,
+  ModerateUserRole,
+  ModerateUserStatus,
+  ModerateUser,
+  ModerateAuction,
+  ModerateAuctionsResponse,
+  AuctionStatus,
+} from "../types/admin.types";
+import { getMockAuctions } from "@/features/auctions/testing/mock-auctions";
+import type { AuctionSummary } from "@/features/auctions/types/auction.types";
+
 
 
 // --- Mock Data Matching the Reference Screenshot ---
@@ -393,5 +407,172 @@ export function updateMockUserStatus(userId: string, status: ModerateUserStatus)
   return false;
 }
 
+// ─── Moderate Auctions Mock Data & Hook ─────────────────────────────────────
 
+const mapAuctionSummaryToModerateAuction = (summary: AuctionSummary): ModerateAuction => {
+  let adminStatus: "Active" | "Pending" | "Ended" | "Cancelled" = "Active";
+  if (summary.status === "Upcoming") {
+    adminStatus = "Pending";
+  } else if (summary.status === "Ended") {
+    adminStatus = "Ended";
+  } else if (summary.status === "Active") {
+    adminStatus = "Active";
+  }
 
+  return {
+    id: summary.id,
+    title: summary.title,
+    imageUrl: summary.imageUrl,
+    sellerName: summary.seller?.fullName || "Unknown Seller",
+    sellerEmail: summary.seller?.email || "unknown@mazadzone.com",
+    category: summary.category,
+    status: adminStatus,
+    currentBid: summary.pricing.currentBid ?? summary.pricing.startingPrice,
+    currency: "USD",
+    bidCount: summary.pricing.bidCount,
+    startDate: summary.timing.startDate.toISOString(),
+    endDate: summary.timing.endDate.toISOString(),
+  };
+};
+
+const initialMockAuctions = getMockAuctions().map(mapAuctionSummaryToModerateAuction);
+
+const MOCK_MODERATE_AUCTIONS_DATA: ModerateAuctionsResponse = {
+  data: initialMockAuctions,
+  totalCount: initialMockAuctions.length,
+  page: 1,
+  pageSize: 10,
+  totalPages: Math.ceil(initialMockAuctions.length / 10),
+};
+
+export interface UseModerateAuctionsFilters {
+  search: string;
+  category: string;
+  status: AuctionStatus | "All Statuses";
+  sortBy: string;
+  dateFrom: string;
+  page: number;
+  pageSize: number;
+}
+
+export function useModerateAuctions(filters: UseModerateAuctionsFilters) {
+  return useQuery<ModerateAuctionsResponse>({
+    queryKey: ["admin", "moderate-auctions", filters],
+    queryFn: async () => {
+      try {
+        const queryParams = new URLSearchParams({
+          search: filters.search,
+          category: filters.category,
+          status: filters.status,
+          sortBy: filters.sortBy,
+          dateFrom: filters.dateFrom,
+          page: filters.page.toString(),
+          pageSize: filters.pageSize.toString(),
+        }).toString();
+
+        const response = await api.get<ModerateAuctionsResponse>(`/admin/auctions?${queryParams}`);
+        return response.data;
+      } catch (error) {
+        console.warn("Failed to fetch moderate auctions from backend, falling back to mock data:", error);
+
+        let filteredData = [...MOCK_MODERATE_AUCTIONS_DATA.data];
+
+        if (filters.search) {
+          const lowerQuery = filters.search.toLowerCase();
+          filteredData = filteredData.filter(
+            (a) =>
+              a.title.toLowerCase().includes(lowerQuery) ||
+              a.sellerName.toLowerCase().includes(lowerQuery) ||
+              a.sellerEmail.toLowerCase().includes(lowerQuery) ||
+              a.id.toLowerCase().includes(lowerQuery)
+          );
+        }
+        if (filters.category && filters.category !== "All Categories") {
+          filteredData = filteredData.filter((a) => a.category === filters.category);
+        }
+        if (filters.status !== "All Statuses") {
+          filteredData = filteredData.filter((a) => a.status === filters.status);
+        }
+
+        const startIndex = (filters.page - 1) * filters.pageSize;
+        const endIndex = startIndex + filters.pageSize;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+
+        return {
+          ...MOCK_MODERATE_AUCTIONS_DATA,
+          data: paginatedData,
+          totalCount: filteredData.length,
+          page: filters.page,
+          pageSize: filters.pageSize,
+          totalPages: Math.ceil(filteredData.length / filters.pageSize),
+        };
+      }
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export async function exportAuctionsApi(
+  filters: UseModerateAuctionsFilters,
+  selectedIds: string[]
+): Promise<Blob> {
+  try {
+    const params: Record<string, string> = {
+      search: filters.search,
+      category: filters.category,
+      status: filters.status,
+      sortBy: filters.sortBy,
+    };
+    if (selectedIds.length > 0) {
+      params.selectedIds = selectedIds.join(",");
+    }
+    const response = await api.get<Blob>("/admin/auctions/export", {
+      params,
+      responseType: "blob",
+    });
+    return response.data;
+  } catch (error) {
+    console.warn("Failed to reach real auction export endpoint, generating mock CSV:", error);
+
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    let filteredData = [...MOCK_MODERATE_AUCTIONS_DATA.data];
+    if (selectedIds.length > 0) {
+      filteredData = filteredData.filter((a) => selectedIds.includes(a.id));
+    } else {
+      if (filters.search) {
+        const lowerQuery = filters.search.toLowerCase();
+        filteredData = filteredData.filter(
+          (a) =>
+            a.title.toLowerCase().includes(lowerQuery) ||
+            a.sellerName.toLowerCase().includes(lowerQuery)
+        );
+      }
+      if (filters.category && filters.category !== "All Categories") {
+        filteredData = filteredData.filter((a) => a.category === filters.category);
+      }
+      if (filters.status !== "All Statuses") {
+        filteredData = filteredData.filter((a) => a.status === filters.status);
+      }
+    }
+
+    const csvHeader = "ID,Title,Seller,Seller Email,Category,Status,Current Bid,Bid Count,Start Date,End Date\n";
+    const csvRows = filteredData
+      .map(
+        (a) =>
+          `${a.id},"${a.title}","${a.sellerName}","${a.sellerEmail}",${a.category},${a.status},${a.currentBid},${a.bidCount},${a.startDate},${a.endDate}`
+      )
+      .join("\n");
+
+    return new Blob([csvHeader + csvRows], { type: "text/csv;charset=utf-8;" });
+  }
+}
+
+export function updateMockAuctionStatus(auctionId: string, status: AuctionStatus) {
+  const auction = MOCK_MODERATE_AUCTIONS_DATA.data.find((a) => a.id === auctionId);
+  if (auction) {
+    auction.status = status;
+    return true;
+  }
+  return false;
+}
