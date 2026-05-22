@@ -39,16 +39,19 @@ export async function fetchMyBids(
   const mockAuctions = getMockAuctions().slice(0, 15);
   const allBids: BidActivity[] = mockAuctions.map((auction, idx) => {
     let status: BidStatus = "Leading";
-    if (auction.status === "Ended") {
-      status = "Ended";
-    } else if (idx % 3 === 1) {
+    const mod = idx % 4;
+    if (mod === 0) {
+      status = "Leading";
+    } else if (mod === 1) {
       status = "Outbid";
-    } else if (idx % 3 === 2) {
-      status = "Ended";
+    } else if (mod === 2) {
+      status = "Won";
+    } else {
+      status = "Lost";
     }
 
     const currentBid = auction.pricing.currentBid || auction.pricing.startingPrice;
-    const yourBid = status === "Leading" ? currentBid : currentBid - 75;
+    const yourBid = (status === "Leading" || status === "Won") ? currentBid : currentBid - 75;
 
     return {
       id: `bid-${auction.id}`,

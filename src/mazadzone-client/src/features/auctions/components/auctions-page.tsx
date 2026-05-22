@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { AuctionCard, AuctionCardSkeleton } from "./auction-card";
 import { AuctionFilterBar } from "./auction-filter-bar";
@@ -22,9 +22,7 @@ import { AuctionFilters } from "../types/auction.types";
 export function AuctionsPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { searchParams, setFilters } = useUrlFilters<AuctionFilters>();
 
   const filters = useMemo<AuctionFilters>(() => {
     const f: Record<string, string | number> = {};
@@ -50,29 +48,12 @@ export function AuctionsPage() {
   const pagination = response;
 
   const handleFilterChange = useCallback((newFilters: AuctionFilters) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        params.set(key, String(value));
-      } else {
-        params.delete(key);
-      }
-    });
-
-    // Reset to page 1 when filters change (unless only page changed)
-    if (newFilters.page === undefined) {
-      params.set("page", "1");
-    }
-
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router]);
+    setFilters(newFilters);
+  }, [setFilters]);
 
   const handlePageChange = useCallback((page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [searchParams, pathname, router]);
+    setFilters({ page } as Partial<AuctionFilters>);
+  }, [setFilters]);
 
   const handleFavoriteClick = useCallback((auctionId: string) => {
     setFavorites((prev) => {

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Info } from "lucide-react";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { ModerateAuctionsFilters } from "./ModerateAuctionsFilters";
 import { ModerateAuctionsTable } from "./ModerateAuctionsTable";
 import {
@@ -14,9 +14,7 @@ import { useNotificationStore } from "@/stores/notification.store";
 import type { AuctionStatus } from "../../types/admin.types";
 
 export function ModerateAuctionsPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { searchParams, setFilters } = useUrlFilters<UseModerateAuctionsFilters>();
 
   const filters = useMemo<UseModerateAuctionsFilters>(() => {
     return {
@@ -39,37 +37,17 @@ export function ModerateAuctionsPage() {
   const { data, isLoading } = useModerateAuctions(filters);
 
   const handleFilterChange = (newFilters: Partial<UseModerateAuctionsFilters>) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        params.set(key, String(value));
-      } else {
-        params.delete(key);
-      }
-    });
-
-    // Reset to page 1 when filters change (unless page is explicitly provided)
-    if (newFilters.page === undefined) {
-      params.set("page", "1");
-    }
-
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    setFilters(newFilters);
     setSelectedIds([]); // Clear selection when filters change
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.replace(`${pathname}?${params.toString()}`);
+    setFilters({ page } as Partial<UseModerateAuctionsFilters>);
     setSelectedIds([]);
   };
 
   const handlePageSizeChange = (pageSize: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("pageSize", String(pageSize));
-    params.set("page", "1");
-    router.replace(`${pathname}?${params.toString()}`);
+    setFilters({ pageSize, page: 1 } as Partial<UseModerateAuctionsFilters>);
     setSelectedIds([]);
   };
 

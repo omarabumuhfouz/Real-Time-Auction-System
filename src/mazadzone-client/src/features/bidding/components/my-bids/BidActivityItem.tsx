@@ -20,7 +20,7 @@ interface BidActivityItemProps {
 }
 
 export function BidActivityItem({ activity }: BidActivityItemProps) {
-  const isEnded = activity.status === "Ended";
+  const isEnded = activity.status === "Won" || activity.status === "Lost" || (activity.status as string) === "Ended";
   const isOutbid = activity.status === "Outbid";
   const detailHref = ROUTES.AUCTIONS.DETAIL(activity.auction.id);
   const currentBid = activity.auction.pricing.currentBid || activity.auction.pricing.startingPrice;
