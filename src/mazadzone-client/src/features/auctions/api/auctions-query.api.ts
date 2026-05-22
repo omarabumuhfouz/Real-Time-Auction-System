@@ -162,6 +162,21 @@ export async function fetchClosingSoonAuctions(
 }
 
 /**
+ * Fetches auctions that are upcoming.
+ */
+export async function fetchUpcomingAuctions(
+  limit: number = 4,
+): Promise<AuctionSummary[]> {
+  const response = await fetchActiveAuctions({
+    status: AuctionStatus.UPCOMING,
+    sortBy: SortByValues.START_TIME,
+    sortDirection: "asc",
+    pageSize: limit,
+  });
+  return response.items;
+}
+
+/**
  * Fetches similar auctions based on category/subcategory.
  */
 export async function fetchSimilarAuctions(

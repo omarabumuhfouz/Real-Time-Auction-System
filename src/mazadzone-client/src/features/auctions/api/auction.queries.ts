@@ -13,6 +13,7 @@ import {
   fetchAuctionById,
   fetchAuctionsByCategory,
   fetchClosingSoonAuctions,
+  fetchUpcomingAuctions,
   fetchBidHistory,
   fetchSimilarAuctions,
   fetchSellerAuctions,
@@ -81,6 +82,16 @@ export function useGetClosingSoonAuctions(limit: number = 4) {
   return useQuery<AuctionSummary[]>({
     queryKey: [...auctionKeys.all, "closing-soon", limit],
     queryFn: () => fetchClosingSoonAuctions(limit),
+  });
+}
+
+/**
+ * Hook to get upcoming auctions.
+ */
+export function useGetUpcomingAuctions(limit: number = 4) {
+  return useQuery<AuctionSummary[]>({
+    queryKey: [...auctionKeys.all, "upcoming", limit],
+    queryFn: () => fetchUpcomingAuctions(limit),
   });
 }
 
