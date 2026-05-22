@@ -1,6 +1,6 @@
 import { AuctionSummary } from "@/features/auctions";
 
-export type BidStatus = "Leading" | "Outbid" | "Ended";
+export type BidStatus = "Leading" | "Outbid" | "Won" | "Lost";
 
 export interface BidActivity {
   id: string; // usually the bid activity id

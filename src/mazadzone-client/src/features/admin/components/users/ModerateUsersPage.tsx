@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { Info } from "lucide-react";
 import { ModerateUsersFilters } from "./ModerateUsersFilters";
 import { ModerateUsersTable } from "./ModerateUsersTable";
@@ -10,9 +10,7 @@ import { useNotificationStore } from "@/stores/notification.store";
 import type { ModerateUserRole, ModerateUserStatus } from "../../types/admin.types";
 
 export function ModerateUsersPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { searchParams, setFilters } = useUrlFilters<UseModerateUsersFilters>();
 
   const filters = useMemo<UseModerateUsersFilters>(() => {
     return {
@@ -32,37 +30,17 @@ export function ModerateUsersPage() {
   const { data, isLoading } = useModerateUsers(filters);
 
   const handleFilterChange = (newFilters: Partial<UseModerateUsersFilters>) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        params.set(key, String(value));
-      } else {
-        params.delete(key);
-      }
-    });
-
-    // Reset to page 1 when filters change (unless page is explicitly provided)
-    if (newFilters.page === undefined) {
-      params.set("page", "1");
-    }
-
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    setFilters(newFilters);
     setSelectedIds([]); // Clear selection when filters change
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.replace(`${pathname}?${params.toString()}`);
+    setFilters({ page } as Partial<UseModerateUsersFilters>);
     setSelectedIds([]); // Clear selection when page changes
   };
 
   const handlePageSizeChange = (pageSize: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("pageSize", String(pageSize));
-    params.set("page", "1");
-    router.replace(`${pathname}?${params.toString()}`);
+    setFilters({ pageSize, page: 1 } as Partial<UseModerateUsersFilters>);
     setSelectedIds([]); 
   };
 
