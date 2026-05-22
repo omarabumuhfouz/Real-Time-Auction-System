@@ -88,6 +88,47 @@ public partial class AuctionQueries (
         );
     }
 
+    public async Task<IReadOnlyList<AuctionsListDto>> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
+    {
+        var baseAuction = await _context.Auctions
+            .AsNoTracking()
+            .Where(a => a.Id.Equals(auctionId))
+            .Select(a => new { a.Item.CategoryId, a.Item.Title, a.Item.Description })
+            .FirstOrDefaultAsync(ct);
+
+        if (baseAuction == null)
+        {
+            return Array.Empty<AuctionsListDto>();
+        }
+
+        var query = _context.Auctions
+            .AsNoTracking()
+            .Where(a => a.Id != auctionId && a.Status == AuctionStatus.Active)
+            .Where(a => a.Item.CategoryId == baseAuction.CategoryId ||
+                        EF.Functions.Like(a.Item.Title, $"%{baseAuction.Title}%") ||
+                        EF.Functions.Like(a.Item.Description, $"%{baseAuction.Title}%") ||
+                        EF.Functions.Like(baseAuction.Title, $"%" + a.Item.Title + "%"));
+
+        var similarAuctions = await query
+            .OrderByDescending(a => a.Item.CategoryId == baseAuction.CategoryId)
+            .ThenByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading)
+                .Select(b => b.Amount.Amount)
+                .FirstOrDefault())
+            .Take(limit)
+            .Select(a => new AuctionsListDto(
+                a.Id.Value,
+                a.Item.Images.Where(img => img.isMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
+                a.Item.Title,
+                a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault(),
+                a.StartTime,
+                a.EndTime,
+                (int)a.Status,
+                a.Bids.Count()))
+            .ToListAsync(ct);
+
+        return similarAuctions;
+    }
+
     public async Task<IReadOnlyList<AffectedAuctionDto>> GetAuctionsByBidderIdAsync(UserId bidderId, CancellationToken ct)
     {
         var rawAuctions = await _context.Auctions

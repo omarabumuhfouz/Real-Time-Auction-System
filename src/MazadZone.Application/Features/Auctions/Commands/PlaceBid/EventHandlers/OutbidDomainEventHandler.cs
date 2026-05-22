@@ -1,6 +1,8 @@
 using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions.Events;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users.ValueObjects;
 
@@ -18,7 +20,6 @@ namespace MazadZone.Application.Features.Auctions.Commands.PlaceBid.EventHandler
 /// <typeparam name="OutbidDomainEventHandler"></typeparam>
 
 public class OutbidDomainEventHandler (
-    IRealTimeNotificationService _realTimeNotificationService,
     ISender _sender
 ) : INotificationHandler<BidderOutbidDomainEvent>
 {
@@ -29,14 +30,11 @@ public class OutbidDomainEventHandler (
 
         var NotificationId = await _sender.Send(new CreateNotificationCommand(
             UserId: UserId.Load(notification.OutbidBidderId.Value),
+            NotificationMethods.ReceiveNotification,
             Title: $"Your bid of {notification.OutbidBidId:C} has been surpassed",
             Message: $"Your bid of {notification.OutBidAmount:C} has been surpassed. Place a new bid to stay in the game!"
         ), cancellationToken);
 
-        await _realTimeNotificationService.SendNotificationAsync(
-            notification.OutbidBidderId.Value,
-            NotificationId.Value,
-            cancellationToken
-        );
+
     }
 }

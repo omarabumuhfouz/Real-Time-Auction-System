@@ -229,6 +229,10 @@ public static partial class MazadLogEvents
         public const int GetAuctionsAttempt = 4127;
         public const int GetAuctionsNoResults = 4128;
         public const int GetAuctionsSuccess = 4129;
+
+        public const int GetSimilarAuctionsAttempt = 4130;
+        public const int GetSimilarAuctionsNoResults = 4131;
+        public const int GetSimilarAuctionsSuccess = 4132;
     }
 
     public static class Categories
