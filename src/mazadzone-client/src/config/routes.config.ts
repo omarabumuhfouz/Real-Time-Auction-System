@@ -56,5 +56,6 @@ export const ROUTES = {
     USERS: "/admin/users",
     AUCTIONS: "/admin/auctions",
     DISPUTES: "/admin/disputes",
+    CATEGORIES: "/admin/categories",
   },
 } as const;
