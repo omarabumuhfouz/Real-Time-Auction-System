@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useGetAdminOverviewStats } from "../api/queries";
+import { useGetAdminOverviewStats } from "../../api/queries";
 import { DashboardOverview } from "./DashboardOverview";
-import { AdminHeader } from "./AdminHeader";
+import { AdminHeader } from "../layout/AdminHeader";
 import { Button } from "@/components/ui/button";
 import { DashboardOverviewSkeleton } from "./skeletons";
 

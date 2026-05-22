@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { OpenDisputesBreakdown } from "../types/admin.types";
+import type { OpenDisputesBreakdown } from "../../types/admin.types";
 
 import { OpenDisputesBreakdownSkeleton } from "./skeletons";
 

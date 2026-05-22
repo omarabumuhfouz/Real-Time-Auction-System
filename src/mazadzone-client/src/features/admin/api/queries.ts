@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import type { AdminDashboardOverviewData, AuctionActivityTrend, UserGrowthTrend } from "../types/admin.types";
+import type { AdminDashboardOverviewData, AuctionActivityTrend, UserGrowthTrend, ModerateUsersResponse, ModerateUserRole, ModerateUserStatus, ModerateUser } from "../types/admin.types";
+
 
 // --- Mock Data Matching the Reference Screenshot ---
 const MOCK_ADMIN_OVERVIEW_DATA: AdminDashboardOverviewData = {
@@ -193,3 +194,204 @@ export function useGetUserGrowthTrend(timeframe: string) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// --- Moderate Users Mock Data & Hook ---
+
+const generateMockUsers = (): ModerateUser[] => {
+  const roles: ModerateUserRole[] = ["Bidder", "Seller", "Admin"];
+  const statuses: ModerateUserStatus[] = ["Active", "Suspended", "Banned"];
+  
+  const baseUsers = [
+    { fullName: "Ahmad Khan", email: "ahmad.khan@email.com" },
+    { fullName: "Sara Ali", email: "sara.ali@email.com" },
+    { fullName: "Bilal Hussain", email: "bilal.hussain@email.com" },
+    { fullName: "Ayesha Malik", email: "ayesha.malik@email.com" },
+    { fullName: "Usman Tariq", email: "usman.tariq@email.com" },
+    { fullName: "Hassan Raza", email: "hassan.raza@email.com" },
+    { fullName: "Zainab Fatima", email: "zainab.fatima@email.com" },
+    { fullName: "Faisal Noor", email: "faisal.noor@email.com" },
+    { fullName: "Imran Siddiqui", email: "imran.siddiqui@email.com" },
+    { fullName: "Nida Ahmed", email: "nida.ahmed@email.com" },
+  ];
+
+  const users: ModerateUser[] = [];
+  
+  for (let i = 1; i <= 65; i++) {
+    const base = baseUsers[(i - 1) % baseUsers.length];
+    const role = roles[(i - 1) % roles.length];
+    const status = i % 12 === 0 ? "Banned" : i % 8 === 0 ? "Suspended" : "Active";
+    
+    const joinedDate = new Date();
+    joinedDate.setDate(joinedDate.getDate() - (i % 30));
+    joinedDate.setHours(10 + (i % 12), i % 60, 0, 0);
+
+    let lastActive = "Today 10:24 AM";
+    if (i % 3 === 0) {
+      lastActive = "Today 8:15 AM";
+    } else if (i % 3 === 1) {
+      lastActive = "Yesterday 4:32 PM";
+    } else {
+      const activeDate = new Date();
+      activeDate.setDate(activeDate.getDate() - (i % 5) - 1);
+      lastActive = activeDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + " 2:15 PM";
+    }
+
+    users.push({
+      id: `u${i}`,
+      fullName: i > baseUsers.length ? `${base.fullName} ${Math.ceil(i / baseUsers.length)}` : base.fullName,
+      email: i > baseUsers.length 
+        ? `${base.email.split('@')[0]}.${Math.ceil(i / baseUsers.length)}@${base.email.split('@')[1]}`
+        : base.email,
+      role,
+      status,
+      activity: {
+        auctions: (i * 3) % 50,
+        bids: (i * 7) % 150
+      },
+      joinedDate: joinedDate.toISOString(),
+      lastActive,
+    });
+  }
+  return users;
+};
+
+const MOCK_MODERATE_USERS_DATA: ModerateUsersResponse = {
+  data: generateMockUsers(),
+  totalCount: 65,
+  page: 1,
+  pageSize: 10,
+  totalPages: 7,
+};
+
+export interface UseModerateUsersFilters {
+  search: string;
+  role: ModerateUserRole | "All Roles";
+  status: ModerateUserStatus | "All Statuses";
+  sortBy: string;
+  page: number;
+  pageSize: number;
+}
+
+export function useModerateUsers(filters: UseModerateUsersFilters) {
+  return useQuery<ModerateUsersResponse>({
+    queryKey: ["admin", "moderate-users", filters],
+    queryFn: async () => {
+      try {
+        const queryParams = new URLSearchParams({
+          search: filters.search,
+          role: filters.role,
+          status: filters.status,
+          sortBy: filters.sortBy,
+          page: filters.page.toString(),
+          pageSize: filters.pageSize.toString(),
+        }).toString();
+        
+        const response = await api.get<ModerateUsersResponse>(`/admin/users?${queryParams}`);
+        return response.data;
+      } catch (error) {
+        console.warn("Failed to fetch moderate users from backend, falling back to mock data:", error);
+        
+        // Return filtered mock data
+        let filteredData = [...MOCK_MODERATE_USERS_DATA.data];
+        
+        if (filters.search) {
+          const lowerQuery = filters.search.toLowerCase();
+          filteredData = filteredData.filter(
+            (u) => u.fullName.toLowerCase().includes(lowerQuery) || u.email.toLowerCase().includes(lowerQuery)
+          );
+        }
+        if (filters.role !== "All Roles") {
+          filteredData = filteredData.filter((u) => u.role === filters.role);
+        }
+        if (filters.status !== "All Statuses") {
+          filteredData = filteredData.filter((u) => u.status === filters.status);
+        }
+
+        // Apply pagination mock
+        const startIndex = (filters.page - 1) * filters.pageSize;
+        const endIndex = startIndex + filters.pageSize;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+        
+        return {
+          ...MOCK_MODERATE_USERS_DATA,
+          data: paginatedData,
+          totalCount: filteredData.length,
+          page: filters.page,
+          pageSize: filters.pageSize,
+          totalPages: Math.ceil(filteredData.length / filters.pageSize),
+        };
+      }
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+export async function exportUsersApi(filters: UseModerateUsersFilters, selectedIds: string[]): Promise<Blob> {
+  try {
+    const params: Record<string, string> = {
+      search: filters.search,
+      role: filters.role,
+      status: filters.status,
+      sortBy: filters.sortBy,
+    };
+    
+    // Pass selected IDs to the server if bulk exporting
+    if (selectedIds.length > 0) {
+      params.selectedIds = selectedIds.join(',');
+    }
+
+    const response = await api.get<Blob>("/admin/users/export", {
+      params,
+      responseType: "blob",
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.warn("Failed to reach real export endpoint, generating mock CSV blob:", error);
+    
+    // --- Mock Fallback for local testing ---
+    
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    // Filter the mock data just like the API would
+    let filteredData = [...MOCK_MODERATE_USERS_DATA.data];
+    if (selectedIds.length > 0) {
+      filteredData = filteredData.filter((u) => selectedIds.includes(u.id));
+    } else {
+      if (filters.search) {
+        const lowerQuery = filters.search.toLowerCase();
+        filteredData = filteredData.filter(
+          (u) => u.fullName.toLowerCase().includes(lowerQuery) || u.email.toLowerCase().includes(lowerQuery)
+        );
+      }
+      if (filters.role !== "All Roles") {
+        filteredData = filteredData.filter((u) => u.role === filters.role);
+      }
+      if (filters.status !== "All Statuses") {
+        filteredData = filteredData.filter((u) => u.status === filters.status);
+      }
+    }
+    
+    // Generate CSV string
+    const csvHeader = "ID,Full Name,Email,Role,Status,Joined Date,Last Active\n";
+    const csvRows = filteredData.map(u => 
+      `${u.id},"${u.fullName}","${u.email}",${u.role},${u.status},${u.joinedDate},"${u.lastActive}"`
+    ).join("\n");
+    
+    const csvContent = csvHeader + csvRows;
+    return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  }
+}
+
+export function updateMockUserStatus(userId: string, status: ModerateUserStatus) {
+  const user = MOCK_MODERATE_USERS_DATA.data.find((u) => u.id === userId);
+  if (user) {
+    user.status = status;
+    return true;
+  }
+  return false;
+}
+
+
+
