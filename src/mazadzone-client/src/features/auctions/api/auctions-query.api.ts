@@ -107,7 +107,7 @@ export async function fetchActiveAuctions(
  */
 export async function fetchAuctionById(
   id: string,
-): Promise<AuctionSummary | undefined> {
+): Promise<AuctionSummary | null> {
   await simulateDelay();
 
   /**
@@ -116,7 +116,7 @@ export async function fetchAuctionById(
    * return data;
    */
 
-  return getMockAuctionById(id);
+  return getMockAuctionById(id) || null;
 }
 
 /**

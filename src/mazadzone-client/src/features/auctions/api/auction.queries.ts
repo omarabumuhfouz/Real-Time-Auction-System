@@ -56,7 +56,7 @@ export function useGetAuctions(filters?: AuctionFilters) {
  * Fetches a single auction by its ID.
  */
 export function useGetAuctionById(id: string) {
-  return useQuery<AuctionSummary | undefined>({
+  return useQuery<AuctionSummary | null>({
     queryKey: auctionKeys.detail(id),
     queryFn: () => fetchAuctionById(id),
     enabled: !!id,

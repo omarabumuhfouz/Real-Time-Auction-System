@@ -59,6 +59,8 @@
   --color-info-foreground: var(--info-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-review: var(--review);
+  --color-review-foreground: var(--review-foreground);
 }
 
 /*
@@ -145,6 +147,8 @@
   --info-foreground: oklch(0.4878 0.2432 264.4);
   --warning: oklch(0.9365 0.032 17.74);
   --warning-foreground: oklch(0.509494 0.208583 28.513);
+  --review: oklch(0.96 0.04 290);
+  --review-foreground: oklch(0.45 0.15 290);
 }
 
 /*
@@ -210,6 +214,8 @@
   --info-foreground: oklch(0.4878 0.2432 264.4);
   --warning: oklch(0.9365 0.032 17.74);
   --warning-foreground: oklch(0.509494 0.208583 28.513);
+  --review: oklch(0.20 0.03 290);
+  --review-foreground: oklch(0.96 0.04 290);
 }
 
 @layer base {
