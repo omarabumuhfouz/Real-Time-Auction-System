@@ -1,4 +1,7 @@
+using MazadZone.Application.Features.Auctions.DTOs;
+using MazadZone.Application.Features.Auctions.Enums;
 using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Events;
@@ -15,9 +18,9 @@ namespace MazadZone.Application.Features.Auctions.EventHandlers;
 public class NotifyAuctionCancelledByAdminEventHandler(
     ILogger<NotifyAuctionCancelledEventHandler> _logger,
     IAuctionRepository _auctionRepository,
-    IRealTimeNotificationService _realTimeNotificationService ,
     IItemRepository _itemRepository,
-    ISender _sender
+    ISender _sender,
+    IAuctionStreamService _auctionStreamService
 )
  : INotificationHandler<AuctionCancelledDomainEvent>
 {
@@ -37,6 +40,16 @@ public class NotifyAuctionCancelledByAdminEventHandler(
             return;
         }
 
+
+        //broadcast
+
+        await _auctionStreamService.BroadcastAuctionUpdateAsync(BroadcastAuctionUpdateTypes.StatusChanged, new AuctionStatusUpdateDto{
+            AuctionId = notification.AuctionId.Value,
+            Status = AuctionStatus.Cancelled.ToString(),
+        }, cancellationToken);
+        _logger.LogInformation("Broadcasting auction cancelled update for Auction ID: {AuctionId}", notification.AuctionId);
+       
+
         var item = await _itemRepository.GetItemByIdAsync(auction.Item.Id.Value, cancellationToken);
 
         if(item is null)
@@ -53,16 +66,16 @@ public class NotifyAuctionCancelledByAdminEventHandler(
                 var cancellationNotificationId = await _sender.Send(
                     new CreateNotificationCommand(
                         UserId.Load(bid.BidderId.Value),
+                        NotificationMethods.ReceiveNotification,
                         $"{itemTitle} Auction Cancelled",
                         $"{itemTitle} Auction is in a Cancelled By Admin"
                 ));
                 
-                await _realTimeNotificationService.SendNotificationAsync(bid.BidderId.Value, cancellationNotificationId.Value);
             }
         }
 
         // Log the auction cancellation event
-        _logger.LogInformation("Auction with ID {AuctionId} has been cancelled By Admin.", notification.AuctionId);
+        _logger.LogInformation("Finished handling AuctionCancelledDomainEvent for Auction ID: {AuctionId}", notification.AuctionId);
         
     }
 }

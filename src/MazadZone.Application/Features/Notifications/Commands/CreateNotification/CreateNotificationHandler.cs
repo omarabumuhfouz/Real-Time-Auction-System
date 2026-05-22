@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Repositories;
+using MazadZone.Application.Services;
+using MazadZone.Application.Features.Auctions.DTOs;
 
 namespace MazadZone.Application.Features.Notifications.Commands.CreateNotification;
 
@@ -19,15 +21,18 @@ public class CreateNotificationHandler : ICommandHandler<CreateNotificationComma
     private readonly INotificationRepository _notificationRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateNotificationHandler> _logger;
+    private readonly IRealTimeNotificationService _realTimeNotificationService;
 
     public CreateNotificationHandler(
         INotificationRepository notificationRepository,
         IUnitOfWork unitOfWork,
-        ILogger<CreateNotificationHandler> logger)
+        ILogger<CreateNotificationHandler> logger,
+        IRealTimeNotificationService realTimeNotificationService)
     {
         _notificationRepository = notificationRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _realTimeNotificationService = realTimeNotificationService;
     }
 
     public async Task<Result<NotificationId>> Handle(CreateNotificationCommand request, CancellationToken cancellationToken)
@@ -39,8 +44,22 @@ public class CreateNotificationHandler : ICommandHandler<CreateNotificationComma
         await _notificationRepository.AddAsync(notification, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Notification created with ID {NotificationId}", notification.Id);
+    _logger.LogInformation("Notification created with ID {NotificationId}", notification.Id);
 
-        return notification.Id;
+    var userNotificationDto = new UserNotificationDto(
+        request.UserId.Value,
+        request.Method,
+        request.Title,
+        request.Message
+    );
+
+    // Sending Real time Notifications
+    _logger.LogInformation("Sending notification to user {UserId}", request.UserId);
+    await _realTimeNotificationService.SendNotificationAsync(
+        userNotificationDto,cancellationToken);
+    _logger.LogInformation("Notification sent to user {UserId}", request.UserId);
+
+
+    return notification.Id;
     }
 }

@@ -1,7 +1,12 @@
 
+using MazadZone.Application.Features.Auctions.DTOs;
+using MazadZone.Application.Features.Auctions.Enums;
 using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Services;
+using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Events;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users.ValueObjects;
 
@@ -19,10 +24,10 @@ namespace MazadZone.Application.Features.Auctions.Commands.PlaceBid.EventHandler
 public class NotifyPlaceBidEventHandler
 (
     IAuctionRepository _auctionRepository,
-    IRealTimeNotificationService _realTimeNotificationService,
     ILogger<NotifyPlaceBidEventHandler> _logger,
     IItemRepository _itemRepository,
-    ISender _sender
+    ISender _sender,
+    IAuctionStreamService _auctionStreamService
 ) : INotificationHandler<BidPlacedDomainEvent>
 {
     public async Task Handle(
@@ -41,6 +46,15 @@ public class NotifyPlaceBidEventHandler
             return;
         }
 
+        //BroadCast
+        
+        await _auctionStreamService.BroadcastAuctionUpdateAsync(BroadcastAuctionUpdateTypes.StatusChanged, new AuctionStatusUpdateDto{
+            AuctionId = notification.AuctionId.Value,
+            Status = AuctionStatus.Active.ToString(),
+        }, cancellationToken);
+        _logger.LogInformation("Broadcasted auction status update for Auction ID: {AuctionId}", notification.AuctionId);
+        
+
         var item = await _itemRepository
             .GetItemByIdAsync(auction.Item.Id.Value, cancellationToken);
 
@@ -58,21 +72,22 @@ public class NotifyPlaceBidEventHandler
             .Distinct()
             .ToList();
 
+        await _auctionStreamService.BroadcastAuctionUpdateAsync(BroadcastAuctionUpdateTypes.BidPlaced, new AuctionBidUpdateDto{
+            AuctionId = notification.AuctionId.Value,
+            NewPrice = auction.CurrentHighestBidAmount.Amount,
+        }, cancellationToken);
+
         foreach (var bidderId in biddersToNotify)
         {
             // Create a notification for the outbid bidder
             var notificationId = await _sender.Send(
                 new CreateNotificationCommand(
                     UserId.Load(bidderId.Value),
+                    NotificationMethods.ReceiveNotification,
                     title,
                     message),
                 cancellationToken);
 
-            await _realTimeNotificationService
-                .SendNotificationAsync(
-                    bidderId.Value,
-                    notificationId.Value,
-                    cancellationToken);
         }
     }
 }
