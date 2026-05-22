@@ -3,7 +3,7 @@
 import React from "react";
 import { Info, ArrowUpRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CategoryHealthStats } from "../types/admin.types";
+import type { CategoryHealthStats } from "../../types/admin.types";
 
 import { CategoryHealthSkeleton } from "./skeletons";
 

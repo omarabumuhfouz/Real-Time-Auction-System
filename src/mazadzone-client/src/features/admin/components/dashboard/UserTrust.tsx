@@ -3,7 +3,7 @@
 import React from "react";
 import { Info, ArrowUpRight, ShieldCheck, ChevronRight, UserPlus, FileText, CheckCircle2, ShieldAlert, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { UserTrustStats } from "../types/admin.types";
+import type { UserTrustStats } from "../../types/admin.types";
 
 import { UserTrustSkeleton } from "./skeletons";
 

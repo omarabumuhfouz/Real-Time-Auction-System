@@ -4,7 +4,7 @@ import React from "react";
 import { Info, Lock, CheckCircle2, AlertTriangle, RotateCcw, ExternalLink } from "lucide-react";
 import { formatCurrency } from "@/utils/currency.utils";
 import { cn } from "@/lib/utils";
-import type { PaymentStats } from "../types/admin.types";
+import type { PaymentStats } from "../../types/admin.types";
 
 import { PaymentProviderStatusSkeleton } from "./skeletons";
 

@@ -2,20 +2,8 @@
 
 import React from "react";
 import { Info, ArrowUpRight, ChevronDown } from "lucide-react";
-import {
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ComposedChart,
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
+import { Line, LineChart, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,31 +11,31 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { AuctionActivityTrend } from "../types/admin.types";
+import type { UserGrowthTrend } from "../../types/admin.types";
 
-interface ActivityChartProps {
-  data?: AuctionActivityTrend;
+interface UserGrowthChartProps {
+  data?: UserGrowthTrend;
   isLoading?: boolean;
   timeframe: string;
   onTimeframeChange: (value: string) => void;
 }
 
 const chartConfig: ChartConfig = {
-  newAuctions: {
-    label: "New Auctions",
-    color: "var(--primary)",
+  newUsers: {
+    label: "New Users",
+    color: "var(--color-info-foreground)",
   },
-  bidsPlaced: {
-    label: "Bids Placed",
-    color: "var(--color-dark)",
+  newSellers: {
+    label: "New Sellers",
+    color: "var(--primary)",
   },
 };
 
-import { ActivityChartSkeleton } from "./skeletons";
+import { UserGrowthChartSkeleton } from "./skeletons";
 
-export function ActivityChart({ data, isLoading, timeframe, onTimeframeChange }: ActivityChartProps) {
+export function UserGrowthChart({ data, isLoading, timeframe, onTimeframeChange }: UserGrowthChartProps) {
   if (isLoading && !data) {
-    return <ActivityChartSkeleton />;
+    return <UserGrowthChartSkeleton />;
   }
 
   return (
@@ -55,10 +43,8 @@ export function ActivityChart({ data, isLoading, timeframe, onTimeframeChange }:
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-1.5">
-          <h3 className="text-base font-bold text-foreground">
-            Auction Activity & Bidding Trend
-          </h3>
-          <span title="Weekly tracking of launched auctions versus total bids submitted">
+          <h3 className="text-base font-bold text-foreground">User Growth Trends</h3>
+          <span title="Weekly tracking of user growth across different user stages">
             <Info className="h-4 w-4 text-muted-foreground cursor-help" />
           </span>
         </div>
@@ -95,7 +81,7 @@ export function ActivityChart({ data, isLoading, timeframe, onTimeframeChange }:
               </div>
             )}
             <ChartContainer config={chartConfig} className="w-full h-full aspect-auto">
-              <ComposedChart data={data.dataPoints} margin={{ top: 10, right: -5, left: -10, bottom: 0 }}>
+              <LineChart data={data.dataPoints} margin={{ top: 10, right: 5, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="label"
@@ -104,24 +90,12 @@ export function ActivityChart({ data, isLoading, timeframe, onTimeframeChange }:
                   tickMargin={10}
                   className="text-[11px] font-medium"
                 />
-                {/* Left Y Axis for Bar (New Auctions) */}
                 <YAxis
-                  yAxisId="left"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={5}
-                  tick={{ fill: "var(--primary)", fontSize: 11, fontWeight: 500 }}
+                  className="text-[11px] font-medium"
                   tickFormatter={(val) => (val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val)}
-                />
-                {/* Right Y Axis for Line (Bids Placed) */}
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={5}
-                  tick={{ fill: "var(--color-dark)", fontSize: 11, fontWeight: 500 }}
-                  tickFormatter={(val) => (val >= 1000 ? `${(val / 1000).toFixed(0)}K` : val)}
                 />
 
                 <ChartTooltip
@@ -133,61 +107,61 @@ export function ActivityChart({ data, isLoading, timeframe, onTimeframeChange }:
                   }
                 />
 
-                {/* Orange Bars for New Auctions */}
-                <Bar
-                  yAxisId="left"
-                  dataKey="newAuctions"
-                  fill="var(--primary)"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={45}
-                />
-
-                {/* Dark Navy Line for Bids Placed */}
+                {/* Blue line: New Users */}
                 <Line
-                  yAxisId="right"
                   type="monotone"
-                  dataKey="bidsPlaced"
-                  stroke="var(--color-dark)"
+                  dataKey="newUsers"
+                  stroke="var(--color-info-foreground)"
                   strokeWidth={2.5}
-                  dot={{ fill: "var(--color-dark)", strokeWidth: 1, r: 4 }}
+                  dot={{ fill: "var(--color-info-foreground)", strokeWidth: 1, r: 4 }}
                   activeDot={{ r: 6 }}
                 />
-              </ComposedChart>
+
+                {/* Orange line: New Sellers */}
+                <Line
+                  type="monotone"
+                  dataKey="newSellers"
+                  stroke="var(--primary)"
+                  strokeWidth={2.5}
+                  dot={{ fill: "var(--primary)", strokeWidth: 1, r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
             </ChartContainer>
           </div>
 
-          {/* Footer Metrics */}
+          {/* Footer Growth Summaries - 2 Columns */}
           <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border">
-            {/* New Auctions Box */}
+            {/* New Users */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-2.5 w-2.5 rounded-sm bg-primary shrink-0" />
-                <span>Total New Auctions</span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
+                <span className="h-2.5 w-2.5 rounded-full bg-info-foreground shrink-0" />
+                <span>Total New Users</span>
               </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-xl font-bold text-foreground">
-                  {data.totalNewAuctions.value.toLocaleString()}
+              <div className="flex items-baseline gap-1 sm:gap-2 mt-1">
+                <span className="text-sm sm:text-base font-extrabold text-foreground font-mono">
+                  {data.totalNewUsers.value.toLocaleString()}
                 </span>
-                <span className="flex items-center text-xs font-semibold text-success-foreground">
-                  <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                  {data.totalNewAuctions.changePercent}%
+                <span className="flex items-center text-[10px] font-bold text-success-foreground">
+                  <ArrowUpRight className="h-3 w-3" />
+                  {data.totalNewUsers.changePercent}%
                 </span>
               </div>
             </div>
 
-            {/* Bids Placed Box */}
+            {/* New Sellers */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-2.5 w-2.5 rounded-sm bg-dark shrink-0" />
-                <span>Total Bids Placed</span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
+                <span className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+                <span>Total New Sellers</span>
               </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-xl font-bold text-foreground">
-                  {data.totalBidsPlaced.value.toLocaleString()}
+              <div className="flex items-baseline gap-1 sm:gap-2 mt-1">
+                <span className="text-sm sm:text-base font-extrabold text-foreground font-mono">
+                  {data.totalNewSellers.value.toLocaleString()}
                 </span>
-                <span className="flex items-center text-xs font-semibold text-success-foreground">
-                  <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                  {data.totalBidsPlaced.changePercent}%
+                <span className="flex items-center text-[10px] font-bold text-success-foreground">
+                  <ArrowUpRight className="h-3 w-3" />
+                  {data.totalNewSellers.changePercent}%
                 </span>
               </div>
             </div>

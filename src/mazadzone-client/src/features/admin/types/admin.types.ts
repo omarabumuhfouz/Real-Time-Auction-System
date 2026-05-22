@@ -117,3 +117,30 @@ export interface AdminDashboardOverviewData {
   categoryHealth: CategoryHealthStats;
   payments: PaymentStats;
 }
+
+export type ModerateUserRole = "Bidder" | "Seller" | "Admin";
+export type ModerateUserStatus = "Active" | "Suspended" | "Banned";
+
+export interface ModerateUser {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl?: string;
+  role: ModerateUserRole;
+  status: ModerateUserStatus;
+  activity: {
+    auctions: number;
+    bids: number;
+  };
+  joinedDate: string; // ISO date string
+  lastActive: string; // "Today 10:24 AM", "Yesterday 6:47 PM", etc.
+}
+
+export interface ModerateUsersResponse {
+  data: ModerateUser[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+

@@ -8,10 +8,10 @@ import { UserTrust } from "./UserTrust";
 import { UserGrowthChart } from "./UserGrowthChart";
 import { CategoryHealth } from "./CategoryHealth";
 import { PaymentProviderStatus } from "./PaymentProviderStatus";
-import { useGetAuctionActivityTrend, useGetUserGrowthTrend } from "../api/queries";
+import { useGetAuctionActivityTrend, useGetUserGrowthTrend } from "../../api/queries";
 import { formatCurrency } from "@/utils/currency.utils";
-import { METRIC_CARD_DEFINITIONS } from "../constants/dashboard.constants";
-import type { AdminDashboardOverviewData } from "../types/admin.types";
+import { METRIC_CARD_DEFINITIONS } from "../../constants/dashboard.constants";
+import type { AdminDashboardOverviewData } from "../../types/admin.types";
 
 interface DashboardOverviewProps {
   stats: AdminDashboardOverviewData;
