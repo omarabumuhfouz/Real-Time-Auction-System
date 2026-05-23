@@ -1,4 +1,7 @@
+"use client";
+
 import { useState } from "react";
+import Link from "next/link";
 import { Star, Clock, MoreVertical, CornerDownRight, MessageSquare, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { Button } from "@/components/ui/button";
@@ -76,19 +79,22 @@ export function SellerReviewsTab({
           >
             <div className="flex items-start justify-between">
               {/* Reviewer Details */}
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
+              <Link
+                href={`/users/reviewer-${review.reviewerName.toLowerCase().replace(/\s/g, "-").replace(/\./g, "")}`}
+                className="group flex items-center gap-3 cursor-pointer select-none"
+              >
+                <div className="flex size-10 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground transition-all duration-300 group-hover:scale-105 ring-2 ring-transparent group-hover:ring-primary/50">
                   {review.reviewerInitial}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
                     {review.reviewerName}
                   </span>
                   <div className="mt-0.5 flex items-center gap-2">
                     {renderStars(review.rating)}
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Time and Actions */}
               <div className="flex items-center gap-2 text-xs text-muted-foreground">

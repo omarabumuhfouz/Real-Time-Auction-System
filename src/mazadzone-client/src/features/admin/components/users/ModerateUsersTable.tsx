@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { MoreHorizontal, ArrowUpDown, Ban, PauseCircle, CheckCircle2, Eye, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -56,6 +59,7 @@ export function ModerateUsersTable({
   onSelectAll,
   onSelectRow
 }: ModerateUsersTableProps) {
+  const router = useRouter();
   const [actionUser, setActionUser] = useState<ModerateUser | null>(null);
   const [actionType, setActionType] = useState<"suspend" | "ban" | null>(null);
 
@@ -69,12 +73,7 @@ export function ModerateUsersTable({
     } else if (type === "restore") {
       restoreMutation.mutate(user.id);
     } else if (type === "view") {
-      addNotification({
-        type: "info",
-        title: "View User Details",
-        message: `Viewing profile of ${user.fullName}.`,
-        duration: 3000,
-      });
+      router.push(`/users/${user.id}`);
     }
   };
 
