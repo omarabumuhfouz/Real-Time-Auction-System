@@ -2,34 +2,50 @@
 
 import { useState } from "react";
 import { Loader2, Plus, MoreVertical, MapPin, AlertTriangle } from "lucide-react";
-import { useGetAddresses, useCreateAddress, AddressDialog, type Address } from "@/features/profile";
+import { useGetAddresses, useCreateAddress, useGetProfile } from "../api/profile.queries";
+import { AddressDialog } from "./AddressDialog";
+import { type Address } from "../types/profile.types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import type { DeliveryAddress } from "../../types/place-bid.types";
 
-export interface ChooseAddressStepProps {
+export interface AddressSelectStepProps {
   selectedAddressId?: string;
-  onSelectAddress: (address: DeliveryAddress) => void;
+  onSelectAddress: (address: {
+    id: string;
+    label: string;
+    fullName: string;
+    phoneNumber: string;
+    streetAddress: string;
+    building: string;
+    city: string;
+    isDefault: boolean;
+  }) => void;
   onCancel: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export function ChooseAddressStep({
+export function AddressSelectStep({
   selectedAddressId,
   onSelectAddress,
   onCancel,
-}: ChooseAddressStepProps) {
+  title = "Choose Shipping Address",
+  subtitle = "Select where you want your item to be shipped.",
+}: AddressSelectStepProps) {
   const { data: profileAddresses = [], isLoading, isError } = useGetAddresses();
   const createMutation = useCreateAddress();
   
   const [localSelectedId, setLocalSelectedId] = useState<string>(selectedAddressId || "");
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
 
-  const mapAddress = (addr: Address): DeliveryAddress => ({
+  const { data: profile } = useGetProfile();
+
+  const mapAddress = (addr: Address) => ({
     id: addr.id,
-    label: addr.isDefault ? "Home (Default)" : "Address",
-    fullName: addr.fullName,
-    phoneNumber: addr.phoneNumber,
+    label: addr.title,
+    fullName: profile?.fullName || "",
+    phoneNumber: profile?.phoneNumber || "",
     streetAddress: addr.streetAddress,
     building: addr.building,
     city: addr.city,
@@ -49,7 +65,7 @@ export function ChooseAddressStep({
       setLocalSelectedId(newAddress.id);
       setIsAddressDialogOpen(false);
     } catch (err) {
-      console.error("Failed to add address in bid flow:", err);
+      console.error("Failed to add address in shared select flow:", err);
     }
   };
 
@@ -78,16 +94,13 @@ export function ChooseAddressStep({
     <div className="space-y-6 text-left">
       {/* Header */}
       <div>
-        <h3 className="text-xl font-bold text-foreground">Choose Delivery Address</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Select where you want your item to be delivered.
-        </p>
+        <h3 className="text-xl font-bold text-foreground">{title}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
       </div>
 
       {/* Address List Section */}
       {isLoading ? (
         <div className="space-y-3 py-6">
-          {/* Skeleton Loaders */}
           {[1, 2].map((i) => (
             <div
               key={i}
@@ -107,7 +120,7 @@ export function ChooseAddressStep({
           <div>
             <p className="text-sm font-bold text-foreground">No saved addresses</p>
             <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1">
-              Add a delivery address to complete your bid setup.
+              Add a shipping address to complete your order setup.
             </p>
           </div>
           <button
@@ -147,7 +160,7 @@ export function ChooseAddressStep({
                       htmlFor={`addr-${addr.id}`}
                       className="font-bold text-foreground cursor-pointer flex items-center gap-2"
                     >
-                      {addr.isDefault ? "Home" : "Address"}
+                      {addr.title}
                       {addr.isDefault && (
                         <span className="text-[9px] font-black uppercase tracking-wider bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
                           Default
@@ -157,7 +170,9 @@ export function ChooseAddressStep({
                     <p className="text-muted-foreground mt-0.5">
                       {addr.building}, {addr.streetAddress}, {addr.city}
                     </p>
-                    <p className="text-muted-foreground text-xs">{addr.phoneNumber}</p>
+                    {profile?.phoneNumber && (
+                      <p className="text-muted-foreground text-xs">{profile.phoneNumber}</p>
+                    )}
                   </div>
                 </div>
                 <button
@@ -165,7 +180,6 @@ export function ChooseAddressStep({
                   className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded-full hover:bg-muted"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Optional action, for now prevent click through
                   }}
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -207,7 +221,6 @@ export function ChooseAddressStep({
         </button>
       </div>
 
-      {/* Reusable Address Dialog */}
       <AddressDialog
         isOpen={isAddressDialogOpen}
         onClose={() => setIsAddressDialogOpen(false)}

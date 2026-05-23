@@ -14,8 +14,7 @@ export const INITIAL_PROFILE: UserProfile = {
 export const INITIAL_ADDRESSES: Address[] = [
   {
     id: "addr-1",
-    fullName: "Ahmed Al-Mansouri",
-    phoneNumber: "+966 50 123 4567",
+    title: "Home",
     streetAddress: "King Fahd Road, Al Olaya District",
     building: "Building 123, Apt 45",
     landmark: "",
@@ -24,8 +23,7 @@ export const INITIAL_ADDRESSES: Address[] = [
   },
   {
     id: "addr-2",
-    fullName: "Ahmed Al-Mansouri (Office)",
-    phoneNumber: "+966 50 123 4567",
+    title: "Office",
     streetAddress: "Prince Mohammed bin Abdulaziz Road, Al Malqa District",
     building: "Office Tower 2, Floor 15",
     landmark: "",

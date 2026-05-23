@@ -16,6 +16,7 @@ import {
   ActivityItemActions,
 } from "@/components/activity-list";
 import { DisputeDialog } from "@/features/disputes";
+import { CompletePaymentModal } from "../checkout/CompletePaymentModal";
 
 interface OrderActivityItemProps {
   activity: OrderActivity;
@@ -32,6 +33,7 @@ interface OrderActivityItemProps {
  */
 export function OrderActivityItem({ activity }: OrderActivityItemProps) {
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const detailHref = ROUTES.ORDERS.DETAIL(activity.id);
   const isPending = activity.status === "Pending";
 
@@ -75,20 +77,26 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
 
       {/* Column 3: Action Buttons (25% Width) */}
       <ActivityItemActions className="mt-4 md:mt-0 w-full md:w-[25%] shrink-0 flex flex-col sm:flex-row gap-2.5 justify-start md:justify-end md:pr-6">
-        <Button
-          asChild
-          variant={isPending ? "default" : "secondary"}
-          className={cn(
-            "font-semibold rounded-xl text-lg w-full h-14 cursor-pointer transition-colors",
-            isPending
-              ? "bg-primary text-white hover:bg-primary/90 md:w-[310px]"
-              : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-none md:w-[150px]"
-          )}
-        >
-          <Link href={detailHref}>
-            {isPending ? "Complete Payment" : "View Details"}
-          </Link>
-        </Button>
+        {isPending ? (
+          <Button
+            type="button"
+            onClick={() => setIsPaymentModalOpen(true)}
+            variant="default"
+            className="font-semibold rounded-xl text-lg w-full md:w-[310px] h-14 cursor-pointer transition-colors bg-primary text-white hover:bg-primary/90"
+          >
+            Complete Payment
+          </Button>
+        ) : (
+          <Button
+            asChild
+            variant="secondary"
+            className="font-semibold rounded-xl text-lg w-full md:w-[150px] h-14 cursor-pointer transition-colors bg-gray-100 text-gray-800 hover:bg-gray-200 border-none"
+          >
+            <Link href={detailHref}>
+              View Details
+            </Link>
+          </Button>
+        )}
         {!isPending && (
           <Button
             type="button"
@@ -106,6 +114,16 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
           orderId={activity.id}
           orderNumber={activity.orderNumber}
           itemName={activity.auction.title}
+        />
+
+        <CompletePaymentModal
+          orderId={activity.id}
+          orderNumber={activity.orderNumber}
+          finalBid={activity.finalBid}
+          title={activity.auction.title}
+          imageUrl={activity.auction.imageUrl}
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
         />
       </ActivityItemActions>
     </ActivityListItem>

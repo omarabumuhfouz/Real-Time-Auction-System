@@ -3,15 +3,16 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "radix-ui";
-import { useGetAddresses } from "@/features/profile";
+import { useGetAddresses, useGetProfile } from "@/features/profile";
 import { cn } from "@/lib/utils";
 import { usePlaceBid, useGetSavedPaymentMethods } from "../../api/bidding.queries";
 import type { PlaceBidFlowState, PlaceBidModalProps, DeliveryAddress, SavedPaymentMethod } from "../../types/place-bid.types";
 
+import { AddressSelectStep } from "@/features/profile";
+import { PaymentMethodDrawer } from "@/features/payment";
+
 // Step components
 import { PlaceBidStep } from "./PlaceBidStep";
-import { ChooseAddressStep } from "./ChooseAddressStep";
-import { PaymentProviderSheet } from "./PaymentProviderSheet";
 import { ReviewConfirmStep } from "./ReviewConfirmStep";
 import { BidSuccessStep } from "./BidSuccessStep";
 
@@ -26,6 +27,7 @@ export function PlaceBidModal({
   const { data: profileAddresses = [] } = useGetAddresses();
   const { data: savedPaymentMethods = [] } = useGetSavedPaymentMethods();
   const placeBidMutation = usePlaceBid();
+  const { data: profile } = useGetProfile();
 
   // State orchestrator
   const [flowState, setFlowState] = useState<PlaceBidFlowState>({
@@ -45,14 +47,13 @@ export function PlaceBidModal({
   // Reset or initialize state when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Fetch default address
       const defaultAddr = profileAddresses.find((a) => a.isDefault) || profileAddresses[0] || null;
       const mappedAddr = defaultAddr
         ? {
             id: defaultAddr.id,
-            label: defaultAddr.isDefault ? "Home (Default)" : "Address",
-            fullName: defaultAddr.fullName,
-            phoneNumber: defaultAddr.phoneNumber,
+            label: defaultAddr.title,
+            fullName: profile?.fullName || "",
+            phoneNumber: profile?.phoneNumber || "",
             streetAddress: defaultAddr.streetAddress,
             building: defaultAddr.building,
             city: defaultAddr.city,
@@ -153,10 +154,12 @@ export function PlaceBidModal({
 
           {/* Step 2: Choose Address List */}
           {currentStep === "choose-address" && (
-            <ChooseAddressStep
+            <AddressSelectStep
               selectedAddressId={flowState.selectedAddress?.id}
               onSelectAddress={handleSelectAddress}
               onCancel={() => setFlowState((prev) => ({ ...prev, step: "place-bid" }))}
+              title="Choose Delivery Address"
+              subtitle="Select where you want your item to be delivered."
             />
           )}
 
@@ -189,11 +192,12 @@ export function PlaceBidModal({
       </Dialog>
 
       {/* Step 3: Payment Sheet overlay on the right side */}
-      <PaymentProviderSheet
+      <PaymentMethodDrawer
         isOpen={isPaymentSheetOpen}
         onClose={() => setIsPaymentSheetOpen(false)}
-        onSave={handleSavePaymentMethod}
-        bidAmount={flowState.bidAmount}
+        onSaveCard={handleSavePaymentMethod}
+        mode="payment"
+        amount={flowState.bidAmount * 0.1}
         deliveryAddress={flowState.selectedAddress}
       />
     </>

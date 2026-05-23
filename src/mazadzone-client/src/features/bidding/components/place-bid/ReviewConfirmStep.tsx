@@ -139,7 +139,7 @@ export function ReviewConfirmStep({
         <div className="space-y-0.5">
           <p className="font-bold">Important Notice</p>
           <p className="leading-relaxed">
-            A temporary bid deposit of <span className="font-black">{formatCurrency(bidAmount * 0.1)}</span> will be placed. If you win and fail to confirm the order within the allowed time, this deposit will be forfeited.
+            A temporary bid deposit of <span className="font-black">{formatCurrency(bidAmount * 0.1)}</span> will be placed. If you win and fail to complete the payment within the allowed time, this 10% secure deposit will be charged and go to the company bank account.
           </p>
         </div>
       </div>
