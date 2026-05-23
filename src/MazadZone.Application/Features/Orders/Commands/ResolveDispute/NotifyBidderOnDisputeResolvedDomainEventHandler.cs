@@ -16,7 +16,7 @@ public sealed class NotifyBidderOnDisputeResolvedDomainEventHandler
 
     public async Task Handle(DisputeResolvedDomainEvent notification, CancellationToken ct)
     {
-        var order = await _orderRepository.GetByIdAsync(notification.OrderId.Value, ct);
+        var order = await _orderRepository.GetByIdAsync(notification.OrderId, ct);
         if (order is null) return;
 
        const string title = "Dispute Resolved: Order #{0}";

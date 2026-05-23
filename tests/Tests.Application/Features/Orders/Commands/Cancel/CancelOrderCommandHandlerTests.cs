@@ -12,7 +12,7 @@ public class CancelOrderCommandHandlerTests : OrderBaseTest<CancelOrderCommandHa
         // Arrange
         var command = new CancelOrderCommand(OrderId.New());
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -36,7 +36,7 @@ public class CancelOrderCommandHandlerTests : OrderBaseTest<CancelOrderCommandHa
 
         var command = new CancelOrderCommand(order.Id);
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
@@ -59,7 +59,7 @@ public class CancelOrderCommandHandlerTests : OrderBaseTest<CancelOrderCommandHa
         var order = OrderHelper.CreatePendingOrder();
 
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

@@ -20,14 +20,14 @@ public sealed class AddSubCategoryCommandHandler : ICommandHandler<AddSubCategor
 
     public async Task<Result<Unit>> Handle(AddSubCategoryCommand request, CancellationToken ct)
     {
-        var parent = await _categoryRepository.GetByIdAsync(request.ParentId.Value, ct);
+        var parent = await _categoryRepository.GetByIdAsync(request.ParentId, ct);
         if (parent is null)
         {
             GlobalLogs.LogCategoryNotFound(_logger, request.ParentId);
             return CategoryErrors.NotFound;
         }
 
-        var subCategory = await _categoryRepository.GetByIdAsync(request.SubCategoryId.Value, ct);
+        var subCategory = await _categoryRepository.GetByIdAsync(request.SubCategoryId, ct);
         if (subCategory is null)
         {
             GlobalLogs.LogCategoryNotFound(_logger, request.SubCategoryId);

@@ -43,7 +43,7 @@ public class ResolveDisputeValidatorTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Should_Have_Error_When_Resolution_Is_Invalid(string invalidResolution)
+    public void Should_Have_Error_When_Resolution_Is_Invalid(string? invalidResolution)
     {
         // Arrange
         var command = OrderHelper.CreateResolveDisputeCommand() with { Resolution = invalidResolution };

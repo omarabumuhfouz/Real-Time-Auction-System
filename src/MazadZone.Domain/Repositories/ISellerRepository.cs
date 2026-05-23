@@ -4,7 +4,7 @@ using MazadZone.Domain.Shared.Interfaces;
 
 namespace MazadZone.Domain.Repositories;
 
-public interface ISellerRepository : IGenericRepository<Seller>, IScopedService
+public interface ISellerRepository : IGenericRepository<Seller, SellerId>, IScopedService
 {
     public Task<Seller?> GetByAuctionIdAsync(AuctionId auctionId, CancellationToken ct);
 

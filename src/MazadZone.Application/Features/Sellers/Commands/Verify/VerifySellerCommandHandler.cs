@@ -22,7 +22,7 @@ public sealed class VerifySellerCommandHandler : ICommandHandler<VerifySellerCom
     public async Task<Result<Unit>> Handle(VerifySellerCommand request, CancellationToken cancellationToken)
     {
         // 1. Retrieve the aggregate via strong type ID
-        var seller = await _sellerRepository.GetByIdAsync(request.SellerId.Value, cancellationToken);
+        var seller = await _sellerRepository.GetByIdAsync(request.SellerId, cancellationToken);
 
         if (seller is null)
         {

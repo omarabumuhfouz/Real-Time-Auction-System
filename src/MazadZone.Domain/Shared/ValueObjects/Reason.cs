@@ -19,5 +19,8 @@ public sealed record Reason
         return new Reason(text);
     }
 
+    public static Reason FromDatabase(string value) => new Reason(value ?? string.Empty);
+
+
     private Reason(string text) => Text = text;
 }

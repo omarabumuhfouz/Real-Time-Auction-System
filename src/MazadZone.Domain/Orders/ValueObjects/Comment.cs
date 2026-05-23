@@ -25,6 +25,10 @@ public sealed record Comment
     // Optional: Implicit conversion to string makes the domain logic much cleaner
     public static implicit operator string(Comment comment) => comment.Value;
 
+    public static Comment FromDatabase(string value) => new Comment(value ?? string.Empty);
+
+
+
     // Optional: Explicit conversion from string if you want to bypass validation (careful!)
     public override string ToString() => Value;
 }

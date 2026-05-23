@@ -5,7 +5,7 @@ using MzadZone.Domain.Payments;
 
 namespace MazadZone.Domain.Repositories;
 
-public interface IPaymentRepository : IGenericRepository<Payment>, IScopedService
+public interface IPaymentRepository : IGenericRepository<Payment, PaymentId>, IScopedService
 {
     Task<Payment?> GetByIdAsync(PaymentId paymentId, CancellationToken cancellationToken);
 }

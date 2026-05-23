@@ -27,7 +27,7 @@ public class CategoryDomainService : ICategoryDomainService
             }
 
             // Get the parent of the current category in the loop
-            var parent = await _categoryRepository.GetByIdAsync(currentParentId.Value.Value, ct);
+            var parent = await _categoryRepository.GetByIdAsync(currentParentId.Value, ct);
             currentParentId = parent?.ParentCategoryId;
         }
 

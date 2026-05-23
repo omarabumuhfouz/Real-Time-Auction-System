@@ -5,10 +5,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 {
     protected Entity(TId id) => Id = id;
 
-    #pragma warning disable CS8618 
-    #pragma warning disable CS0519
     protected Entity() { }
-    #pragma warning restore CS8618
 
 
     public TId Id { get; private init; }

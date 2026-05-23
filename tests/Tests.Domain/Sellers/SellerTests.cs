@@ -83,7 +83,7 @@ public class SellerTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void UpdateBankDetails_NewAccountIsInvalid_ReturnsInvalidBankAccountError(string invalidBankAccount)
+    public void UpdateBankDetails_NewAccountIsInvalid_ReturnsInvalidBankAccountError(string? invalidBankAccount)
     {
         // Arrange
         var seller = CreateValidSeller();

@@ -4,7 +4,7 @@ using MazadZone.Infrastructure.Persistence;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class BidderRepository : GenericRepository<Bidder>, IBidderRepository
+public class BidderRepository : GenericRepository<Bidder, BidderId>, IBidderRepository
 {
     private readonly AppDbContext _context;
 

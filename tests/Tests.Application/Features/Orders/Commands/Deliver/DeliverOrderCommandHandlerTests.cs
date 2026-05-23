@@ -12,7 +12,7 @@ public class DeliverOrderCommandHandlerTests : OrderBaseTest<DeliverOrderCommand
         // Arrange
         var command = OrderHelper.CreateDeliverOrderCommand();
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -35,7 +35,7 @@ public class DeliverOrderCommandHandlerTests : OrderBaseTest<DeliverOrderCommand
         // 2. Arrange - Use the same ID for the command
         var command = OrderHelper.CreateDeliverOrderCommand() with { OrderId = order.Id };
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
@@ -59,7 +59,7 @@ public class DeliverOrderCommandHandlerTests : OrderBaseTest<DeliverOrderCommand
 
         var command = OrderHelper.CreateDeliverOrderCommand() with { OrderId = order.Id };
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public sealed class CategoryRepository : GenericRepository<Category>, ICategoryRepository
+public sealed class CategoryRepository : GenericRepository<Category, CategoryId>, ICategoryRepository
 {
     private readonly AppDbContext _context;
 

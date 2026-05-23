@@ -4,7 +4,7 @@ using MazadZone.Domain.Sellers;
 using MazadZone.Infrastructure.Persistence;
 
 namespace MazadZone.Infrastructure.Repositories;
-public class SellerRepository : GenericRepository<Seller>, ISellerRepository
+public class SellerRepository : GenericRepository<Seller, SellerId>, ISellerRepository
 {
     private readonly AppDbContext _context;
     public SellerRepository(AppDbContext context) : base(context)

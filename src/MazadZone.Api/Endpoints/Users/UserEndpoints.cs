@@ -15,10 +15,6 @@ public static class UserEndpoints
                            .MapToApiVersion(1, 0)
                            .WithTags("Users Management");
 
-        // Auth/Self-Service Group
-        var authGroup = app.MapGroup("/api/auth")
-                           .WithTags("Auth")
-                           .WithOpenApi();
 
         // Map Admin Actions
         Activate.MapEndpoint(userGroup);
@@ -26,7 +22,7 @@ public static class UserEndpoints
         Suspend.MapEndpoint(userGroup);
 
         // Map Auth Actions
-        ChangePassword.MapEndpoint(authGroup);
-        ChangeEmail.MapEndpoint(authGroup);
+        ChangePassword.MapEndpoint(userGroup);
+        ChangeEmail.MapEndpoint(userGroup);
     }
 }

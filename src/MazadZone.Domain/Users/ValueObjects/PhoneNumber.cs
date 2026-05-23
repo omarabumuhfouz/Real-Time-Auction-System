@@ -23,4 +23,10 @@ public record PhoneNumber
 
         return new PhoneNumber(cleanNumber);
     }
+
+    public static PhoneNumber FromDatabase(string value) => new PhoneNumber(value ?? string.Empty);
+
+    public static implicit operator string(PhoneNumber phoneNumber) => phoneNumber.Value;
+
+
 }

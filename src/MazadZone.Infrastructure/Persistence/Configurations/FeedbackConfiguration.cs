@@ -43,7 +43,7 @@ public sealed class FeedbackConfiguration : IEntityTypeConfiguration<Feedback>
             .HasColumnName("Reply")
              .HasConversion(
                 comment => comment.Value, 
-                value => Comment.Create(value).Value); 
+                value => Comment.FromDatabase(value)); 
 
         builder.Property(f => f.CreatedAtUtc)
             .IsRequired();

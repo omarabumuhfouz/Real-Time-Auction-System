@@ -15,7 +15,7 @@ public class ActivateUserCommandHandlerTests : UserBaseTest<ActivateUserCommandH
         var command = new ActivateUserCommand(UserId.New());
 
         // Setup repository mock using the primitive .Value to guarantee a perfect match
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -36,7 +36,7 @@ public class ActivateUserCommandHandlerTests : UserBaseTest<ActivateUserCommandH
         var user = UserHelper.CreateBannedUser();
         var command = new ActivateUserCommand(user.Id);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act
@@ -58,7 +58,7 @@ public class ActivateUserCommandHandlerTests : UserBaseTest<ActivateUserCommandH
         var user = UserHelper.CreateSuspendedUser();
         var command = new ActivateUserCommand(user.Id);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act

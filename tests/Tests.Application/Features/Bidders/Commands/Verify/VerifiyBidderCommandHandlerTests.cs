@@ -12,7 +12,7 @@ public class VerifiyBidderCommandHandlerTests : BidderBaseTest<VerifyBidderComma
         // Arrange
         var command = BidderHelper.CreateVerifyBidderCommand();
 
-        _bidderRepository.GetByIdAsync(command.BidderId.Value, Arg.Any<CancellationToken>())
+        _bidderRepository.GetByIdAsync(command.BidderId, Arg.Any<CancellationToken>())
             .Returns((Bidder?)null);
 
         // Act
@@ -33,7 +33,7 @@ public class VerifiyBidderCommandHandlerTests : BidderBaseTest<VerifyBidderComma
         var command = BidderHelper.CreateVerifyBidderCommand();
         var bidder = BidderHelper.CreateUnverifiedBidder(command.BidderId);
 
-        _bidderRepository.GetByIdAsync(command.BidderId.Value, Arg.Any<CancellationToken>())
+        _bidderRepository.GetByIdAsync(command.BidderId, Arg.Any<CancellationToken>())
             .Returns(bidder);
 
         // Act

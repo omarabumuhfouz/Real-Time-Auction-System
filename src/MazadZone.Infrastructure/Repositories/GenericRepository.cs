@@ -1,10 +1,15 @@
+using System.Linq.Expressions;
+using MazadZone.Domain.Primitives;
 using MazadZone.Domain.Repositories;
 using MazadZone.Infrastructure.Persistence;
+using MazadZone.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : class
+public class GenericRepository<T,TId> : IGenericRepository<T, TId> 
+where T : Entity<TId>
+where TId : notnull
 {
     protected readonly AppDbContext DbContext;
     protected readonly DbSet<T> DbSet;
@@ -31,8 +36,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         DbSet.Remove(entity);
     }
 
-    public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
     {
-        return await DbSet.FindAsync(id, cancellationToken);
+        return await DbSet.FindByIdAsync(id, cancellationToken);
     }
 }

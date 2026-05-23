@@ -13,7 +13,7 @@ public class ResolveDisputeCommandHandlerTests : OrderBaseTest<ResolveDisputeCom
         var command = OrderHelper.CreateResolveDisputeCommand();
 
         // Use ReturnsForAnyArgs to avoid VOG009 issues with null returns
-        _orderRepository.GetByIdAsync(default!, default)
+        _orderRepository.GetWithDispute(command.OrderId, default)
             .ReturnsForAnyArgs((Order?)null);
 
         // Act
@@ -33,7 +33,7 @@ public class ResolveDisputeCommandHandlerTests : OrderBaseTest<ResolveDisputeCom
         var order = OrderHelper.CreatePendingOrder();
         var command = OrderHelper.CreateResolveDisputeCommand() with { OrderId = order.Id };
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithDispute(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
@@ -56,7 +56,7 @@ public class ResolveDisputeCommandHandlerTests : OrderBaseTest<ResolveDisputeCom
 
         var command = OrderHelper.CreateResolveDisputeCommand() with { OrderId = order.Id };
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithDispute(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

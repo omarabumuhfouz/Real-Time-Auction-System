@@ -5,7 +5,7 @@ using MzadZone.Domain.Payments;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
+public class PaymentRepository : GenericRepository<Payment, PaymentId>, IPaymentRepository
 {
     private readonly AppDbContext _context;
 

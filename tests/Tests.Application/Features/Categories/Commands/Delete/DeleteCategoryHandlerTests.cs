@@ -10,7 +10,7 @@ public class DeleteCategoryHandlerTests : CategoryBaseTest<DeleteCategoryCommand
     {
         // Arrange
         var categoryId = CategoryId.New();
-        _categoryRepository.GetByIdAsync(categoryId.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(categoryId, Arg.Any<CancellationToken>())
             .Returns((Category?)null);
 
         var command = new DeleteCategoryCommand(categoryId);
@@ -28,7 +28,7 @@ public class DeleteCategoryHandlerTests : CategoryBaseTest<DeleteCategoryCommand
     {
         // Arrange
         var category = Category.Create("Electronics", "Desc").Value;
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
         var command = new DeleteCategoryCommand(category.Id);

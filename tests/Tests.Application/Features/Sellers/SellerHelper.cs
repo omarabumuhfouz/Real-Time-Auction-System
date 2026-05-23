@@ -36,9 +36,9 @@ public static class SellerHelper
 
     }
 
-    public static VerifyCommand CreateVerifyCommand()
+    public static VerifySellerCommand CreateVerifyCommand()
     {
-        return new VerifyCommand(SellerId.New());
+        return new VerifySellerCommand(SellerId.New());
     }
 
     public static GetPrivateSellerDetailsQuery CreateGetPrivateSellerDetailsQuery()

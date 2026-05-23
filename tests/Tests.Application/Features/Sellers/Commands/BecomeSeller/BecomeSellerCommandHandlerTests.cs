@@ -15,7 +15,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         // Arrange
         var command = SellerHelper.CreateBecomeSellerCommand();
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -37,7 +37,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         var user = UserHelper.CreateActiveUser();
         var command = SellerHelper.CreateBecomeSellerCommand() with {UserId = user.Id};
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _bidderRepository.GetNationalIdByBidderIdAsync(BidderId.Load(user.Id.Value), Arg.Any<CancellationToken>())
@@ -64,7 +64,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         // Passing an explicitly empty/invalid bank account string to prompt domain failure inside Seller.BecomeSeller
         var command = SellerHelper.CreateBecomeSellerCommand() with { UserId = user.Id, BankAccountNumber = string.Empty };
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _bidderRepository.GetNationalIdByBidderIdAsync(BidderId.Load(user.Id.Value), Arg.Any<CancellationToken>())
@@ -90,7 +90,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         var command = SellerHelper.CreateBecomeSellerCommand() with { UserId = user.Id };
         var expectedNationalId = "9991012345";
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _bidderRepository.GetNationalIdByBidderIdAsync(BidderId.Load(user.Id.Value), Arg.Any<CancellationToken>())

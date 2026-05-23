@@ -14,7 +14,7 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         // Arrange
         var command = OrderHelper.CreateConfirmOrderCommand();
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -29,32 +29,6 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task Handle_CaptureRemainingAmountFails_ReturnsPaymentError()
-    {
-        // Arrange
-        var order = OrderHelper.CreatePendingOrder();
-        var command = OrderHelper.CreateConfirmOrderCommand(order.Id);
-        var paymentError = Error.Failure("Payment.CaptureFailed", "Insufficient funds to capture remaining balance.");
-
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
-            .Returns(order);
-
-        // Mock MediatR sub-command payment failure
-        _sender.Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure<Unit>(paymentError));
-
-        // Act
-        var result = await Handler.Handle(command, default);
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(paymentError);
-
-        // Verify that aggregate confirmation state change and persistence were blocked
-        order.Status.ShouldBe(OrderStatus.Pending);
-        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
 
     [Fact]
     public async Task Handle_ConfirmFails_ReturnsDomainError()
@@ -64,12 +38,9 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
 
         var command = OrderHelper.CreateConfirmOrderCommand(order.Id);
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
-        // Mock payment success so it reaches the domain logic step
-        _sender.Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success(Unit.Value));
 
         // Act
         var result = await Handler.Handle(command, default);
@@ -88,12 +59,8 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         var order = OrderHelper.CreatePendingOrder(); // Start with a valid pending order
         var command = OrderHelper.CreateConfirmOrderCommand(order.Id);
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
-
-        // Mock successful balance capture
-        _sender.Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success(Unit.Value));
 
         // Act
         var result = await Handler.Handle(command, default);
@@ -104,11 +71,6 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
 
         // Assert state mutation actually executed on aggregate root
         order.Status.ShouldBe(OrderStatus.Confirmed);
-
-        // Verify sub-command call correctness with value matching
-        await _sender.Received(1).Send(
-            Arg.Is<CaptureRemainingAmountCommand>(c => c.OrderId.Value == command.OrderId.Value),
-            Arg.Any<CancellationToken>());
 
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }

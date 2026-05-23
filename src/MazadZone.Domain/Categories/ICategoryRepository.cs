@@ -2,7 +2,7 @@ using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Shared.Interfaces;
 
 namespace MazadZone.Domain.Categories;
-public interface ICategoryRepository : IGenericRepository<Category>, IScopedService
+public interface ICategoryRepository : IGenericRepository<Category, CategoryId>, IScopedService
 {
     Task<bool> ExistsAsync(CategoryId id, CancellationToken ct);
 

@@ -22,7 +22,7 @@ public class AddFeedbackCommandHandler : ICommandHandler<AddFeedbackCommand, Uni
     {
         AddFeedbackLogs.LogAttempt(_logger,request.OrderId, request.Rating);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
+        var order = await _orderRepository.GetWithFeedback(request.OrderId, ct);
 
         if (order is null) 
         {

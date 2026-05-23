@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class AuctionRepository : GenericRepository<Auction>, IAuctionRepository
+public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuctionRepository
 {
     private readonly AppDbContext _context;
 

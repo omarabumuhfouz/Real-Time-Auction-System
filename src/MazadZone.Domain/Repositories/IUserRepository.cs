@@ -3,7 +3,7 @@ using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Repositories;
-public interface IUserRepository : IGenericRepository<User>, IScopedService
+public interface IUserRepository : IGenericRepository<User,UserId>, IScopedService
 {
      Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken);
      Task<bool> IsEmailInUseAsync(Email email, CancellationToken cancellationToken);

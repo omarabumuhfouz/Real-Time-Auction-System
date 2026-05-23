@@ -21,7 +21,7 @@ public sealed class UpdateBankDetailsCommandHandler : ICommandHandler<UpdateBank
 
     public async Task<Result<Unit>> Handle(UpdateBankDetailsCommand request, CancellationToken cancellationToken)
     {
-        var seller = await _sellerRepository.GetByIdAsync(request.SellerId.Value, cancellationToken);
+        var seller = await _sellerRepository.GetByIdAsync(request.SellerId, cancellationToken);
 
         if (seller is null)
         {

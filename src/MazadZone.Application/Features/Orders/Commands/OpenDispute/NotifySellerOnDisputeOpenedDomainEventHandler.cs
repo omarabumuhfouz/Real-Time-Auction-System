@@ -25,7 +25,7 @@ public sealed class NotifySellerOnDisputeOpenedDomainEventHandler
 
     public async Task Handle(DisputeOpenedDomainEvent notification, CancellationToken ct)
     {
-        var order = await _orderRepository.GetByIdAsync(notification.OrderId.Value, ct);
+        var order = await _orderRepository.GetByIdAsync(notification.OrderId, ct);
         if (order is null) return;
 
         var seller = await _sellerRepository.GetByAuctionIdAsync(order.AuctionId, ct);

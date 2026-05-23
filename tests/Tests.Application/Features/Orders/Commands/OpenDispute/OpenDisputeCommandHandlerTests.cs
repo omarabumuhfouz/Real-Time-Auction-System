@@ -12,7 +12,7 @@ public class OpenDisputeCommandHandlerTests : OrderBaseTest<OpenDisputeCommandHa
         // Arrange
         var command = OrderHelper.CreateOpenDisputeCommand();
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithDispute(command.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -34,7 +34,7 @@ public class OpenDisputeCommandHandlerTests : OrderBaseTest<OpenDisputeCommandHa
 
         var command = OrderHelper.CreateOpenDisputeCommand() with { OrderId = order.Id };
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithDispute(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
@@ -53,7 +53,7 @@ public class OpenDisputeCommandHandlerTests : OrderBaseTest<OpenDisputeCommandHa
 
         var command = OrderHelper.CreateOpenDisputeCommand() with { OrderId = order.Id };
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithDispute(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

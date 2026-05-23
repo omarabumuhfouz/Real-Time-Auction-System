@@ -23,7 +23,7 @@ public sealed class MoveToParentCommandHandler : ICommandHandler<MoveToParentCom
 
     public async Task<Result<Unit>> Handle(MoveToParentCommand request, CancellationToken ct)
     {
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value, ct);
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId, ct);
 
         if (category is null)
         {

@@ -1,4 +1,5 @@
 using AuthService.Domain.Constants;
+using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Infrastructure.Common.Constants;
@@ -45,22 +46,15 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 .IsRequired();
         });
 
-        builder.ComplexProperty(u => u.PhoneNumber, phoneBuilder =>
-        {
-            phoneBuilder.Property(p => p.Value)
-
-                .HasColumnName("PhoneNumber")
-                .HasMaxLength(UserConstants.PhoneNumberLength);
-
-            phoneBuilder.IsRequired(true);
-        });
+        builder.Property(u => u.PhoneNumber)
+            .HasColumnName("PhoneNumber")
+            .HasMaxLength(UserConstants.PhoneNumberLength)
+            .IsRequired(true)
+            .HasConversion(new PhoneNumberConverter());
 
 
         builder.Property(u => u.Email)
-            .HasConversion(
-                email => email.Value,
-                value => Email.Create(value).Value
-            )
+            .HasConversion(new EmailConverter())
             .HasMaxLength(UserConstants.EmailMaxLength)
             .IsRequired()
             .UsePropertyAccessMode(PropertyAccessMode.Field);
@@ -69,13 +63,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique();
 
         builder.Property(u => u.PasswordHash)
-            .HasConversion(
-                passwordHash => passwordHash.Value,
-                value => PasswordHash.Create(value).Value
-            )
+            .HasConversion(new PasswordHashConverter())
             .HasMaxLength(UserConstants.PasswordHashLength)
             .IsRequired()
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Property(u => u.EnforcementReason)
+        .HasConversion(new ReasonConverter());
 
         builder.Property(u => u.Status)
             .HasConversion<int>()

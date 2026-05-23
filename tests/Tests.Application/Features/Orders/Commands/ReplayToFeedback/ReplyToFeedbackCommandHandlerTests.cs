@@ -11,7 +11,7 @@ public class ReplyToFeedbackCommandHandlerTests : OrderBaseTest<ReplyToFeedbackC
         // Arrange
         var command = new ReplyToFeedbackCommand(OrderId.New(), "Thank you for the feedback!");
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithFeedback(command.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -32,7 +32,7 @@ public class ReplyToFeedbackCommandHandlerTests : OrderBaseTest<ReplyToFeedbackC
         var order = OrderHelper.CreateDeliveredOrder();  // not have any feedback yet, so replying would be invalid
         var command = new ReplyToFeedbackCommand(order.Id, "Thank you!");
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithFeedback(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
@@ -56,7 +56,7 @@ public class ReplyToFeedbackCommandHandlerTests : OrderBaseTest<ReplyToFeedbackC
         var replyText = "Thank you for the kind words, enjoy the item!";
         var command = new ReplyToFeedbackCommand(order.Id, replyText);
 
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithFeedback(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

@@ -31,7 +31,7 @@ public sealed class BecomeSellerCommandHandler : ICommandHandler<BecomeSellerCom
 
     public async Task<Result<Unit>> Handle(BecomeSellerCommand request, CancellationToken ct)
     {
-        var user = await _userRepository.GetByIdAsync(request.UserId.Value, ct);  
+        var user = await _userRepository.GetByIdAsync(request.UserId, ct);  
         if(user is null)
         {
             GlobalLogs.LogUserNotFound(_logger,request.UserId);

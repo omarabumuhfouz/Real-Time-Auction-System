@@ -11,7 +11,7 @@ public class UpdateCategoryHandlerTests : CategoryBaseTest<UpdateCategoryCommand
     {
         // Arrange
         var categoryId = CategoryId.New();
-        _categoryRepository.GetByIdAsync(categoryId.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(categoryId, Arg.Any<CancellationToken>())
             .Returns((Category?)null);
 
         var command = new UpdateCategoryCommand(categoryId, "New Name", "New Desc");
@@ -32,7 +32,7 @@ public class UpdateCategoryHandlerTests : CategoryBaseTest<UpdateCategoryCommand
         var newName = "Updated Electronics";
         var newDesc = "Updated Description for electronics";
 
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
         var command = new UpdateCategoryCommand(category.Id, newName, newDesc);
@@ -56,7 +56,7 @@ public class UpdateCategoryHandlerTests : CategoryBaseTest<UpdateCategoryCommand
     {
         // Arrange
         var category = Category.Create("Valid Name", "Valid Desc").Value;
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
         // Assuming Name.Create fails on empty strings (even if Validator catches it, we test the Handler guard)
@@ -77,7 +77,7 @@ public class UpdateCategoryHandlerTests : CategoryBaseTest<UpdateCategoryCommand
     {
         // Arrange
         var category = Category.Create("Valid Name", "Valid Desc").Value;
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
         // Assuming Description.Create fails if the string is too long (e.g., > 500 chars)

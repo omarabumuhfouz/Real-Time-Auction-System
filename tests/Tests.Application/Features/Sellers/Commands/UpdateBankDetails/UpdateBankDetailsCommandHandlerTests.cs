@@ -12,7 +12,7 @@ public class UpdateBankDetailsCommandHandlerTests : SellerBaseTest<UpdateBankDet
         // Arrange
         var command = SellerHelper.CreateUpdateBankDetailsCommand();
 
-        _sellerRepository.GetByIdAsync(command.SellerId.Value, Arg.Any<CancellationToken>())
+        _sellerRepository.GetByIdAsync(command.SellerId, Arg.Any<CancellationToken>())
             .Returns((Seller?)null);
 
         // Act
@@ -35,7 +35,7 @@ public class UpdateBankDetailsCommandHandlerTests : SellerBaseTest<UpdateBankDet
         // Passing an empty string to violate internal entity domain invariants
         var command = SellerHelper.CreateUpdateBankDetailsCommand() with { NewAccountNumber = string.Empty };
 
-        _sellerRepository.GetByIdAsync(command.SellerId.Value, Arg.Any<CancellationToken>())
+        _sellerRepository.GetByIdAsync(command.SellerId, Arg.Any<CancellationToken>())
             .Returns(seller);
 
         // Act
@@ -57,7 +57,7 @@ public class UpdateBankDetailsCommandHandlerTests : SellerBaseTest<UpdateBankDet
         var seller = SellerHelper.CreateValidSeller();
         var command = SellerHelper.CreateUpdateBankDetailsCommand() with { SellerId = seller.Id };
 
-        _sellerRepository.GetByIdAsync(command.SellerId.Value, Arg.Any<CancellationToken>())
+        _sellerRepository.GetByIdAsync(command.SellerId, Arg.Any<CancellationToken>())
             .Returns(seller);
 
         // Act

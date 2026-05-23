@@ -26,5 +26,8 @@ public sealed record Email
     }
 
     public static implicit operator string(Email email) => email.Value;
+
+    public static Email FromDatabase(string value) => new Email(value ?? string.Empty);
+
     public override string ToString() => Value;
 }

@@ -18,7 +18,7 @@ public class MoveToParentHandlerTests : CategoryBaseTest<MoveToParentCommandHand
     {
         // Arrange
         var categoryId = CategoryId.New();
-        _categoryRepository.GetByIdAsync(categoryId.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(categoryId, Arg.Any<CancellationToken>())
             .Returns((Category?)null);
 
         var command = new MoveToParentCommand(categoryId, CategoryId.New());
@@ -38,7 +38,7 @@ public class MoveToParentHandlerTests : CategoryBaseTest<MoveToParentCommandHand
         var category = Category.Create("Electronics", "Desc").Value;
         var newParentId = CategoryId.New();
         
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>()).Returns(category);
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>()).Returns(category);
         
         // Mock the Service to simulate a Circular Reference failure
         _domainService.ChangeParentAsync(category, newParentId, Arg.Any<CancellationToken>())
@@ -61,7 +61,7 @@ public class MoveToParentHandlerTests : CategoryBaseTest<MoveToParentCommandHand
         var category = Category.Create("Laptops", "Desc").Value;
         var newParentId = CategoryId.New();
         
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>()).Returns(category);
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>()).Returns(category);
         _domainService.ChangeParentAsync(category, newParentId, Arg.Any<CancellationToken>()).Returns(Result.Success());
 
         var command = new MoveToParentCommand(category.Id, newParentId);
