@@ -30,8 +30,8 @@ export function SellerReviewsTab({
 
   const replyMutation = useCreateReviewReply(sellerId);
 
-  // Checks if the viewer owns the profile (defaults to true for mock seller-123 for demo interactivity)
-  const canReply = user?.id === sellerId || sellerId === "seller-123" || sellerId === "1";
+  // Checks if the viewer owns the profile (strictly matches logged-in user ID)
+  const canReply = user?.id === sellerId;
 
   const handleReplySubmit = async (reviewId: string) => {
     if (!replyText.trim()) return;

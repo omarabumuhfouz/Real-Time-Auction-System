@@ -13,6 +13,8 @@ export const MOCK_ORDERS: OrderActivity[] = [
       title: "Vintage Rolex Submariner (1978)",
       imageUrl: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=400&q=80",
     },
+    sellerId: "seller-123",
+    sellerName: "Mohammed Al-Rashid",
   },
   {
     id: "ord-2",
@@ -26,6 +28,8 @@ export const MOCK_ORDERS: OrderActivity[] = [
       title: "PlayStation 5 Console (Special Edition)",
       imageUrl: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=400&q=80",
     },
+    sellerId: "seller-456",
+    sellerName: "Fatima Mansour",
   },
   {
     id: "ord-3",
@@ -39,6 +43,8 @@ export const MOCK_ORDERS: OrderActivity[] = [
       title: "Handmade Premium Leather Wallet",
       imageUrl: "https://images.unsplash.com/photo-1627124118303-68d18915da86?auto=format&fit=crop&w=400&q=80",
     },
+    sellerId: "seller-123",
+    sellerName: "Mohammed Al-Rashid",
   },
   {
     id: "ord-4",
@@ -52,6 +58,8 @@ export const MOCK_ORDERS: OrderActivity[] = [
       title: "High-End Gaming PC Build",
       imageUrl: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=400&q=80",
     },
+    sellerId: "seller-456",
+    sellerName: "Fatima Mansour",
   },
   {
     id: "ord-5",
