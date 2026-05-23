@@ -293,7 +293,8 @@ export function BecomeSellerPage() {
       <PaymentMethodDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        onSave={handlePayoutSave}
+        onSavePayout={handlePayoutSave}
+        mode="payout"
       />
     </PageWrapper>
   );

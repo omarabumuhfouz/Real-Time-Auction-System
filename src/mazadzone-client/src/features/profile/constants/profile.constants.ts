@@ -51,17 +51,10 @@ export const getAccountInfoFields = (
  */
 export const getAddressFields = (isPending: boolean): AddressFieldConfig[] => [
   {
-    id: "fullName",
-    label: "Full Name",
-    placeholder: "Enter full name",
-    name: "fullName",
-    disabled: isPending,
-  },
-  {
-    id: "phoneNumber",
-    label: "Phone Number",
-    placeholder: "+966 50 123 4567",
-    name: "phoneNumber",
+    id: "title",
+    label: "Address Title (e.g. Home, Work)",
+    placeholder: "Enter address title",
+    name: "title",
     disabled: isPending,
   },
   {

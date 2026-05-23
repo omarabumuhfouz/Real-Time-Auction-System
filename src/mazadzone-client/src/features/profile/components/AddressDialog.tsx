@@ -44,8 +44,7 @@ export function AddressDialog({
   } = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      fullName: "",
-      phoneNumber: "",
+      title: "",
       streetAddress: "",
       building: "",
       landmark: "",
@@ -59,8 +58,7 @@ export function AddressDialog({
     if (isOpen) {
       if (addressToEdit) {
         reset({
-          fullName: addressToEdit.fullName,
-          phoneNumber: addressToEdit.phoneNumber,
+          title: addressToEdit.title,
           streetAddress: addressToEdit.streetAddress,
           building: addressToEdit.building,
           landmark: addressToEdit.landmark ?? "",
@@ -69,8 +67,7 @@ export function AddressDialog({
         });
       } else {
         reset({
-          fullName: "",
-          phoneNumber: "",
+          title: "",
           streetAddress: "",
           building: "",
           landmark: "",

@@ -1,151 +1,182 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { X, Shield, ShieldCheck } from "lucide-react";
-
-import { useAuthStore } from "@/stores/auth.store";
-import { type PayoutDetails } from "../types";
+import { useState } from "react";
+import { Shield, Check } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { CreditCardForm } from "./CreditCardForm";
-import { 
-  type CreditCardFormValues 
-} from "../validations/creditCard.schema";
+import { type CreditCardFormValues } from "../validations/creditCard.schema";
+import { type PayoutDetails } from "../types";
 
-interface PaymentMethodDrawerProps {
+export interface PaymentMethodDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (details: PayoutDetails) => void;
+  onSavePayout?: (details: PayoutDetails) => void;
+  onSaveCard?: (card: {
+    id: string;
+    cardType: "VISA" | "MASTERCARD" | "AMEX";
+    lastFourDigits: string;
+    expiryDate: string;
+    cardholderName: string;
+    isDefault: boolean;
+  }) => void;
+  mode: "payment" | "payout";
+  amount?: number;
+  deliveryAddress?: {
+    fullName: string;
+    streetAddress: string;
+    building: string;
+    city: string;
+  } | null;
 }
 
-export function PaymentMethodDrawer({ isOpen, onClose, onSave }: PaymentMethodDrawerProps) {
-  const { user } = useAuthStore();
+export function PaymentMethodDrawer({
+  isOpen,
+  onClose,
+  onSavePayout,
+  onSaveCard,
+  mode,
+  amount = 0,
+  deliveryAddress,
+}: PaymentMethodDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [billingSameAsDelivery, setBillingSameAsDelivery] = useState(true);
 
-  // Expose slide-in animation state
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isOpen) {
-        setIsMounted(true);
-        document.body.style.overflow = "hidden"; // Disable page scrolling
-      } else {
-        setIsMounted(false);
-        document.body.style.overflow = "unset";
-      }
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
-
-  // Card brand detection inside Card Number input for mapping cardType
-  const getCardBrand = (cardNumberVal: string) => {
-    const cleanNum = cardNumberVal.replace(/\s/g, "");
+  const getCardBrand = (num: string): "VISA" | "MASTERCARD" | "AMEX" => {
+    const cleanNum = num.replace(/\s/g, "");
     if (cleanNum.startsWith("4")) return "VISA";
     if (/^5[1-5]/.test(cleanNum)) return "MASTERCARD";
     if (/^3[47]/.test(cleanNum)) return "AMEX";
-    return "";
+    return "VISA";
   };
 
-  // Submission handlers
-  const handleCardSave = async (data: CreditCardFormValues) => {
+  const handleFormSave = async (data: CreditCardFormValues) => {
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1200)); // Simulated secure processing
-      const cardBrand = getCardBrand(data.cardNumber) || "Visa";
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate Stripe processing delay
       
-      onSave({
-        type: "card",
-        cardNumber: data.cardNumber,
-        cardType: cardBrand,
-        expiryDate: data.expiryDate,
-        cvv: data.cvv,
-        cardholderName: data.cardholderName,
-      });
+      const cleanNum = data.cardNumber.replace(/\s/g, "");
+      const lastFour = cleanNum.slice(-4);
+      const cardBrand = getCardBrand(data.cardNumber);
 
+      if (mode === "payout" && onSavePayout) {
+        onSavePayout({
+          type: "card",
+          cardNumber: data.cardNumber,
+          cardType: cardBrand,
+          expiryDate: data.expiryDate,
+          cvv: data.cvv,
+          cardholderName: data.cardholderName,
+        });
+      } else if (mode === "payment" && onSaveCard) {
+        onSaveCard({
+          id: `pm-${Date.now()}`,
+          cardType: cardBrand,
+          lastFourDigits: lastFour,
+          expiryDate: data.expiryDate,
+          cardholderName: data.cardholderName,
+          isDefault: true,
+        });
+      }
       onClose();
     } catch (e) {
-      console.error("Card payment processing failed", e);
+      console.error("Card configuration failed:", e);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Client mount check to support SSR/Next.js hydration safety
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-      setMounted(false);
-    };
-  }, []);
+  const isPayoutMode = mode === "payout";
 
-  if (!isOpen || !mounted) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-100 flex justify-end">
-      {/* Backdrop overlay */}
-      <div 
-        onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
-      />
-
-      {/* Drawer panel */}
-      <div 
-        className={`relative w-full sm:w-[500px] h-full bg-card border-l border-border shadow-2xl flex flex-col justify-between overflow-y-auto transition-transform duration-300 z-50 ${
-          isMounted ? "translate-x-0" : "translate-x-full"
-        } animate-slide-in-right`}
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-[500px] bg-card border-l border-border p-6 flex flex-col justify-start overflow-y-auto z-[100]"
       >
-        
-        {/* Scrollable Form Body Container */}
-        <div className="p-6 sm:p-8 space-y-6 flex-1 text-left">
-          
-          {/* Header Secure & Powered Title */}
-          <div className="flex items-start justify-between border-b border-border/40 pb-4 relative">
-            <div className="space-y-1 text-left">
-              <h3 className="text-xl font-bold text-foreground tracking-tight">
-                Add Payout Method (Secure)
-              </h3>
-              <div className="flex items-center gap-1.5 text-[#635BFF] font-bold text-[13px]">
-                <span className="text-muted-foreground font-semibold">Powered by</span>
-                <ShieldCheck className="h-4 w-4 text-[#635BFF] shrink-0 stroke-[2.5]" />
-                <span className="tracking-tight text-sm font-extrabold">Stripe</span>
+        <div className="space-y-6 text-left">
+          {/* Header */}
+          <SheetHeader className="border-b border-border/40 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                <Shield className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <SheetTitle className="text-lg font-bold text-foreground">
+                  {isPayoutMode ? "Add Payout Method (Secure)" : "Secure Checkout Payment"}
+                </SheetTitle>
+                <div className="flex items-center gap-1.5 text-indigo-500 font-bold text-[11px] mt-0.5">
+                  <span className="text-muted-foreground font-semibold">Powered by</span>
+                  <span className="tracking-tight text-xs font-extrabold uppercase text-[#635BFF]">Stripe</span>
+                </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-full hover:bg-muted p-1.5 shrink-0"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          </SheetHeader>
 
-          {/* Secure Information Blue Banner */}
+          {/* Secure Info Banner */}
           <div className="flex items-start gap-3 bg-[#EAF1FC] dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4 text-xs md:text-sm text-[#1A73E8] dark:text-blue-300">
             <Shield className="h-5 w-5 text-[#1A73E8] shrink-0 mt-0.5" />
             <p className="leading-relaxed font-semibold">
-              Your payment information is handled securely by Stripe. MazadZone does not store your full card details.
+              {isPayoutMode
+                ? "Your payout information is handled securely by Stripe. MazadZone does not store your full card details."
+                : "This checkout setup is handled by a third-party payment provider. MazadZone does not store your credit card details."}
             </p>
           </div>
 
-          {/* Render Modular Credit Card Sub-form */}
-          <CreditCardForm 
-            onSave={handleCardSave} 
-            onCancel={onClose} 
-            isSubmitting={isSubmitting} 
-            defaultCardholderName={user?.fullName}
-            mode="payout"
-          />
+          {/* Billing Address Selection (only for payment mode) */}
+          {!isPayoutMode && deliveryAddress && (
+            <div className="flex items-start gap-2 bg-muted/20 border border-border/50 rounded-xl p-4">
+              <Checkbox
+                id="billingSame"
+                checked={billingSameAsDelivery}
+                onCheckedChange={(checked) => setBillingSameAsDelivery(checked === true)}
+                className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              />
+              <div className="space-y-1">
+                <Label
+                  htmlFor="billingSame"
+                  className="text-sm font-bold text-foreground cursor-pointer select-none"
+                >
+                  Billing address same as shipping
+                </Label>
+                {billingSameAsDelivery ? (
+                  <p className="text-xs text-muted-foreground leading-normal">
+                    Using: {deliveryAddress.building}, {deliveryAddress.streetAddress}, {deliveryAddress.city}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground leading-normal">
+                    You will be prompted to enter billing address details at confirmation.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
+          {/* Credit Card Form Component */}
+          <div className="pt-2">
+            <CreditCardForm
+              onSave={handleFormSave}
+              onCancel={onClose}
+              isSubmitting={isSubmitting}
+              defaultCardholderName={deliveryAddress?.fullName || ""}
+              mode={mode}
+              authorizationAmount={amount}
+              submitButtonText={isPayoutMode ? "Save Payout Method" : "Save & Authorize Payment"}
+              infoBannerText={
+                isPayoutMode
+                  ? undefined
+                  : "Your card will be saved securely. The remaining 90% of your bid will be authorized and charged upon confirmation."
+              }
+            />
+          </div>
         </div>
-      </div>
-    </div>,
-    document.body
+      </SheetContent>
+    </Sheet>
   );
 }
