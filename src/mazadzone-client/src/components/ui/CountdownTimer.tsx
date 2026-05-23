@@ -53,7 +53,7 @@ export function CountdownTimer({
   const targetDate = status === "Upcoming" && startDate ? startDate : endDate;
   const { remainingSeconds, isExpired, isMounted } = useAuctionCountdown(targetDate);
   const isLarge = variant === "large";
-  const isEnded = status === "Ended" || isExpired;
+  const isEnded = status === "Ended" || status === "Won" || status === "Lost" || isExpired;
 
   // -- Hydration Safe Skeleton ---------------------------------
   if (!isMounted) {

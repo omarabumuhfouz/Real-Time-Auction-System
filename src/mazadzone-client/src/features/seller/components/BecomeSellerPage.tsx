@@ -24,7 +24,7 @@ import { BecomeSellerPayoutMethod } from "./BecomeSellerPayoutMethod";
 import { BecomeSellerSidebar } from "./BecomeSellerSidebar";
 
 // Import payment feature types and drawer
-import { PayoutDrawer, type PayoutDetails } from "@/features/payment";
+import { PaymentMethodDrawer, type PayoutDetails } from "@/features/payment";
 
 // Import backend registration mutation
 import { useBecomeSeller } from "../api/seller.mutations";
@@ -290,10 +290,11 @@ export function BecomeSellerPage() {
       </div>
 
       {/* Slide-out Secure Payout Drawer from right of the screen (Rendered outside the seller registration form to avoid nesting!) */}
-      <PayoutDrawer
+      <PaymentMethodDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        onSave={handlePayoutSave}
+        onSavePayout={handlePayoutSave}
+        mode="payout"
       />
     </PageWrapper>
   );

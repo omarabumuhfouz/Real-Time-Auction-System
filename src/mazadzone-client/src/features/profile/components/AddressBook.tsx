@@ -15,6 +15,7 @@ import {
   useCreateAddress,
   useUpdateAddress,
   useDeleteAddress,
+  useGetProfile,
 } from "../api/profile.queries";
 import type { Address } from "../types/profile.types";
 
@@ -25,6 +26,8 @@ export function AddressBook() {
   // States for Delete Confirmation Modal
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [addressToDeleteId, setAddressToDeleteId] = useState<string | null>(null);
+
+  const { data: profile } = useGetProfile();
 
   const { data: addresses = [], isLoading, isError, refetch } = useGetAddresses();
   const createMutation = useCreateAddress();
@@ -140,7 +143,7 @@ export function AddressBook() {
               {/* Name & Badge Row */}
               <div className="flex items-center justify-between">
                 <span className="font-bold text-base text-foreground leading-tight">
-                  {address.fullName}
+                  {address.title}
                 </span>
                 {address.isDefault && (
                   <span className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-0.5 rounded-full">
@@ -149,10 +152,17 @@ export function AddressBook() {
                 )}
               </div>
 
-              {/* Phone Number */}
-              <span className="text-sm text-foreground/80 leading-normal">
-                {address.phoneNumber}
-              </span>
+              {/* User details (Full name & Phone) */}
+              <div className="flex flex-col gap-0.5 mt-0.5">
+                <span className="text-sm font-semibold text-foreground/90">
+                  {profile?.fullName}
+                </span>
+                {profile?.phoneNumber && (
+                  <span className="text-xs text-muted-foreground">
+                    {profile.phoneNumber}
+                  </span>
+                )}
+              </div>
 
               {/* Address Details */}
               <p className="text-sm leading-relaxed text-muted-foreground mt-0.5">

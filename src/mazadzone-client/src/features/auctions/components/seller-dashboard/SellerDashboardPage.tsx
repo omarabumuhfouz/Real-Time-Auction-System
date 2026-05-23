@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { LayoutGrid, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/layout/page-wrapper";
@@ -17,9 +17,7 @@ import { SellerDashboardStatsSkeleton } from "./SellerDashboardStatsSkeleton";
 import { SellerAuctionsTableSkeleton } from "./SellerAuctionsTableSkeleton";
 
 export function SellerDashboardPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
+  const { searchParams, setFilters } = useUrlFilters<{ status: string, sortBy: string, page: number }>();
   
   // Authenticated route protection check via reusable hook
   const { isAuthorized, isLoading: isAuthLoading } = useRequireRole(["seller"], {
@@ -56,23 +54,15 @@ export function SellerDashboardPage() {
 
   // Reset page to 1 when filters change
   const handleStatusChange = (status: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("status", status);
-    params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
+    setFilters({ status, page: 1 });
   };
 
   const handleSortChange = (sort: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("sortBy", sort);
-    params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
+    setFilters({ sortBy: sort, page: 1 });
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`${pathname}?${params.toString()}`);
+    setFilters({ page });
   };
 
   // Guard loading screen (prevent flash of protected content)

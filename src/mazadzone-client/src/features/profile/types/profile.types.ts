@@ -13,8 +13,7 @@ export interface UserProfile {
 
 export interface Address {
   id: string;
-  fullName: string;
-  phoneNumber: string;
+  title: string;
   streetAddress: string;
   building: string;
   landmark?: string;

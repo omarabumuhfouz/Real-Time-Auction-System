@@ -2,30 +2,40 @@
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HelpCircle, Loader2, Lock } from "lucide-react";
+import { HelpCircle, Loader2, Lock, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PaymentMode } from "../types";
+import { formatCurrency } from "@/utils/currency.utils";
 
 import { 
   creditCardSchema, 
   type CreditCardFormValues 
 } from "../validations/creditCard.schema";
 
-export interface CreditCardPayoutFormProps {
+export interface CreditCardFormProps {
   onSave: (data: CreditCardFormValues) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   defaultCardholderName?: string;
+  mode?: PaymentMode;
+  authorizationAmount?: number;
+  submitButtonText?: string;
+  infoBannerText?: string;
 }
 
-export function CreditCardPayoutForm({
+export function CreditCardForm({
   onSave,
   onCancel,
   isSubmitting,
-  defaultCardholderName = "Omar Ahmad"
-}: CreditCardPayoutFormProps) {
+  defaultCardholderName = "Omar Ahmad",
+  mode = "payout",
+  authorizationAmount = 0,
+  submitButtonText,
+  infoBannerText
+}: CreditCardFormProps) {
   
   const {
     handleSubmit,
@@ -245,15 +255,31 @@ export function CreditCardPayoutForm({
       </div>
 
       {/* Important Banner */}
-      <div className="flex items-start gap-3 bg-muted/40 border border-border/50 rounded-xl p-4 text-xs md:text-sm text-muted-foreground mt-4 text-left">
-        <Lock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-        <div className="space-y-0.5">
-          <p className="font-bold text-foreground">Important</p>
-          <p className="leading-relaxed">
-            This payout method will be used to receive your earnings after a successful sale.
+      {mode === "payment" ? (
+        <div className="bg-muted/40 border border-border rounded-xl p-4 text-left space-y-2 mt-4">
+          <div className="flex flex-col text-left">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Bid Deposit (10%):
+            </span>
+            <span className="text-xl font-black text-foreground mt-0.5">
+              {formatCurrency(authorizationAmount)}
+            </span>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground font-medium pt-2 border-t border-border/40">
+            Your card will be saved securely. No funds will be held until you confirm your bid in the next step
           </p>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-start gap-3 bg-muted/40 border border-border/50 rounded-xl p-4 text-xs md:text-sm text-muted-foreground mt-4 text-left">
+          <Lock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="font-bold text-foreground">Important</p>
+            <p className="leading-relaxed">
+              {infoBannerText || "This payout method will be used to receive your earnings after a successful sale."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Buttons Actions */}
       <div className="pt-4">
@@ -265,12 +291,12 @@ export function CreditCardPayoutForm({
           {isSubmitting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Verifying Card Details...
+              {mode === "payment" ? "Authorizing Card..." : "Verifying Card Details..."}
             </>
           ) : (
             <>
               <Lock className="h-4.5 w-4.5 shrink-0 stroke-[2.5]" />
-              Save Payout Method
+              {submitButtonText || (mode === "payment" ? "Save & Authorize Bid" : "Save Payout Method")}
             </>
           )}
         </Button>

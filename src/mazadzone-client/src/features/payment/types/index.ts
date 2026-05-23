@@ -1,3 +1,5 @@
+export type PaymentMode = "payout" | "payment";
+
 export interface PayoutDetails {
   type: "card";
   cardNumber: string;

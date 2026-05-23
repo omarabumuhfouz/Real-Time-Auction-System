@@ -5,6 +5,7 @@ export {
   useGetAuctionById,
   useGetAuctionsByCategory,
   useGetClosingSoonAuctions,
+  useGetUpcomingAuctions,
   useGetBidHistory,
   useGetSimilarAuctions,
   useGetSellerAuctions,
@@ -19,6 +20,7 @@ export {
   fetchAuctionById,
   fetchAuctionsByCategory,
   fetchClosingSoonAuctions,
+  fetchUpcomingAuctions,
   fetchSellerAuctions,
 } from "./auctions-query.api";
 

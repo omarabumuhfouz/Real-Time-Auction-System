@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { InputWithIcon } from "@/components/ui/input-with-icon";
 import { PasswordInput } from "@/components/ui/password-input";
 import { loginSchema, type LoginFormValues } from "../validations/login.schema";
 import { ROUTES } from "@/config/routes.config";
+import { useAuthStore } from "@/stores/auth.store";
 
 /**
  * LoginForm
@@ -20,6 +22,8 @@ import { ROUTES } from "@/config/routes.config";
  */
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const login = useAuthStore((state) => state.login);
 
   const {
     register,
@@ -46,6 +50,20 @@ export function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTestAdminLogin = () => {
+    login(
+      {
+        id: "mock-admin-id",
+        email: "admin@mazadzone.com",
+        fullName: "Admin",
+        role: "admin",
+      },
+      "mock-access-token",
+      "mock-refresh-token"
+    );
+    router.push(ROUTES.ADMIN.DASHBOARD);
   };
 
   return (
@@ -140,6 +158,22 @@ export function LoginForm() {
             Sign up
           </Link>
         </p>
+      </div>
+
+      {/* Dev helper button */}
+      <div className="mt-8 pt-6 border-t border-dashed border-border text-center">
+        <p className="text-xs text-muted-foreground mb-3 font-mono">
+          Developer Sandbox Shortcuts
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleTestAdminLogin}
+          className="w-full flex items-center justify-center gap-2 h-10 border-primary/30 text-primary hover:bg-accent hover:text-primary transition-colors"
+        >
+          <Shield className="h-4 w-4" />
+          Log In as Test Admin
+        </Button>
       </div>
     </form>
   );

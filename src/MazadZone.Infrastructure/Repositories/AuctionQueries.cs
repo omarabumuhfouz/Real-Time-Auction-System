@@ -1,11 +1,13 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
+using MazadZone.Application.Features.Auctions.Queries.GetMyBids;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Enums;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Domain.ValueObjects;
@@ -88,6 +90,47 @@ public partial class AuctionQueries (
         );
     }
 
+    public async Task<IReadOnlyList<AuctionsListDto>> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
+    {
+        var baseAuction = await _context.Auctions
+            .AsNoTracking()
+            .Where(a => a.Id.Equals(auctionId))
+            .Select(a => new { a.Item.CategoryId, a.Item.Title, a.Item.Description })
+            .FirstOrDefaultAsync(ct);
+
+        if (baseAuction == null)
+        {
+            return Array.Empty<AuctionsListDto>();
+        }
+
+        var query = _context.Auctions
+            .AsNoTracking()
+            .Where(a => a.Id != auctionId && a.Status == AuctionStatus.Active)
+            .Where(a => a.Item.CategoryId == baseAuction.CategoryId ||
+                        EF.Functions.Like(a.Item.Title, $"%{baseAuction.Title}%") ||
+                        EF.Functions.Like(a.Item.Description, $"%{baseAuction.Title}%") ||
+                        EF.Functions.Like(baseAuction.Title, $"%" + a.Item.Title + "%"));
+
+        var similarAuctions = await query
+            .OrderByDescending(a => a.Item.CategoryId == baseAuction.CategoryId)
+            .ThenByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading)
+                .Select(b => b.Amount.Amount)
+                .FirstOrDefault())
+            .Take(limit)
+            .Select(a => new AuctionsListDto(
+                a.Id.Value,
+                a.Item.Images.Where(img => img.isMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
+                a.Item.Title,
+                a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault(),
+                a.StartTime,
+                a.EndTime,
+                (int)a.Status,
+                a.Bids.Count()))
+            .ToListAsync(ct);
+
+        return similarAuctions;
+    }
+
     public async Task<IReadOnlyList<AffectedAuctionDto>> GetAuctionsByBidderIdAsync(UserId bidderId, CancellationToken ct)
     {
         var rawAuctions = await _context.Auctions
@@ -113,6 +156,77 @@ public partial class AuctionQueries (
             a.BidderIds.Where(id => id != bidderId.Value).ToHashSet() 
         )).ToList();
     
+    }
+
+    public async Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(BidderId bidderId, MyBidsQueryParameters parameters, CancellationToken ct)
+    {
+        var query = _context.Auctions
+            .AsNoTracking()
+            .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value));
+
+        if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
+        {
+            query = query.Where(a => EF.Functions.Like(a.Item.Title, $"%{parameters.SearchTerm}%") ||
+                                     EF.Functions.Like(a.Item.Description, $"%{parameters.SearchTerm}%"));
+        }
+
+        if (parameters.CategoryId.HasValue)
+        {
+            query = query.Where(a => a.Item.CategoryId == parameters.CategoryId.Value);
+        }
+
+        var tab = parameters.Tab?.Trim().ToLowerInvariant() ?? "all";
+
+        query = tab switch
+        {
+            "leading" => query.Where(a => a.Status != AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Leading)),
+            "outbid" => query.Where(a => a.Status != AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Outbid)),
+            "ended" => query.Where(a => a.Status == AuctionStatus.Ended),
+            "lost" => query.Where(a => a.Status == AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Outbid)),
+            "won" => query.Where(a => a.Status == AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Leading)),
+            _ => query
+        };
+
+        var isAsc = string.Equals(parameters.SortDirection, "asc", StringComparison.OrdinalIgnoreCase);
+
+        query = parameters.SortBy switch
+        {
+            "StartTime" => isAsc ? query.OrderBy(a => a.StartTime) : query.OrderByDescending(a => a.StartTime),
+            "EndTime" => isAsc ? query.OrderBy(a => a.EndTime) : query.OrderByDescending(a => a.EndTime),
+            "CurrentBidAmount" => isAsc
+                ? query.OrderBy(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault())
+                : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault()),
+            "YourBidAmount" => isAsc
+                ? query.OrderBy(a => a.Bids.Where(b => b.BidderId == bidderId.Value).OrderByDescending(b => b.PlacedAtUtc).Select(b => b.Amount.Amount).FirstOrDefault())
+                : query.OrderByDescending(a => a.Bids.Where(b => b.BidderId == bidderId.Value).OrderByDescending(b => b.PlacedAtUtc).Select(b => b.Amount.Amount).FirstOrDefault()),
+            _ => isAsc ? query.OrderBy(a => a.CreatedOnUtc) : query.OrderByDescending(a => a.CreatedOnUtc)
+        };
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .Skip((parameters.Page - 1) * parameters.PageSize)
+            .Take(parameters.PageSize)
+            .Select(a => new MyBidAuctionDto(
+                a.Id.Value,
+                a.Item.Images.Where(img => img.isMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
+                a.Item.Title,
+                a.Bids.Where(b => b.BidderId == bidderId.Value)
+                    .OrderByDescending(b => b.PlacedAtUtc)
+                    .Select(b => b.Amount.Amount)
+                    .FirstOrDefault(),
+                a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault(),
+                (int)a.Status,
+                a.Bids.Where(b => b.BidderId == bidderId.Value)
+                    .OrderByDescending(b => b.PlacedAtUtc)
+                    .Select(b => (int)b.Status)
+                    .FirstOrDefault(),
+                a.StartTime,
+                a.EndTime,
+                a.Bids.Count()))
+            .ToListAsync(ct);
+
+        return new PagedList<MyBidAuctionDto>(items, parameters.Page, parameters.PageSize, totalCount);
     }
 
     public Task<Money> GetRemainingBalanceAsync(Payment payment, CancellationToken ct)

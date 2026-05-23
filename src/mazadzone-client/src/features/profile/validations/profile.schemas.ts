@@ -8,8 +8,7 @@ export const profileSchema = z.object({
 });
 
 export const addressSchema = z.object({
-  fullName: z.string().min(3, "Full name must be at least 3 characters"),
-  phoneNumber: z.string().min(9, "Phone number must be at least 9 characters"),
+  title: z.string().min(2, "Title must be at least 2 characters (e.g. Home, Work)"),
   streetAddress: z.string().min(3, "Street address must be at least 3 characters"),
   building: z.string().min(1, "Building number/details are required"),
   landmark: z.string().optional().or(z.literal("")),
@@ -25,8 +24,7 @@ export interface ProfileFormValues {
 }
 
 export interface AddressFormValues {
-  fullName: string;
-  phoneNumber: string;
+  title: string;
   streetAddress: string;
   building: string;
   landmark?: string;

@@ -107,7 +107,7 @@ export async function fetchActiveAuctions(
  */
 export async function fetchAuctionById(
   id: string,
-): Promise<AuctionSummary | undefined> {
+): Promise<AuctionSummary | null> {
   await simulateDelay();
 
   /**
@@ -116,7 +116,7 @@ export async function fetchAuctionById(
    * return data;
    */
 
-  return getMockAuctionById(id);
+  return getMockAuctionById(id) || null;
 }
 
 /**
@@ -155,6 +155,21 @@ export async function fetchClosingSoonAuctions(
   const response = await fetchActiveAuctions({
     status: AuctionStatus.ACTIVE,
     sortBy: SortByValues.END_TIME,
+    sortDirection: "asc",
+    pageSize: limit,
+  });
+  return response.items;
+}
+
+/**
+ * Fetches auctions that are upcoming.
+ */
+export async function fetchUpcomingAuctions(
+  limit: number = 4,
+): Promise<AuctionSummary[]> {
+  const response = await fetchActiveAuctions({
+    status: AuctionStatus.UPCOMING,
+    sortBy: SortByValues.START_TIME,
     sortDirection: "asc",
     pageSize: limit,
   });

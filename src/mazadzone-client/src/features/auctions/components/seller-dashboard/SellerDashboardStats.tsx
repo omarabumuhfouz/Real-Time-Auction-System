@@ -35,7 +35,7 @@ export function SellerDashboardStats({ auctions }: SellerDashboardStatsProps) {
       iconBg: "bg-info/20 border-info/30",
     },
     {
-      title: "Pending Payments",
+      title: "Pending",
       value: pendingPaymentsCount || "0",
       icon: CreditCard,
       iconColor: "text-upcoming-foreground",
