@@ -6,7 +6,6 @@
  */
 
 export { BecomeSellerPage } from "./components/BecomeSellerPage";
-export { SellerProfilePage } from "./components/SellerProfilePage";
 export { SellerReviewsTab } from "./components/SellerReviewsTab";
 export { SellerAuctionsTab } from "./components/SellerAuctionsTab";
 export { useBecomeSeller } from "./api/seller.mutations";
