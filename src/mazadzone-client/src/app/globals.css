@@ -61,6 +61,11 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-review: var(--review);
   --color-review-foreground: var(--review-foreground);
+  --color-step-indicator: var(--step-indicator);
+  --color-step-indicator-foreground: var(--step-indicator-foreground);
+  --color-step-indicator-active: var(--step-indicator-active);
+  --color-step-indicator-active-foreground: var(--step-indicator-active-foreground);
+  --color-card-elevated: var(--card-elevated);
 }
 
 /*
@@ -149,6 +154,15 @@
   --warning-foreground: oklch(0.509494 0.208583 28.513);
   --review: oklch(0.96 0.04 290);
   --review-foreground: oklch(0.45 0.15 290);
+
+  /* Step indicator badges */
+  --step-indicator: oklch(0.9683 0.0069 247.9);
+  --step-indicator-foreground: oklch(0.5544 0.0407 257.42);
+  --step-indicator-active: oklch(0.7049 0.1989 45.77);
+  --step-indicator-active-foreground: oklch(1 0 0);
+
+  /* Elevated card surface (within modals) */
+  --card-elevated: oklch(0.975 0.003 90);
 }
 
 /*
@@ -216,6 +230,15 @@
   --warning-foreground: oklch(0.509494 0.208583 28.513);
   --review: oklch(0.20 0.03 290);
   --review-foreground: oklch(0.96 0.04 290);
+
+  /* Step indicator badges */
+  --step-indicator: oklch(0.269 0.03 270);
+  --step-indicator-foreground: oklch(0.65 0.03 260);
+  --step-indicator-active: oklch(0.7049 0.1989 45.77);
+  --step-indicator-active-foreground: oklch(1 0 0);
+
+  /* Elevated card surface (within modals) */
+  --card-elevated: oklch(0.25 0.03 272);
 }
 
 @layer base {
