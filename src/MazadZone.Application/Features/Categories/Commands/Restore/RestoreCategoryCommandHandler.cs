@@ -28,6 +28,8 @@ public sealed class RestoreCategoryCommandHandler : ICommandHandler<RestoreCateg
             return CategoryErrors.NotFound;
         }
 
+        // Check if Parent is Deleted ?
+
         category.Restore();
 
         await _unitOfWork.SaveChangesAsync(ct);

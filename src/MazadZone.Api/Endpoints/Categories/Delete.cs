@@ -3,22 +3,22 @@ using MazadZone.Domain.Categories;
 
 namespace MazadZone.Api.Endpoints.Categories;
 
-// Isolated Request Contract for the API layer
-// public record DeleteCategoryRequest(CategoryId Id);
-
 public static class Delete
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapDelete("/{id:guid}", HandleAsync)
-           .WithTags("Category Commands")
-           .WithSummary("Deletes a category and its subcategories")
-           .WithDescription("Will fail with a Conflict if the category has active auctions.")
-           .Produces(StatusCodes.Status204NoContent)
-           .Produces(StatusCodes.Status400BadRequest)        // Malformed ID or validation
-           .Produces(StatusCodes.Status404NotFound)       // Category does not exist
-           .Produces(StatusCodes.Status409Conflict)       // Domain rule: e.g., Active Auctions exist
-           .Produces(StatusCodes.Status500InternalServerError); 
+            // .RequireAuthorization("AdminPolicy") // Deleting categories is a destructive admin operation
+            .WithSummary("Delete a category")
+            .WithDescription("Deletes a specific category and automatically cascades the deletion to its subcategories. This operation will fail with a 409 Conflict if the category, or any of its nested subcategories, are currently linked to active auctions.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest) // Malformed route ID
+            .ProducesProblem(StatusCodes.Status401Unauthorized) // If RequireAuthorization is used
+            .ProducesProblem(StatusCodes.Status403Forbidden) // If role-based policies are used
+            .ProducesProblem(StatusCodes.Status404NotFound) // Category does not exist
+            .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule: e.g., Active Auctions exist
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
+
     }
 
     private static async Task<IResult> HandleAsync(
@@ -26,9 +26,7 @@ public static class Delete
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        var command = new DeleteCategoryCommand(id);
-
-        var result = await sender.Send(command, ct);
+        var result = await sender.Send(new DeleteCategoryCommand(id), ct);
 
         return result.Match(
             onValue: _ => Results.NoContent(),

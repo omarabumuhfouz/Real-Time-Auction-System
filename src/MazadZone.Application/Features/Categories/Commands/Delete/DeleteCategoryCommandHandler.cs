@@ -29,6 +29,8 @@ public sealed class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategor
             return CategoryErrors.NotFound;
         }
 
+        // Check if Category or children have and Active Auctions (Note)
+
         var result = category.Delete();
         if (result.IsFailure)
         {

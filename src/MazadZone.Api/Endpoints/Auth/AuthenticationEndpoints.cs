@@ -12,7 +12,7 @@ public static class AuthenticationEndpoints
         var authGroup = app.MapGroup("api/v{version:apiVersion}/auth")
                            .WithApiVersionSet(versionSet)
                            .MapToApiVersion(1, 0)
-                           .WithTags("Authentication");
+                           .WithTags("Authentication Management");
 
         // Register Identity Slices
         Login.MapEndpoint(authGroup);

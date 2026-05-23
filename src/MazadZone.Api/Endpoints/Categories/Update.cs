@@ -9,14 +9,18 @@ public static class Update
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/{id}", HandleAsync)
-           .WithTags("Category Commands")
-           .WithSummary("Updates category details")
+        app.MapPut("/{id:guid}", HandleAsync)
+        //    .RequireAuthorization("AdminPolicy")
+           .WithSummary("Update category details")
+           .WithDescription("Updates the name and description of an existing category. Returns a 409 Conflict if the new name is already taken by another category in the same hierarchy level, or if it violates other domain uniqueness rules.")
+           .Accepts<UpdateCategoryRequest>("application/json")
            .Produces(StatusCodes.Status204NoContent)
-           .Produces(StatusCodes.Status400BadRequest)     // For value object validation failures
-           .Produces(StatusCodes.Status404NotFound)       // If the CategoryId doesn't exist
-           .Produces(StatusCodes.Status409Conflict)       // For domain rule violations or concurrency
-           .Produces(StatusCodes.Status500InternalServerError);
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For payload validation failures
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // If RequireAuthorization is used
+           .ProducesProblem(StatusCodes.Status403Forbidden) // If role-based policies are used
+           .ProducesProblem(StatusCodes.Status404NotFound) // If the CategoryId doesn't exist
+           .ProducesProblem(StatusCodes.Status409Conflict) // For domain rule violations (e.g., duplicate names)
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(

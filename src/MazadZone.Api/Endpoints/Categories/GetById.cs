@@ -8,13 +8,14 @@ public static class GetById
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id}", HandleAsync)
-           .WithTags("Category Queries")
-           .WithSummary("Gets a category by its unique ID")
+        app.MapGet("/{id:guid}", HandleAsync)
+           .AllowAnonymous() // Assuming categories are publicly viewable
+           .WithSummary("Retrieve a category by ID")
+           .WithDescription("Fetches the detailed information for a specific category using its unique identifier. Returns a 404 Not Found if the category does not exist.")
            .Produces<CategoryResponse>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status400BadRequest)    // Mapping/Binding errors
-           .Produces(StatusCodes.Status404NotFound)   // Category not found
-           .Produces(StatusCodes.Status500InternalServerError);
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // Malformed GUID in route
+           .ProducesProblem(StatusCodes.Status404NotFound) // Category not found
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(
@@ -22,10 +23,7 @@ public static class GetById
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        // Using the domain ID directly as requested
-        var query = new GetCategoryByIdQuery(id);
-
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new GetCategoryByIdQuery(id), ct);
 
         return result.Match(
             onValue: category => Results.Ok(category),

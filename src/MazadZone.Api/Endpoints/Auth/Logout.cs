@@ -1,5 +1,5 @@
+using MazadZone.Api.Infrastructure.Binding;
 using MazadZone.Application.Features.Authentication.Commands.Logout;
-using MazadZone.Domain.Users.ValueObjects;
 using System.Security.Claims;
 
 namespace MazadZone.Api.Endpoints.Auth;
@@ -11,23 +11,26 @@ public static class Logout
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("logout", HandleAsync)
-           .RequireAuthorization()
-           .WithTags("Authentication Management")
-           .WithSummary("Invalidate user session")
-           .Produces(StatusCodes.Status204NoContent)
-           .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .RequireAuthorization() 
+            .WithSummary("Invalidate user session")
+            .WithDescription("Logs out the current authenticated user by revoking their refresh token. Set 'isLogoutFromAllDevices' to true to invalidate all active sessions for this user.")
+            .Accepts<LogoutRequest>("application/json") 
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
+
     }
 
     private static async Task<IResult> HandleAsync(
         [FromBody] LogoutRequest request,
         [FromServices] ISender sender,
-        ClaimsPrincipal userPrincipal,
+        BoundUserId boundUserId,
         CancellationToken ct)
     {
-        var userId = userPrincipal.GetUserId();
 
         var command = new LogoutCommand(
-            UserId.Load(userId),
+            boundUserId.Value,
             request.RefreshToken,
             request.IsLogoutFromAllDevices);
 

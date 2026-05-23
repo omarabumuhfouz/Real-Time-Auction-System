@@ -9,11 +9,19 @@ public static class ReplyToFeedback
     public static void MapEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/orders/{orderId:guid}/feedback/reply", HandleAsync)
-            .WithName("ReplyToOrderFeedback")
-            .WithTags("Order Management")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
-            .WithOpenApi();
+           // .RequireAuthorization() // Highly recommended: Only the seller of this specific order should be able to reply
+           .WithName("ReplyToOrderFeedback")
+           .WithSummary("Reply to order feedback")
+           .WithDescription("Allows a seller to publicly reply to feedback left by a buyer on a specific completed order. Returns a 404 if the order is not found, and a 409 Conflict if no feedback exists yet or if a reply has already been submitted.")
+           .Accepts<ReplyToFeedbackRequest>("application/json")
+           .Produces(StatusCodes.Status204NoContent)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For a malformed GUID, or if the 'ReplyText' is empty/too long
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
+           .ProducesProblem(StatusCodes.Status403Forbidden) // Token is valid, but the user is not the seller of THIS order
+           .ProducesProblem(StatusCodes.Status404NotFound) // Order does not exist
+           .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule violations (e.g., no feedback to reply to, or already replied)
+           .ProducesProblem(StatusCodes.Status500InternalServerError)
+           .WithOpenApi();
     }
 
 private static async Task<IResult> HandleAsync(
@@ -22,9 +30,7 @@ private static async Task<IResult> HandleAsync(
         [FromServices] ISender mediator,
         CancellationToken ct)
     {
-        var command = new ReplyToFeedbackCommand(orderId, request.ReplyText);
-        
-        var result = await mediator.Send(command, ct);
+        var result = await mediator.Send(new ReplyToFeedbackCommand(orderId, request.ReplyText), ct);
 
         return result.Match(
             onValue: value => Results.NoContent(),

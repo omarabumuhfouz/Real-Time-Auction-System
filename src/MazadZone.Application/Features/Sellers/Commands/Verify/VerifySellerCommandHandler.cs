@@ -3,23 +3,23 @@ using MazadZone.Domain.Sellers;
 
 namespace MazadZone.Application.Features.Sellers.Commands.Verify;
 
-public sealed class VerifyCommandHandler : ICommandHandler<VerifyCommand, Unit>
+public sealed class VerifySellerCommandHandler : ICommandHandler<VerifySellerCommand, Unit>
 {
     private readonly ISellerRepository _sellerRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<VerifyCommandHandler> _logger;
+    private readonly ILogger<VerifySellerCommandHandler> _logger;
 
-    public VerifyCommandHandler(
+    public VerifySellerCommandHandler(
         ISellerRepository sellerRepository,
         IUnitOfWork unitOfWork,
-        ILogger<VerifyCommandHandler> logger)
+        ILogger<VerifySellerCommandHandler> logger)
     {
         _sellerRepository = sellerRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
-    public async Task<Result<Unit>> Handle(VerifyCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(VerifySellerCommand request, CancellationToken cancellationToken)
     {
         // 1. Retrieve the aggregate via strong type ID
         var seller = await _sellerRepository.GetByIdAsync(request.SellerId.Value, cancellationToken);
@@ -40,7 +40,7 @@ public sealed class VerifyCommandHandler : ICommandHandler<VerifyCommand, Unit>
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // 5. Log Success
-        VerifyLogs.LogSuccess(_logger, request.SellerId);
+        VerifySellerLogs.LogSuccess(_logger, request.SellerId);
 
         return Unit.Value;
     }
