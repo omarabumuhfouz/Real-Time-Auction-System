@@ -11,6 +11,7 @@ import { SimilarItems } from "./SimilarItems";
 import { useAuthStore } from "@/stores/auth.store";
 import { ROUTES } from "@/config/routes.config";
 import type { AuctionSummary, Seller } from "../../types/auction.types";
+import { PlaceBidModal } from "@/features/bidding";
 
 interface AuctionDetailContentProps {
   auction: AuctionSummary;
@@ -26,6 +27,7 @@ export function AuctionDetailContent({
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(auction.isFavorite);
+  const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Mock Data & Derivatives
@@ -52,17 +54,18 @@ export function AuctionDetailContent({
   // ---------------------------------------------------------------------------
 
   const handlePlaceBid = () => {
-    if (!isAuthenticated) {
-      router.push(ROUTES.AUTH.REGISTER);
-      return;
-    }
+    // Temporarily disabled check for testing the Place Bid Modal as a guest
+    // if (!isAuthenticated) {
+    //   router.push(ROUTES.AUTH.REGISTER);
+    //   return;
+    // }
 
     if (auction.isOwner) {
       router.push(`${ROUTES.AUCTIONS.DETAIL(auction.id)}/edit`);
       return;
     }
 
-    // TODO: Open bid modal
+    setIsBidModalOpen(true);
   };
 
   const handleShare = async () => {
@@ -122,6 +125,19 @@ export function AuctionDetailContent({
         auctionId={auction.id}
         category={auction.category}
         subcategory={auction.subcategory}
+      />
+
+      <PlaceBidModal
+        auctionId={auction.id}
+        auctionTitle={auction.title}
+        currentBid={auction.pricing.currentBid ?? auction.pricing.startingPrice}
+        minIncrement={
+          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 100 ? 5 :
+          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 1000 ? 50 :
+          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 10000 ? 100 : 250
+        }
+        isOpen={isBidModalOpen}
+        onClose={() => setIsBidModalOpen(false)}
       />
     </>
   );

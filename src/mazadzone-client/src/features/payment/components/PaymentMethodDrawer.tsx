@@ -6,18 +6,18 @@ import { X, Shield, ShieldCheck } from "lucide-react";
 
 import { useAuthStore } from "@/stores/auth.store";
 import { type PayoutDetails } from "../types";
-import { CreditCardPayoutForm } from "./CreditCardPayoutForm";
+import { CreditCardForm } from "./CreditCardForm";
 import { 
   type CreditCardFormValues 
 } from "../validations/creditCard.schema";
 
-interface PayoutDrawerProps {
+interface PaymentMethodDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (details: PayoutDetails) => void;
 }
 
-export function PayoutDrawer({ isOpen, onClose, onSave }: PayoutDrawerProps) {
+export function PaymentMethodDrawer({ isOpen, onClose, onSave }: PaymentMethodDrawerProps) {
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -135,11 +135,12 @@ export function PayoutDrawer({ isOpen, onClose, onSave }: PayoutDrawerProps) {
           </div>
 
           {/* Render Modular Credit Card Sub-form */}
-          <CreditCardPayoutForm 
+          <CreditCardForm 
             onSave={handleCardSave} 
             onCancel={onClose} 
             isSubmitting={isSubmitting} 
             defaultCardholderName={user?.fullName}
+            mode="payout"
           />
 
         </div>
