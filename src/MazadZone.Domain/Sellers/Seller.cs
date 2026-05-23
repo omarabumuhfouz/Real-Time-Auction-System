@@ -47,6 +47,7 @@ public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity, IAudita
 
     public void Verify()
     {
+        if (IsVerified) return;
         IsVerified = true;
         RaiseDomainEvent(new SellerVerifiedDomainEvent(Id));
     }
@@ -64,11 +65,9 @@ public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity, IAudita
 
     public static Result<Seller> BecomeSeller(BidderId bidderId, string bankAccountNumber, string nationalId)
     {
-        if (string.IsNullOrWhiteSpace(bankAccountNumber))
-            return SellerErrors.InvalidBankAccount;
+        if (string.IsNullOrWhiteSpace(bankAccountNumber)) return SellerErrors.InvalidBankAccount;
 
-        if(string.IsNullOrWhiteSpace(nationalId))
-            return SellerErrors.InvalidNationalId;
+        if (string.IsNullOrWhiteSpace(nationalId)) return SellerErrors.InvalidNationalId;
 
 
         var sellerId = SellerId.Load(bidderId.Value); 

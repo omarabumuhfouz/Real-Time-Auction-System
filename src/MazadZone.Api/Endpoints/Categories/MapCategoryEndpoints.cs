@@ -11,7 +11,8 @@ public static class CategoryEndpoints
 
         var categoryGroup = app.MapGroup("api/v{version:apiVersion}/categories")
                                .WithApiVersionSet(versionSet)
-                               .MapToApiVersion(1, 0);
+                               .MapToApiVersion(1, 0)
+                               .WithTags("Category Management");
 
         // Registered Queries
         GetRoots.MapEndpoint(categoryGroup);       

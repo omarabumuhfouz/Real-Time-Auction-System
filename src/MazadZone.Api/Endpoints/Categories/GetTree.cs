@@ -8,20 +8,19 @@ public static class GetTree
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/tree", HandleAsync)
-           .WithTags("Category Queries")
-           .WithSummary("Retrieves the full hierarchical category tree")
+           .AllowAnonymous() 
+           .WithSummary("Retrieve the full hierarchical category tree")
+           .WithDescription("Fetches the complete, deeply nested category structure including all root categories and their descendants. This endpoint is ideal for rendering complete multi-level navigation menus or caching the entire category structure on the client side.")
            .Produces<IReadOnlyList<CategoryTreeResponse>>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status500InternalServerError);
+           .ProducesProblem(StatusCodes.Status400BadRequest)
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        var query = new GetCategoryTreeQuery();
-
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new GetCategoryTreeQuery(), ct);
 
         return result.Match(
             onValue: tree => Results.Ok(tree),

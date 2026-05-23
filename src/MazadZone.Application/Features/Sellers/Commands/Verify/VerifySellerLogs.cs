@@ -1,10 +1,8 @@
-using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Sellers;
-using Microsoft.Extensions.Logging;
 
 namespace MazadZone.Application.Features.Sellers.Commands.Verify;
 
-internal static partial class VerifyLogs
+internal static partial class VerifySellerLogs
 {
     [LoggerMessage(
         EventId = MazadLogEvents.Sellers.VerifySuccess,

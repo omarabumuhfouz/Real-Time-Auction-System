@@ -6,6 +6,9 @@ public interface ICategoryRepository : IGenericRepository<Category>, IScopedServ
 {
     Task<bool> ExistsAsync(CategoryId id, CancellationToken ct);
 
+    Task<bool> IsNameUniqueAsync(string name, CategoryId? parentId, CancellationToken ct);
+
+
     Task<bool> ExistsWithNameInScopeAsync(
         string name,
         CategoryId? parentId,

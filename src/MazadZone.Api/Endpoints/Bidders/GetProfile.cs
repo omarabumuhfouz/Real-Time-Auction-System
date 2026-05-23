@@ -9,12 +9,14 @@ public static class GetProfile
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/{id:guid}", HandleAsync)
-           .WithSummary("Retrieves a Bidder's Profile")
-           .WithDescription("Gets detailed profile information for a specific bidder.")
-           .Produces<BidderProfileDto>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status404NotFound)
-           .Produces(StatusCodes.Status500InternalServerError);
+        // .RequireAuthorization() 
+        .WithSummary("Retrieve a bidder's profile")
+        .WithDescription("Fetches detailed profile information for a specific bidder using their unique identifier. Returns a 404 if the bidder does not exist.")
+        .Produces<BidderProfileDto>(StatusCodes.Status200OK)
+        .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized) 
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(
@@ -22,8 +24,7 @@ public static class GetProfile
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        var query = new GetBidderProfileQuery(id);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new GetBidderProfileQuery(id), ct);
 
         return result.Match(
             onValue: bidderDto => Results.Ok(bidderDto),

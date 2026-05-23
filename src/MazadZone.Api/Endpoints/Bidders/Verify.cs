@@ -7,13 +7,16 @@ public static class Verify
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id:guid}", HandleAsync)
-           .WithSummary("Verifies a Bidder")
-           .WithDescription("Verifies the identity of a specific bidder.")
-           .Produces(StatusCodes.Status204NoContent)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status404NotFound)
-           .Produces(StatusCodes.Status500InternalServerError);
+        app.MapPatch("/{id:guid}/verify", HandleAsync)
+            // .RequireAuthorization("AdminPolicy") 
+            .WithSummary("Verify a bidder's identity")
+            .WithDescription("Marks a specific bidder profile as verified. This operation updates the bidder's status and is typically restricted to administrative roles.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized) 
+            .ProducesProblem(StatusCodes.Status403Forbidden) 
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(
@@ -21,8 +24,7 @@ public static class Verify
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        var query = new VerifyBidderCommand(id);
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new VerifyBidderCommand(id), ct);
 
         return result.Match(
             onValue: _ => Results.NoContent(),

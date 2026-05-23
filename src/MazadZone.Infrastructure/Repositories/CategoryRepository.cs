@@ -38,4 +38,9 @@ public sealed class CategoryRepository : GenericRepository<Category>, ICategoryR
                 (excludeId == null || c.Id != excludeId), 
                 ct);
     }
+
+    public Task<bool> IsNameUniqueAsync(string name, CategoryId? parentId, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -109,8 +109,12 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order is not in a Confirmed state.</returns>
     public Result Ship()
     {
+        if (Status == OrderStatus.Shipped) return Result.Success();
+
         if (Status != OrderStatus.Confirmed) return OrderErrors.CannotShipped;
+
         Status = OrderStatus.Shipped;
+
         RaiseDomainEvent(new OrderShippedDomainEvent(Id, BidderId));
         return Result.Success();
     }
@@ -119,6 +123,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order is not currently Pending.</returns>
     public Result Confirm()
     {
+        if (Status == OrderStatus.Confirmed) return Result.Success();
+
         if (Status != OrderStatus.Pending) return OrderErrors.CannotConfirm;
         Status = OrderStatus.Confirmed;
         RaiseDomainEvent(new OrderConfirmedDomainEvent(Id, AuctionId));
@@ -129,6 +135,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order was not previously Shipped.</returns>
     public Result Deliver()
     {
+        if (Status == OrderStatus.Delivered) return Result.Success();
+
         if (Status != OrderStatus.Shipped) return OrderErrors.CannotDeliver;
         Status = OrderStatus.Delivered;
         RaiseDomainEvent(new OrderDeliveredDomainEvent(Id, AuctionId, BidderId));
@@ -139,6 +147,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order has already moved past the Pending state.</returns>
     public Result Cancel()
     {
+        if (Status == OrderStatus.Canceled) return Result.Success();
+
         if (Status != OrderStatus.Pending) return OrderErrors.CannotCancel;
         
         Status = OrderStatus.Canceled;
