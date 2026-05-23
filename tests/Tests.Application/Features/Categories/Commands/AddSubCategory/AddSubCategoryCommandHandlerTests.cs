@@ -10,7 +10,7 @@ public class AddSubCategoryCommandHandlerTests : CategoryBaseTest<AddSubCategory
     public async Task Handle_Should_ReturnNotFound_WhenParentDoesNotExist()
     {
         // Arrange: Parent returns null
-        _categoryRepository.GetByIdAsync(Arg.Any<Guid>(), default).Returns((Category?)null);
+        _categoryRepository.GetByIdAsync(CategoryId.New(), default).Returns((Category?)null);
         var command = new AddSubCategoryCommand(CategoryId.New(), CategoryId.New());
 
         // Act
@@ -28,8 +28,8 @@ public class AddSubCategoryCommandHandlerTests : CategoryBaseTest<AddSubCategory
         var parent = Category.Create("Parent", "Desc").Value;
         var sub = Category.Create("Sub", "Desc", CategoryId.New()).Value; // ParentId is wrong
 
-        _categoryRepository.GetByIdAsync(parent.Id.Value, default).Returns(parent);
-        _categoryRepository.GetByIdAsync(sub.Id.Value, default).Returns(sub);
+        _categoryRepository.GetByIdAsync(parent.Id, default).Returns(parent);
+        _categoryRepository.GetByIdAsync(sub.Id, default).Returns(sub);
 
         var command = new AddSubCategoryCommand(parent.Id, sub.Id);
 
@@ -49,8 +49,8 @@ public class AddSubCategoryCommandHandlerTests : CategoryBaseTest<AddSubCategory
         var parent = Category.Create("Parent", "Desc").Value;
         var sub = Category.Create("Sub", "Desc", parent.Id).Value; // Correct ParentId
 
-        _categoryRepository.GetByIdAsync(parent.Id.Value, default).Returns(parent);
-        _categoryRepository.GetByIdAsync(sub.Id.Value, default).Returns(sub);
+        _categoryRepository.GetByIdAsync(parent.Id, default).Returns(parent);
+        _categoryRepository.GetByIdAsync(sub.Id, default).Returns(sub);
 
         var command = new AddSubCategoryCommand(parent.Id, sub.Id);
 

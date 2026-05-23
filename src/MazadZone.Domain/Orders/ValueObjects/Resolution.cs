@@ -29,6 +29,7 @@ public sealed record Resolution
 
         return new Resolution(sanitizedText);
     }
+public static Resolution FromDatabase(string value) => new Resolution(value ?? string.Empty);
 
     // Optional: Implicit conversion to string makes it easier to use with standard APIs
     public static implicit operator string(Resolution resolution) => resolution.Value;

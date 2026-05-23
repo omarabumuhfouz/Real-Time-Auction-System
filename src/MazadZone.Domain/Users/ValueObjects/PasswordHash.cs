@@ -17,6 +17,8 @@ public sealed record PasswordHash
         return Result.Success(new PasswordHash(hash));
     }
 
+    public static PasswordHash FromDatabase(string value) => new PasswordHash(value ?? string.Empty);
+
     // Explicitly overriding ToString() to prevent accidental logging of the hash!
     public override string ToString() => "***"; 
 }

@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Tests.Application.Features.Sellers.Commands.Verify;
 
-public class VerifyCommandHandlerTests : SellerBaseTest<VerifyCommandHandler>
+public class VerifyCommandHandlerTests : SellerBaseTest<VerifySellerCommandHandler>
 {
     [Fact]
     public async Task Handle_SellerDoesNotExist_ReturnsNotFoundError()
@@ -12,7 +12,7 @@ public class VerifyCommandHandlerTests : SellerBaseTest<VerifyCommandHandler>
         // Arrange
         var command = SellerHelper.CreateVerifyCommand();
 
-        _sellerRepository.GetByIdAsync(command.SellerId.Value, Arg.Any<CancellationToken>())
+        _sellerRepository.GetByIdAsync(command.SellerId, Arg.Any<CancellationToken>())
             .Returns((Seller?)null);
 
         // Act
@@ -34,7 +34,7 @@ public class VerifyCommandHandlerTests : SellerBaseTest<VerifyCommandHandler>
         var seller = SellerHelper.CreateValidSeller();
         var command = SellerHelper.CreateVerifyCommand();
 
-        _sellerRepository.GetByIdAsync(command.SellerId.Value, Arg.Any<CancellationToken>())
+        _sellerRepository.GetByIdAsync(command.SellerId, Arg.Any<CancellationToken>())
             .Returns(seller);
 
         // Act

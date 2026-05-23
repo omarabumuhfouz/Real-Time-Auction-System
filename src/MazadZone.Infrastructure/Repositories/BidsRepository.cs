@@ -4,7 +4,7 @@ using MazadZone.Infrastructure.Persistence;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class BidRepository : GenericRepository<Bid>, IBidRepository
+public class BidRepository : GenericRepository<Bid, BidId>, IBidRepository
 {
     public BidRepository(AppDbContext context)
         : base(context)

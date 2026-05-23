@@ -18,7 +18,7 @@ public class VerifyBidderCommandHandler : ICommandHandler<VerifyBidderCommand, U
 
     public async Task<Result<Unit>> Handle(VerifyBidderCommand request, CancellationToken cancellationToken)
     {
-        var bidder = await _bidderRepository.GetByIdAsync(request.BidderId.Value, cancellationToken);
+        var bidder = await _bidderRepository.GetByIdAsync(request.BidderId, cancellationToken);
         if (bidder is null)
         {
             GlobalLogs.LogBidderNotFound(_logger, request.BidderId);

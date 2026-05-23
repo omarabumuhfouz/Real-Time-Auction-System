@@ -4,7 +4,7 @@ using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Repositories;
 
-public interface IAuctionRepository: IGenericRepository<Auction>, IScopedService
+public interface IAuctionRepository: IGenericRepository<Auction, AuctionId>, IScopedService
 {
     Task<int> TerminateAllAuctionsBySellerIdAsync(UserId sellerId, string reason, CancellationToken ct);
     Task<int> CancelAllActiveBySellerIdAsync(Guid sellerId,CancellationToken ct);

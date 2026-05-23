@@ -41,7 +41,7 @@ public class CreateNotificationHandler : ICommandHandler<CreateNotificationComma
 
         var notification = Notification.Create(request.UserId, request.Title, request.Message);
 
-        await _notificationRepository.AddAsync(notification, cancellationToken);
+        _notificationRepository.Add(notification);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     _logger.LogInformation("Notification created with ID {NotificationId}", notification.Id);

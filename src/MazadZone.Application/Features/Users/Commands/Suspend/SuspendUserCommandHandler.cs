@@ -21,7 +21,7 @@ public class SuspendUserCommandHandler : ICommandHandler<SuspendUserCommand, Uni
 
     public async Task<Result<Unit>> Handle(SuspendUserCommand request, CancellationToken ct)
     {
-        var user = await _userRepo.GetByIdAsync(request.UserId.Value, ct);
+        var user = await _userRepo.GetByIdAsync(request.UserId, ct);
         if (user is null)
         {
             GlobalLogs.LogUserNotFound(_logger, request.UserId);

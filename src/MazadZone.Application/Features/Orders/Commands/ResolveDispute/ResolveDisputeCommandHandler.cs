@@ -22,7 +22,7 @@ public class ResolveDisputeCommandHandler : ICommandHandler<ResolveDisputeComman
     {
         ResolveDisputeLogs.LogAttempt(_logger, request.OrderId, request.Resolution);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
+        var order = await _orderRepository.GetWithDispute(request.OrderId, ct);
 
         if (order is null) 
         {

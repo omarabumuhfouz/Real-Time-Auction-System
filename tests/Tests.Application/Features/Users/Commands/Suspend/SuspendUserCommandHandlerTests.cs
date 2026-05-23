@@ -14,7 +14,7 @@ public class SuspendUserCommandHandlerTests : UserBaseTest<SuspendUserCommandHan
         // Arrange
         var command = CreateCommand();
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -38,7 +38,7 @@ public class SuspendUserCommandHandlerTests : UserBaseTest<SuspendUserCommandHan
         // Pass an empty string to force Reason.Create() to fail its domain validation
         var command = CreateCommand(user.Id, string.Empty);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act
@@ -61,7 +61,7 @@ public class SuspendUserCommandHandlerTests : UserBaseTest<SuspendUserCommandHan
         var user = UserHelper.CreateBannedUser();
         var command = CreateCommand(user.Id);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act
@@ -87,7 +87,7 @@ public class SuspendUserCommandHandlerTests : UserBaseTest<SuspendUserCommandHan
 
         var command = CreateCommand(user.Id);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act

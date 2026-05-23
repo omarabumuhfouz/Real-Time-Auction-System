@@ -19,6 +19,9 @@ public sealed record Description
         return Result.Success(new Description(value.Trim()));
     }
 
+    public static Description FromDatabase(string value) => new Description(value ?? string.Empty);
+
+
     public static implicit operator string(Description description) => description.Value;
     
     public override string ToString() => Value;

@@ -12,7 +12,7 @@ public class CommentTests
     [InlineData(" ")]
     [InlineData("   ")]
     [InlineData(null)]
-    public void Create_ValueIsEmptyOrWhitespace_ReturnsEmptyError(string invalidValue)
+    public void Create_ValueIsEmptyOrWhitespace_ReturnsEmptyError(string? invalidValue)
     {
         // Act
         var result = Comment.Create(invalidValue);

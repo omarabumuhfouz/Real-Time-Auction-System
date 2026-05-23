@@ -25,7 +25,7 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
             .Select(x => x.Entity)
             .SelectMany(aggregateRoot => 
             {
-                var domainEvents = aggregateRoot.DomainEvents;
+                var domainEvents = aggregateRoot.DomainEvents.ToList();
                 aggregateRoot.ClearDomainEvents();
                 return domainEvents;
             })

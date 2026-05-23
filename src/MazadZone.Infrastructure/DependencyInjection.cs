@@ -19,8 +19,8 @@ public static class DependencyInjection
     {
 
         services
-            .AddDatabase(configuration)
             .AddOutboxPattern(configuration)
+            .AddDatabase(configuration)
             .AddPollyPolicies(configuration)
             .AddRedisServices(configuration)
             .AddServiceScanning();

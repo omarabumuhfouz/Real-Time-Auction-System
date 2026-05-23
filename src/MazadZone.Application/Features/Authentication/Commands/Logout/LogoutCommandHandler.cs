@@ -27,7 +27,7 @@ public class LogoutCommandHandler : ICommandHandler<LogoutCommand, Unit>
 {
     var hashedToken = _tokenProvider.HashToken(request.RefreshToken);
 
-    var user = await _userRepository.GetByIdAsync(request.UserId.Value, ct);
+    var user = await _userRepository.GetByIdAsync(request.UserId, ct);
     
     if (user is null)
     {

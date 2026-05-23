@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class UserRepository : GenericRepository<User>, IUserRepository
+public class UserRepository : GenericRepository<User,UserId>, IUserRepository
 {
     private readonly AppDbContext _context;
 

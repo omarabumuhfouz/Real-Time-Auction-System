@@ -15,7 +15,7 @@ public class ChangePasswordCommandHandlerTests : UserBaseTest<ChangePasswordComm
         // Arrange
         var command = new ChangePasswordCommand(UserId.New(), "oldPass123!", "newPass123!", "newPass123!");
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -36,7 +36,7 @@ public class ChangePasswordCommandHandlerTests : UserBaseTest<ChangePasswordComm
         var user = UserHelper.CreateActiveUser();
         var command = new ChangePasswordCommand(user.Id, "wrongOldPassword", "newPass123!", "newPass123!");
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Setup the password service to reject the current password
@@ -61,7 +61,7 @@ public class ChangePasswordCommandHandlerTests : UserBaseTest<ChangePasswordComm
         var user = UserHelper.CreateActiveUser();
         var command = new ChangePasswordCommand(user.Id, "correctOldPass", "newPass123!", "newPass123!");
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _passwordService.ValidatePassword(command.CurrentPassword, user.PasswordHash.Value)
@@ -94,7 +94,7 @@ public class ChangePasswordCommandHandlerTests : UserBaseTest<ChangePasswordComm
         var command = new ChangePasswordCommand(user.Id, "correctOldPass", "newPass123!", "newPass123!");
         var expectedNewHash = "$2a$12$NewValidHashStringGoesHere123456789";
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _passwordService.ValidatePassword(command.CurrentPassword, user.PasswordHash.Value)

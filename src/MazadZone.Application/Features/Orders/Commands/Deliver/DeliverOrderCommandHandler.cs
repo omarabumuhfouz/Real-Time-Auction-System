@@ -22,7 +22,7 @@ public class DeliverOrderCommandHandler : ICommandHandler<DeliverOrderCommand, U
     {
         DeliverOrderLogs.LogAttempt(_logger, request.OrderId);
 
-        var order = await _orderRepository.GetByIdAsync(request.OrderId.Value, ct);
+        var order = await _orderRepository.GetByIdAsync(request.OrderId, ct);
 
         if (order is null) 
         {

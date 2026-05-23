@@ -38,7 +38,7 @@ public class OrderQueries : ResilientRepository , IOrderQueries
                ELSE 'Unknown'
            END AS Status,
 
-          CAST(CASE WHEN d.OrderId IS NOT NULL AND d.Status != @ResolvedDisputeStatus THEN 1 ELSE 0 END AS BIT) AS HasActiveDispute,
+           CAST(CASE WHEN d.OrderId IS NOT NULL AND d.Status != @ResolvedDisputeStatus THEN 1 ELSE 0 END AS BIT) AS HasActiveDispute,
            CAST(CASE WHEN d.OrderId IS NULL AND o.Status IN (@ShippedStatus, @DeliveredStatus) THEN 1 ELSE 0 END AS BIT) AS IsDisputable,
            CAST(CASE WHEN f.OrderId IS NULL AND o.Status = @DeliveredStatus THEN 1 ELSE 0 END AS BIT) AS CanLeaveFeedback
 
@@ -98,6 +98,9 @@ public class OrderQueries : ResilientRepository , IOrderQueries
             CAST(CASE WHEN DisputeId IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasActiveDispute,
             CAST(CASE WHEN Status = @Delivered AND FeedbackId IS NULL THEN 1 ELSE 0 END AS BIT) AS CanLeaveFeedback
         FROM Orders
+        LEFT JOIN Disputes d ON o.Id = d.OrderId
+        LEFT JOIN Feedbacks f ON o.Id = f.OrderId
+
             WHERE {whereClause}
             ORDER BY Id DESC
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;

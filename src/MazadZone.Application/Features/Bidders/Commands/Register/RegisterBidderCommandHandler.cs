@@ -56,6 +56,7 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         }
 
         var newUser = newUserResult.Value;
+        newUser.AddBidderRole();
 
         var bidderResult = Bidder.CompleteProfile(newUser.Id,request.NationalId, request.Address.ToAddress());
         if (bidderResult.IsFailure)

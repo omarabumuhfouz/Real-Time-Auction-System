@@ -13,7 +13,7 @@ public class NotifyBidderOnDisputeResolvedDomainEventHandlerTests
         var domainEvent = OrderHelper.CreateDisputeResolvedEvent();
 
         // Using ReturnsForAnyArgs to avoid Vogen default initialization crashes
-        _orderRepository.GetByIdAsync(default!, default)
+        _orderRepository.GetByIdAsync(domainEvent.OrderId!, default)
             .ReturnsForAnyArgs((Order?)null);
 
         // Act
@@ -32,7 +32,7 @@ public class NotifyBidderOnDisputeResolvedDomainEventHandlerTests
         var order = OrderHelper.CreatePendingOrder();
         var domainEvent = OrderHelper.CreateDisputeResolvedEvent() with { OrderId = order.Id };
 
-        _orderRepository.GetByIdAsync(order.Id.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(order.Id, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

@@ -15,7 +15,7 @@ public class BanUserCommandHandlerTests : UserBaseTest<BanUserCommandHandler>
         var command = new BanUserCommand(UserId.New(), "Violation of terms.");
 
         // Safe setup using the primitive .Value 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -38,7 +38,7 @@ public class BanUserCommandHandlerTests : UserBaseTest<BanUserCommandHandler>
         // Pass an empty string to force Reason.Create() to fail its domain validation
         var command = new BanUserCommand(user.Id, string.Empty);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act
@@ -63,7 +63,7 @@ public class BanUserCommandHandlerTests : UserBaseTest<BanUserCommandHandler>
         var banReason = "Severe policy violation: Fraudulent bids.";
         var command = new BanUserCommand(user.Id, banReason);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act

@@ -14,7 +14,7 @@ public class NotifySellerOnDisputeOpenedDomainEventHandlerTests : OrderBaseTest<
         // Arrange
         var domainEvent = OrderHelper.CreateDisputeOpenedEvent();
 
-        _orderRepository.GetByIdAsync(domainEvent.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(domainEvent.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -32,7 +32,7 @@ public class NotifySellerOnDisputeOpenedDomainEventHandlerTests : OrderBaseTest<
         var domainEvent = OrderHelper.CreateDisputeOpenedEvent();
         var order = OrderHelper.CreatePendingOrder();
 
-        _orderRepository.GetByIdAsync(domainEvent.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(domainEvent.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         _sellerRepository.GetByAuctionIdAsync(order.AuctionId, Arg.Any<CancellationToken>())
@@ -43,7 +43,7 @@ public class NotifySellerOnDisputeOpenedDomainEventHandlerTests : OrderBaseTest<
 
         // Assert
         // Verify we checked the order but stopped because the seller was missing
-        await _orderRepository.Received(1).GetByIdAsync(domainEvent.OrderId.Value, Arg.Any<CancellationToken>());
+        await _orderRepository.Received(1).GetByIdAsync(domainEvent.OrderId, Arg.Any<CancellationToken>());
         await _notificationRepository.DidNotReceiveWithAnyArgs().NotifySellerAsync(default!, default!, default!, default);
     }
 
@@ -57,7 +57,7 @@ public class NotifySellerOnDisputeOpenedDomainEventHandlerTests : OrderBaseTest<
 
         var domainEvent = OrderHelper.CreateDisputeOpenedEvent();
 
-        _orderRepository.GetByIdAsync(domainEvent.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(domainEvent.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         _sellerRepository.GetByAuctionIdAsync(order.AuctionId, Arg.Any<CancellationToken>())

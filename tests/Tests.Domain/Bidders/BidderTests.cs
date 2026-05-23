@@ -32,7 +32,7 @@ public class BidderTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void CompleteProfile_Should_ReturnFailure_When_NationalIdIsInvalid(string invalidNationalId)
+    public void CompleteProfile_Should_ReturnFailure_When_NationalIdIsInvalid(string? invalidNationalId)
     {
         // Arrange
         var userId = UserId.New();

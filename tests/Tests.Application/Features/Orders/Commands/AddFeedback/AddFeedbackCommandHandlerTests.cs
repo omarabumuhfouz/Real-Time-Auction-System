@@ -12,7 +12,7 @@ public class AddFeedbackCommandHandlerTests : OrderBaseTest<AddFeedbackCommandHa
         // Arrange
         var command = OrderHelper.CreateAddFeedbackCommand();
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithFeedback(command.OrderId, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act
@@ -34,7 +34,7 @@ public class AddFeedbackCommandHandlerTests : OrderBaseTest<AddFeedbackCommandHa
         
         var order = OrderHelper.CreatePendingOrder(); 
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithFeedback(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
@@ -56,7 +56,7 @@ public class AddFeedbackCommandHandlerTests : OrderBaseTest<AddFeedbackCommandHa
         
         var order = OrderHelper.CreateDeliveredOrder(); 
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetWithFeedback(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

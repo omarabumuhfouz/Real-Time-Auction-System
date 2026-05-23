@@ -6,11 +6,11 @@ namespace Tests.Application.Features.Sellers.Commands.Verify;
 
 public class VerifyValidatorTests
 {
-    private readonly VerifyValidator _validator;
+    private readonly VerifySellerValidator _validator;
 
     public VerifyValidatorTests()
     {
-        _validator = new VerifyValidator();
+        _validator = new VerifySellerValidator();
     }
 
     [Fact]

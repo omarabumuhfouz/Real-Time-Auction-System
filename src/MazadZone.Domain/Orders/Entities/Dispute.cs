@@ -69,4 +69,3 @@ public sealed class Dispute : Entity<DisputeId>
 //     PaySeller = 2,        // The bidder's claim was invalid; give money to the seller
 //     PartialRefund = 3,    // A compromise where both parties get some money
 //     EscalateToLegal = 4   // Too complex for the system; requires manual legal intervention
-// }
