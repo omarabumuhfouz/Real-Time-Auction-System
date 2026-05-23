@@ -1,4 +1,4 @@
-import { SellerProfilePage } from "@/features/seller";
+import { UserProfilePage } from "@/features/profile";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -6,5 +6,5 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  return <SellerProfilePage sellerId={id} />;
+  return <UserProfilePage userId={id} />;
 }

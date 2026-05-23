@@ -41,13 +41,14 @@ export const ROUTES = {
     CREATE_AUCTION: "/seller/auctions/create",
     EDIT_AUCTION: (id: string) => `/seller/auctions/${id}/edit` as const,
     BECOME: "/seller/become",
-    PROFILE: (id: string) => `/seller/${id}` as const,
+    PROFILE: (id: string) => `/users/${id}` as const,
   },
 
   // --- Profile -------------------------------------------
   PROFILE: {
     VIEW: "/profile",
     EDIT: "/profile/edit",
+    PUBLIC: (id: string) => `/users/${id}` as const,
   },
 
   // --- Admin ---------------------------------------------
