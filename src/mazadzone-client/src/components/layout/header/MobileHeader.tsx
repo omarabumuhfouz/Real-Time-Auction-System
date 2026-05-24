@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORIES } from "./header.constants";
-import { NotificationPopover, useGetUnreadCount } from "@/features/notifications";
+import { NotificationPopover, useGetUnreadCount, useNotificationStore } from "@/features/notifications";
 import { useAuthStore } from "@/stores/auth.store";
 
 export interface MobileHeaderProps {
@@ -36,7 +36,11 @@ export const MobileHeader = ({
   pathname,
 }: MobileHeaderProps) => {
   const user = useAuthStore((state) => state.user);
-  const { data: unreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
+  const { data: serverUnreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
+  const notifications = useNotificationStore((state) => state.notifications);
+  const storeUnreadCount = useNotificationStore((state) => state.getUnreadCount());
+
+  const unreadCount = notifications.length > 0 ? storeUnreadCount : serverUnreadCount;
 
   return (
     <>

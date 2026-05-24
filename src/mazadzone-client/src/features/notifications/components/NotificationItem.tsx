@@ -1,52 +1,133 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Notification } from "../types/notification.types";
-import { Bell, Gavel, Package, MessageSquare, Clock } from "lucide-react";
+import {
+  Bell,
+  Gavel,
+  Package,
+  MessageSquare,
+  Clock,
+  Trophy,
+  XCircle,
+  CreditCard,
+  AlertTriangle,
+  CheckCircle2,
+  Star,
+  ShieldCheck,
+  UserCheck,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import type { NotificationType } from "../types/notification.types";
 
 interface NotificationItemProps {
   notification: Notification;
   onClick?: (notification: Notification) => void;
 }
 
-const ICON_MAP = {
-  bid_accepted: { icon: Gavel, color: "bg-orange-50 text-orange-500" },
-  order_shipped: { icon: Package, color: "bg-orange-50 text-orange-500" },
-  new_message: { icon: MessageSquare, color: "bg-orange-50 text-orange-500" },
-  auction_ending: { icon: Bell, color: "bg-orange-50 text-orange-500" },
-  general: { icon: Bell, color: "bg-orange-50 text-orange-500" },
+// ---------------------------------------------------------------------------
+// Icon map — domain event type → icon + colour ring
+// ---------------------------------------------------------------------------
+
+type IconConfig = {
+  icon: typeof Bell;
+  /** Tailwind classes for the icon container background + text colour. */
+  color: string;
 };
 
-export const NotificationItem = ({ notification, onClick }: NotificationItemProps) => {
-  const { icon: Icon, color } = ICON_MAP[notification.type] || ICON_MAP.general;
+const ICON_MAP: Record<NotificationType, IconConfig> = {
+  // Bidding
+  bid_accepted: { icon: Gavel, color: "bg-primary/10 text-primary" },
+  bid_placed:   { icon: Gavel, color: "bg-primary/10 text-primary" },
+  outbid:       { icon: Gavel, color: "bg-warning text-warning-foreground" },
 
-  return (
+  // Auctions
+  auction_ending:   { icon: Clock,    color: "bg-warning text-warning-foreground" },
+  auction_won:      { icon: Trophy,   color: "bg-success text-success-foreground" },
+  auction_cancelled:{ icon: XCircle,  color: "bg-destructive/10 text-destructive" },
+
+  // Orders
+  order_shipped:  { icon: Package,   color: "bg-info text-info-foreground" },
+  order_received: { icon: Package,   color: "bg-success text-success-foreground" },
+
+  // Payments
+  payment_failed:     { icon: CreditCard, color: "bg-destructive/10 text-destructive" },
+  payment_authorized: { icon: CreditCard, color: "bg-success text-success-foreground" },
+
+  // Disputes
+  dispute_opened:   { icon: AlertTriangle, color: "bg-warning text-warning-foreground" },
+  dispute_resolved: { icon: CheckCircle2, color: "bg-success text-success-foreground" },
+
+  // Feedback
+  feedback_received: { icon: Star, color: "bg-primary/10 text-primary" },
+
+  // Account
+  account_verified: { icon: ShieldCheck, color: "bg-success text-success-foreground" },
+  seller_approved:  { icon: UserCheck,   color: "bg-success text-success-foreground" },
+
+  // Messaging
+  new_message: { icon: MessageSquare, color: "bg-info text-info-foreground" },
+
+  // Fallback
+  general: { icon: Bell, color: "bg-muted text-muted-foreground" },
+};
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function NotificationItem({ notification, onClick }: NotificationItemProps) {
+  const { icon: Icon, color } =
+    ICON_MAP[notification.type] ?? ICON_MAP.general;
+
+  const content = (
     <div
       onClick={() => onClick?.(notification)}
       className={cn(
-        "flex items-start gap-4 p-4 transition-colors cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-0",
-        !notification.isRead && "bg-white"
+        "flex items-start gap-3.5 px-4 py-3.5 transition-colors cursor-pointer",
+        "hover:bg-muted/40 border-b border-border last:border-0",
+        !notification.isRead && "bg-primary/[0.03]"
       )}
+      role="listitem"
+      aria-label={`${notification.title}${!notification.isRead ? " — unread" : ""}`}
     >
-      <div className={cn("shrink-0 w-10 h-10 rounded-full flex items-center justify-center", color)}>
-        <Icon className="w-5 h-5" />
+      {/* Icon ring */}
+      <div
+        className={cn(
+          "shrink-0 w-9 h-9 rounded-full flex items-center justify-center mt-0.5",
+          color
+        )}
+        aria-hidden="true"
+      >
+        <Icon className="w-4 h-4" />
       </div>
 
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center justify-between gap-2">
-          <h4 className="text-sm font-semibold text-gray-900 truncate">
+      {/* Text */}
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <div className="flex items-start justify-between gap-2">
+          <h4 className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
             {notification.title}
           </h4>
           {!notification.isRead && (
-            <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+            <span
+              className="mt-1 w-2 h-2 rounded-full bg-primary shrink-0"
+              aria-label="Unread"
+            />
           )}
         </div>
-        <p className="text-sm text-gray-600 line-clamp-2">
+
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
           {notification.message}
         </p>
-        <span className="text-xs text-gray-400">
-          {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+
+        <span className="text-[11px] text-muted-foreground/70 font-medium">
+          {formatDistanceToNow(new Date(notification.createdAt), {
+            addSuffix: true,
+          })}
         </span>
       </div>
     </div>
   );
-};
+
+  return content;
+}

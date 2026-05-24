@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { useNotificationStore } from "@/stores/notification.store";
+import { useAppToast } from "@/lib/toast/app-toast";
 import { updateMockAuctionStatus } from "./queries";
 
 export interface CancelAuctionParams {
@@ -19,7 +19,7 @@ export interface ForceEndAuctionParams {
  */
 export function useCancelAuction() {
   const queryClient = useQueryClient();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   return useMutation({
     mutationFn: async ({ auctionId, reason }: CancelAuctionParams) => {
@@ -40,21 +40,11 @@ export function useCancelAuction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "moderate-auctions"] });
-      addNotification({
-        type: "success",
-        title: "Auction Cancelled",
-        message: "The auction has been successfully cancelled.",
-        duration: 4000,
-      });
+      appToast.success("Auction Cancelled", "The auction has been successfully cancelled.");
     },
     onError: (error: unknown) => {
       const msg = error instanceof Error ? error.message : "Failed to cancel the auction. Please try again.";
-      addNotification({
-        type: "error",
-        title: "Action Failed",
-        message: msg,
-        duration: 5000,
-      });
+      appToast.error("Action Failed", msg);
     },
   });
 }
@@ -65,7 +55,7 @@ export function useCancelAuction() {
  */
 export function useForceEndAuction() {
   const queryClient = useQueryClient();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   return useMutation({
     mutationFn: async ({ auctionId, reason }: ForceEndAuctionParams) => {
@@ -86,21 +76,11 @@ export function useForceEndAuction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "moderate-auctions"] });
-      addNotification({
-        type: "success",
-        title: "Auction Force-Ended",
-        message: "The auction has been force-ended and bidding is now closed.",
-        duration: 4000,
-      });
+      appToast.success("Auction Force-Ended", "The auction has been force-ended and bidding is now closed.");
     },
     onError: (error: unknown) => {
       const msg = error instanceof Error ? error.message : "Failed to force-end the auction. Please try again.";
-      addNotification({
-        type: "error",
-        title: "Action Failed",
-        message: msg,
-        duration: 5000,
-      });
+      appToast.error("Action Failed", msg);
     },
   });
 }

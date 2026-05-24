@@ -29,7 +29,7 @@ import {
 } from "../../constants/moderate-users.constants";
 import { ModerateUsersPagination } from "./ModerateUsersPagination";
 import { useRestoreUser } from "../../api/user-mutations";
-import { useNotificationStore } from "@/stores/notification.store";
+
 import { SuspendUserDialog } from "./SuspendUserDialog";
 import { BanUserDialog } from "./BanUserDialog";
 
@@ -64,7 +64,6 @@ export function ModerateUsersTable({
   const [actionType, setActionType] = useState<"suspend" | "ban" | null>(null);
 
   const restoreMutation = useRestoreUser();
-  const addNotification = useNotificationStore((state) => state.addNotification);
 
   const handleActionClick = (type: "view" | "suspend" | "ban" | "restore", user: ModerateUser) => {
     if (type === "suspend" || type === "ban") {

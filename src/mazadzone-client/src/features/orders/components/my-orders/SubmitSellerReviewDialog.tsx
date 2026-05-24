@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Star, Loader2, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
-import { useNotificationStore } from "@/stores/notification.store";
+import { useAppToast } from "@/lib/toast/app-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -37,7 +37,7 @@ export function SubmitSellerReviewDialog({
   itemName,
 }: SubmitSellerReviewDialogProps) {
   const { user } = useAuthStore();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
@@ -74,12 +74,7 @@ export function SubmitSellerReviewDialog({
         orderId,
       });
 
-      addNotification({
-        type: "success",
-        title: "Review Submitted",
-        message: `Your feedback for ${sellerName} has been recorded successfully!`,
-        duration: 4000,
-      });
+      appToast.success("Review Submitted", `Your feedback for ${sellerName} has been recorded successfully!`);
 
       // Reset form state & close dialog
       setRating(0);

@@ -7,8 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
   PlusCircle,
-  CheckCircle,
-  AlertCircle
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +14,8 @@ import { PageWrapper } from "@/components/layout/page-wrapper";
 import { ROUTES } from "@/config/routes.config";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRequireRole } from "@/hooks/use-require-role";
+import { AppAlert } from "@/components/feedback/app-alert";
+import { useAppToast } from "@/lib/toast/app-toast";
 
 import { useCreateAuction } from "../../api/auction.mutations";
 import { AuctionCategory, AuctionSubcategory, AuctionCondition } from "../../types/auction.types";
@@ -40,6 +40,7 @@ export function CreateAuctionPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { mutateAsync: createAuction, isPending } = useCreateAuction();
+  const appToast = useAppToast();
 
   const { isAuthorized, isLoading: isAuthLoading } = useRequireRole(["seller"], {
     loginMessage: "Please log in to create a new auction listing.",
@@ -164,6 +165,7 @@ export function CreateAuctionPage() {
       });
 
       setSubmitSuccess(true);
+      appToast.success("Auction created!", "Redirecting to your dashboard...");
 
       // Delay navigation slightly to let success animation play
       setTimeout(() => {
@@ -175,6 +177,7 @@ export function CreateAuctionPage() {
       // Simulate successful local testing workflow
       await new Promise((resolve) => setTimeout(resolve, 1500));
       setSubmitSuccess(true);
+      appToast.success("Auction created!", "Redirecting to your dashboard...");
       setTimeout(() => {
         router.push(ROUTES.SELLER.AUCTIONS);
       }, 1500);
@@ -199,18 +202,22 @@ export function CreateAuctionPage() {
 
         {/* Success Banner */}
         {submitSuccess && (
-          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 p-4 rounded-xl text-sm font-semibold animate-fade-in text-left">
-            <CheckCircle className="h-5 w-5 shrink-0" />
-            <p>Auction created successfully! Redirecting to your dashboard...</p>
-          </div>
+          <AppAlert
+            type="success"
+            title="Auction created successfully!"
+            message="Redirecting to your dashboard..."
+            className="animate-fade-in"
+          />
         )}
 
         {/* Error Banner */}
         {submitError && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 p-4 rounded-xl text-sm font-semibold animate-fade-in text-left">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <p>{submitError}</p>
-          </div>
+          <AppAlert
+            type="error"
+            title="Failed to create auction"
+            message={submitError}
+            className="animate-fade-in"
+          />
         )}
 
         {/* Primary Form wrapped in FormProvider */}

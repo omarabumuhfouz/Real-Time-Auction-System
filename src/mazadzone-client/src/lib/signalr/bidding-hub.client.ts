@@ -47,8 +47,8 @@ export interface PlaceBidPayload {
  * await hub.joinAuction("auction-123");
  * ```
  */
-export function createBiddingHubClient() {
-  const connection: HubConnection = createHubConnection("/bidding");
+export function createBiddingHubClient(accessTokenFactory?: () => string | Promise<string>) {
+  const connection: HubConnection = createHubConnection("/bidding", accessTokenFactory);
 
   return {
     /** The underlying SignalR connection (for advanced use) */
