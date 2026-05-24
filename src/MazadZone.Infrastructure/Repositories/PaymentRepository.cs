@@ -1,6 +1,8 @@
 using MazadZone.Domain.Payments.ValueObjects;
 using MazadZone.Domain.Repositories;
+using MazadZone.Domain.Orders;
 using MazadZone.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
 
 namespace MazadZone.Infrastructure.Repositories;
@@ -14,8 +16,11 @@ public class PaymentRepository : GenericRepository<Payment, PaymentId>, IPayment
         _context = context;
     }
     
-    public Task<Payment?> GetByIdAsync(PaymentId paymentId, CancellationToken cancellationToken)
+
+    public async Task<Payment?> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return await DbSet.SingleOrDefaultAsync(
+            payment => payment.OrderId.Value == orderId,
+            cancellationToken);
     }
 }
