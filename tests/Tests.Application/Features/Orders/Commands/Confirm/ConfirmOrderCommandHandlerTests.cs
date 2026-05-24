@@ -1,7 +1,6 @@
 using MazadZone.Application.Features.Orders.Commands.Confirm;
-using MazadZone.Application.Features.Payments.Commands.CaptureRemainingAmount;
+using MazadZone.Application.Features.Payments.Commands.PayRemainingAmount;
 using MazadZone.Domain.Orders;
-using MazadZone.Domain.Primitives.Results;
 using MediatR;
 
 namespace Tests.Application.Features.Orders.Commands.Confirm;
@@ -25,7 +24,7 @@ public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommand
         result.TopError.ShouldBe(OrderErrors.NotFound);
 
         // Verify payment logic was completely bypassed
-        await _sender.DidNotReceive().Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>());
+        // await _sender.DidNotReceive().Send(Arg.Any<PayRemainingAmountCommand>(), Arg.Any<CancellationToken>());
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 

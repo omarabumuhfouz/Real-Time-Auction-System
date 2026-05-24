@@ -1,16 +1,12 @@
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Enums;
-using MazadZone.Application.Features.Auctions.Queries;
 using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
 using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Events;
-using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users.ValueObjects;
-using Microsoft.Extensions.Logging;
-using MzadZone.Domain.Payments;
 
 namespace MazadZone.Application.Features.Auctions.Commands.EndAuction.EventHandlers;
 /// <summary>
@@ -44,8 +40,8 @@ public class NotifyAuctionEndedEventHandler
             AuctionId = notification.AuctionId.Value,
             Status = AuctionStatus.Ended.ToString(),
         }, cancellationToken);
+
         _logger.LogInformation("Broadcasted auction ended update for Auction ID: {AuctionId}", notification.AuctionId);
-        
         
         var item = await _itemRepository.GetItemByIdAsync(auction.Item.Id.Value, cancellationToken);
         var itemTitle = item?.Title ?? "your auction item";
@@ -56,7 +52,7 @@ public class NotifyAuctionEndedEventHandler
         _logger.LogInformation("Sending notification for auction ended for Auction ID: {AuctionId}", notification.AuctionId);
         if (auction.Bids.Any())
         {
-            // Notify all bidders about the cancellation
+            // Notify all bidders about the Auction ended
             foreach (var bid in auction.Bids)
             {
                 var cancellationNotificationId = await _sender.Send(new CreateNotificationCommand(

@@ -2,15 +2,15 @@ namespace MazadZone.Application.Features.Auctions.Queries;
 
 public record AuctionQueryParameters
 {
-    public int Page { get; init; } = 1;
-    public int PageSize { get; init; } = 10;
+    public int Page { get; init; } 
+    public int PageSize { get; init; } 
     public string? SearchTerm { get; init; }
     public Guid? CategoryId { get; init; }
     public Guid? SubCategoryId { get; init; }
     public CurrentBidAmountRange? CurrentBidAmount { get; init; }
-    public string Status { get; init; } = "active";
-    public string SortBy { get; init; } = "CreationDate";
-    public string? SortDirection { get; init; } = "desc";
+    public string Status { get; init; } 
+    public string SortBy { get; init; }
+    public string? SortDirection { get; init; } 
 }
 
 public class CurrentBidAmountRange

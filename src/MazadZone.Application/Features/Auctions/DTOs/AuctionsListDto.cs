@@ -9,6 +9,6 @@ public sealed record AuctionsListDto(
     decimal CurrentBidAmount, // Refresh websocket connection to get real-time updates on current bid amount
     DateTime StartTime,
     DateTime EndTime,
-    int Status, // Refresh websocket connection to get real-time updates on auction status (active/upcoming/ended)
+    string Status, // Refresh websocket connection to get real-time updates on auction status (active/upcoming/ended)
     int BidsCount //Refresh websocket connection to get real-time updates on bid count and current bid amount
 );

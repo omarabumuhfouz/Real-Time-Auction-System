@@ -9,12 +9,10 @@ using MazadZone.Domain.ValueObjects;
 namespace MazadZone.Application.Features.Auctions.Commands.CreateAuction;
 
 public sealed record CreateAuctionCommand(
-    ItemId ItemId,
     SellerId SellerId,
     Address ShippingAddress,
     decimal StartBidAmount,
     decimal MinBidAmount,
-    Currency Currency,
     DateTime StartTime,
     DateTime EndTime,
     string Title,

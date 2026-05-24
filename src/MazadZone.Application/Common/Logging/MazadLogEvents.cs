@@ -233,6 +233,9 @@ public static partial class MazadLogEvents
         public const int GetSimilarAuctionsAttempt = 4130;
         public const int GetSimilarAuctionsNoResults = 4131;
         public const int GetSimilarAuctionsSuccess = 4132;
+        public const int CreateAuctionJobScheduled = 4133;
+
+        
     }
 
     public static class Categories

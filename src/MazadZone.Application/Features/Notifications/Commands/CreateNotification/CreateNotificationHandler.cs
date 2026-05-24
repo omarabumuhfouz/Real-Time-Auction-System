@@ -55,8 +55,18 @@ public class CreateNotificationHandler : ICommandHandler<CreateNotificationComma
 
     // Sending Real time Notifications
     _logger.LogInformation("Sending notification to user {UserId}", request.UserId);
-    await _realTimeNotificationService.SendNotificationAsync(
-        userNotificationDto,cancellationToken);
+    
+    try 
+    {
+        await _realTimeNotificationService.SendNotificationAsync(userNotificationDto, cancellationToken);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogWarning(ex, "Failed to send real-time notification to user {UserId}. Notification saved to DB.", request.UserId);
+    }
+
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
+    
     _logger.LogInformation("Notification sent to user {UserId}", request.UserId);
 
 

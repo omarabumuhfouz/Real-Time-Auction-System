@@ -18,7 +18,7 @@ public record AuctionDto(
     decimal CurrentBidAmount,
     DateTime StartTime,
     DateTime EndTime,
-    int AuctionStatus,
+    string AuctionStatus,
     IReadOnlyList<BidDto> Bids
     );
 

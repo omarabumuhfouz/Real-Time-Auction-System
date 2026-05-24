@@ -1,6 +1,7 @@
 
 using MazadZone.Api;
 using MazadZone.Api.Endpoints;
+using MazadZone.Api.Endpoints.Auctions;
 using MazadZone.Api.Endpoints.Bidders;
 using MazadZone.Api.Endpoints.Notifications;
 using MazadZone.Api.Middlewares;
@@ -11,9 +12,12 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using MazadZone.Api.Endpoints.Orders;
 using MazadZone.Api.Endpoints.Categories;
+using MazadZone.Api.Endpoints.Payments;
 using MazadZone.Api.Endpoints.Users;
 using MazadZone.Api.Endpoints.Sellers;
 using MazadZone.Api.Endpoints.Auth;
+using MazadZone.Infrastructure.RealTime.Hubs;
+using Hangfire;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -31,17 +35,22 @@ try
         .ReadFrom.Services(services));
 
     builder.Services.AddMazadZoneServices(builder.Configuration);
+    
+    builder.Services.AddSignalR();
 
     builder.Services.AddOpenApi();
 
     var app = builder.Build();
 
+    //Map Endpoints
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();
     app.MapOrderEndpoints();
+    app.MapPaymentEndpoints();
     app.MapCategoryEndpoints();
     app.MapUserEndpoints();
     app.MapSellerEndpoints();
+    app.MapAuctionEndpoints();
     app.MapAuthenticationEndpoints();
 
     if (app.Environment.IsDevelopment())
@@ -49,8 +58,9 @@ try
         app.MapOpenApi();
 
     }
+
 #region  Seed database
-//     if (app.Environment.IsDevelopment())
+// if (app.Environment.IsDevelopment())
 // {
 //     // Create a temporary DI scope
 //     using var scope = app.Services.CreateScope();
@@ -75,34 +85,39 @@ try
 //         Console.WriteLine($"❌ Error during database seeding: {ex.Message}");
 //     }
 // }
+
 #endregion
     app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseSerilogRequestLogging(options =>
-{
-    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
-        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
-    };
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+        };
 
-    // Exclude health check endpoints from request logs
-    options.GetLevel = (httpContext, elapsed, ex) =>
-    {
-        if (httpContext.Request.Path.StartsWithSegments("/health"))
-            return Serilog.Events.LogEventLevel.Verbose;
+        // Exclude health check endpoints from request logs
+        options.GetLevel = (httpContext, elapsed, ex) =>
+        {
+            if (httpContext.Request.Path.StartsWithSegments("/health"))
+                return Serilog.Events.LogEventLevel.Verbose;
 
-        return elapsed > 500
-            ? Serilog.Events.LogEventLevel.Warning
-            : Serilog.Events.LogEventLevel.Information;
-    };
-});
+            return elapsed > 500
+                ? Serilog.Events.LogEventLevel.Warning
+                : Serilog.Events.LogEventLevel.Information;
+        };
+    });
     app.MapScalarApiReference();
-app.UseSerilogRequestLogging();
+    app.UseSerilogRequestLogging();
     app.UseHttpsRedirection();
+    
+    //Map Hubs
+    app.MapHub<AuctionsHub>("/hubs/auctions");
+    app.MapHub<NotificationsHub>("/hubs/notifications");
 
-    // Map endpoints
-
-
+    //Hangfire Dashboard
+    app.UseHangfireDashboard("/hangfire");
+    
     app.Run();
 
 }

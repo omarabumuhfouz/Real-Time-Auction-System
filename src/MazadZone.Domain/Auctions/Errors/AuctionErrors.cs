@@ -25,6 +25,10 @@ public static class AuctionErrorCodes
 
     public const string PaymentAuthorizationFailed = "Auction.PaymentAuthorizationFailed";
 
+    public const string ConcurrencyConflict = "Auction.ConcurrencyConflict";
+    public const string DatabaseError = "Auction.DatabaseError";
+    public const string PlaceBidFailed = "Auction.PlaceBidFailed";
+
 }
 
 public static class AuctionErrors
@@ -100,4 +104,11 @@ public static class AuctionErrors
     
     public static Error PaymentAuthorizationFailed =>
         Error.Conflict(AuctionErrorCodes.PaymentAuthorizationFailed, "Payment authorization for the bid deposit failed."); 
+
+    public static Error ConcurrencyConflict =>
+        Error.Conflict(AuctionErrorCodes.ConcurrencyConflict, "Concurrency conflict: You were outbid during processing.");
+
+    public static Error DatabaseError =>
+        Error.Conflict(AuctionErrorCodes.DatabaseError, "Database error");
+
 }

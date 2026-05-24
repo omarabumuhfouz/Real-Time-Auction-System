@@ -13,4 +13,5 @@ public interface INotificationRepository : IGenericRepository<Notification, Noti
     Task NotifySellerAsync(Guid sellerId, string title, string message, CancellationToken ct = default);
     Task NotifyAdminAsync(string title, string message, CancellationToken ct = default);
     Task NotifyUserAsync(UserId userId, string title, string message, CancellationToken ct);
+
 }

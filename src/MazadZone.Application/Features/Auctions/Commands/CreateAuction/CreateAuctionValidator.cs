@@ -6,8 +6,7 @@ public sealed class CreateAuctionValidator : AbstractValidator<CreateAuctionComm
 {
     public CreateAuctionValidator()
     {
-        RuleFor(x => x.ItemId)
-            .NotEmpty();
+
 
         RuleFor(x => x.SellerId)
             .NotEmpty();
@@ -23,9 +22,6 @@ public sealed class CreateAuctionValidator : AbstractValidator<CreateAuctionComm
             .GreaterThan(0m)
             .WithMessage("Minimum bid amount must be greater than zero.");
 
-        RuleFor(x => x.Currency)
-            .IsInEnum()
-            .WithMessage("Currency must be a valid value.");
 
         RuleFor(x => x.StartTime)
             .LessThan(x => x.EndTime)

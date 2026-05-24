@@ -1,4 +1,6 @@
+using MazadZone.Application.Services;
 using MazadZone.Domain.Repositories;
+using MzadZone.Domain.Payments.Entities;
 
 namespace MazadZone.Application.Features.Orders.Commands.CancelOrder;
 
@@ -11,11 +13,13 @@ public class CancelOrderCommandHandler : ICommandHandler<CancelOrderCommand, Uni
     public CancelOrderCommandHandler(
         IOrderRepository orderRepository, 
         IUnitOfWork unitOfWork,
+
         ILogger<CancelOrderCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+
     }
 
     public async Task<Result<Unit>> Handle(CancelOrderCommand request, CancellationToken ct)
@@ -38,6 +42,8 @@ public class CancelOrderCommandHandler : ICommandHandler<CancelOrderCommand, Uni
             CancelOrderLogs.LogDomainViolation(_logger, request.OrderId, cancellationResult.TopError.Message);
             return cancellationResult.TopError;
         }
+
+
 
         await _unitOfWork.SaveChangesAsync(ct);
 
