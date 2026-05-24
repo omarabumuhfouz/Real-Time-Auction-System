@@ -1,4 +1,5 @@
 using MazadZone.Application.Features.Orders.Commands.Confirm;
+using MazadZone.Application.Features.Payments.Commands.PayRemainingAmount;
 using MazadZone.Domain.Orders;
 using MediatR;
 
@@ -6,26 +7,26 @@ namespace Tests.Application.Features.Orders.Commands.Confirm;
 
 public class ConfirmOrderCommandHandlerTests : OrderBaseTest<ConfirmOrderCommandHandler>
 {
-    // [Fact]
-    // public async Task Handle_OrderDoesNotExist_ReturnsNotFoundError()
-    // {
-    //     // Arrange
-    //     var command = OrderHelper.CreateConfirmOrderCommand();
+    [Fact]
+    public async Task Handle_OrderDoesNotExist_ReturnsNotFoundError()
+    {
+        // Arrange
+        var command = OrderHelper.CreateConfirmOrderCommand();
 
-    //     _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
-    //         .Returns((Order?)null);
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
+            .Returns((Order?)null);
 
-    //     // Act
-    //     var result = await Handler.Handle(command, default);
+        // Act
+        var result = await Handler.Handle(command, default);
 
-    //     // Assert
-    //     result.IsFailure.ShouldBeTrue();
-    //     result.TopError.ShouldBe(OrderErrors.NotFound);
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.TopError.ShouldBe(OrderErrors.NotFound);
 
-    //     // Verify payment logic was completely bypassed
-    //     await _sender.DidNotReceive().Send(Arg.Any<CaptureRemainingAmountCommand>(), Arg.Any<CancellationToken>());
-    //     await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    // }
+        // Verify payment logic was completely bypassed
+        await _sender.DidNotReceive().Send(Arg.Any<PayRemainingAmountCommand>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 
 
     [Fact]
