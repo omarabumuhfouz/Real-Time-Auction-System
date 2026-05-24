@@ -1,3 +1,10 @@
+using System;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Polly;
+using Hangfire;
 using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Shared.Interfaces;
@@ -6,10 +13,8 @@ using MazadZone.Infrastructure.Configuration;
 using MazadZone.Infrastructure.Outbox;
 using MazadZone.Infrastructure.Persistence;
 using MazadZone.Infrastructure.Persistence.Interceptors;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Polly;
+using MazadZone.Infrastructure.Scheduling;
+using MazadZone.Infrastructure.Services; // مسار خدمة الدفع الوهمية
 
 namespace MazadZone.Infrastructure;
 
@@ -17,13 +22,17 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-
         services
             .AddOutboxPattern(configuration)
             .AddDatabase(configuration)
             .AddPollyPolicies(configuration)
             .AddRedisServices(configuration)
-            .AddServiceScanning();
+            .AddServiceScanning()
+            .AddSignalRServices()
+            .AddHangfireServices(configuration);
+         //   .AddPaymentService();
+
+
 
         return services;
     }
@@ -50,9 +59,7 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(resilienceOptions.MaxDelaySeconds),
                     errorNumbersToAdd: null
                 );
-
-            })
-                   .AddInterceptors(interceptor);
+            }).AddInterceptors(interceptor);
         });
 
         // 3. Register Dapper
@@ -60,7 +67,6 @@ public static class DependencyInjection
 
         return services;
     }
-
 
     private static IServiceCollection AddOutboxPattern(this IServiceCollection services, IConfiguration configuration)
     {
@@ -75,14 +81,13 @@ public static class DependencyInjection
         var options = new ResilienceOptions();
         configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
 
-        // Define a policy that handles common transient errors (database timeouts, network issues)
         var retryPolicy = Policy
-            .Handle<Exception>() // You can refine this to HttpRequestException, SqlException, etc.
+            .Handle<Exception>() 
             .WaitAndRetryAsync(options.RetryCount, retryAttempt =>
                 TimeSpan.FromSeconds(Math.Pow(options.BaseDelaySeconds, retryAttempt)),
                 (exception, timeSpan, retryCount, context) =>
                 {
-// Log.Warning("Retry {Count} after {Delay}s due to {Error}", retryCount, timeSpan.TotalSeconds, exception.Message);
+                    // Log logic here
                 });
 
         services.AddSingleton<IAsyncPolicy>(retryPolicy);
@@ -92,20 +97,23 @@ public static class DependencyInjection
 
     private static IServiceCollection AddRedisServices(this IServiceCollection services, IConfiguration configuration)
     {
-services.AddStackExchangeRedisCache(options =>
+        services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = configuration.GetConnectionString("Redis");
-            // Optional: Adds a prefix to all keys so you don't clash with other apps sharing the same Redis instance
             options.InstanceName = "MazadZone_"; 
         });
-services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddScoped<ICacheService, RedisCacheService>();
         return services;
     }
 
-public static IServiceCollection AddServiceScanning(this IServiceCollection services)
+    public static IServiceCollection AddServiceScanning(this IServiceCollection services)
     {
+        var infrastructureAssembly = typeof(DependencyInjection).Assembly;
+        var applicationAssembly = typeof(MazadZone.Application.DependencyInjection).Assembly;
+        var domainAssembly = typeof(MazadZone.Domain.Categories.ICategoryDomainService).Assembly;
+
         services.Scan(scan => scan
-            .FromAssemblies(AppDomain.CurrentDomain.GetAssemblies())
+            .FromAssemblies(infrastructureAssembly, applicationAssembly, domainAssembly)
             // Register Scoped Services
             .AddClasses(classes => classes.AssignableTo<IScopedService>())
                 .AsImplementedInterfaces()
@@ -122,4 +130,35 @@ public static IServiceCollection AddServiceScanning(this IServiceCollection serv
 
         return services;
     }
+
+    public static IServiceCollection AddSignalRServices(this IServiceCollection services)
+    {
+        services.AddSignalRCore();
+        return services;
+    }
+
+    public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("MazadZoneDb");
+
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(connectionString));
+
+        services.AddHangfireServer();
+
+        // services.AddScoped<IOrderJobScheduler, HangfireOrderJobScheduler>();
+        // services.AddScoped<IAuctionJobScheduler, HangfireAuctionJobScheduler>();
+
+        return services;
+    }
+
+    // public static IServiceCollection AddPaymentService(this IServiceCollection services)
+    // {
+    //     // تسجيل الخدمة الوهمية وتجاهل خدمة Stripe نهائياً
+    //     services.AddScoped<IPaymentService, PaymentService>();
+    //     return services;
+    // }
 }

@@ -163,7 +163,6 @@ public class DatabaseSeeder : IDatabaseSeeder
                         shippingAddress: address,
                         startBidAmount: Money.Create(startAmount, Currency.Jod).Value.Amount,
                         minBidAmount: Money.Create(minBidAmount, Currency.Jod).Value.Amount,
-                        currency: Currency.Jod,
                         startTime: startTime,
                         endTime: endTime,
                         title: f.Commerce.ProductName(),
