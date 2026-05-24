@@ -1,4 +1,4 @@
-import { Spinner } from "@/components/status/spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Root-level loading state.
@@ -6,8 +6,8 @@ import { Spinner } from "@/components/status/spinner";
  */
 export default function Loading() {
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <Spinner size={32} />
+    <div className="flex flex-1 items-center justify-center py-16">
+      <Spinner size="lg" />
     </div>
   );
 }

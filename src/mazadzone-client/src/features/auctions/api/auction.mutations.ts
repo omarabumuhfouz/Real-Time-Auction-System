@@ -33,34 +33,24 @@ export function useUpdateAuction(id: string) {
 }
 
 import type { ApiError, ApiResponse } from "@/types/api.types";
-import { useNotificationStore } from "@/stores/notification.store";
+import { useAppToast } from "@/lib/toast/app-toast";
 
 /**
  * Deletes an auction.
  */
 export function useDeleteAuction() {
   const queryClient = useQueryClient();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   return useMutation<ApiResponse<void>, ApiError, string>({
     mutationFn: (id: string) => deleteAuctionApi(id),
     onSuccess: (response) => {
       // Invalidate all auction queries to force refetching of tables, stats, and details
       void queryClient.invalidateQueries({ queryKey: auctionKeys.all });
-      addNotification({
-        type: "success",
-        title: "Success",
-        message: response.message || "Your auction listing has been successfully removed.",
-        duration: 3000,
-      });
+      appToast.success("Success", response.message || "Your auction listing has been successfully removed.");
     },
     onError: (err) => {
-      addNotification({
-        type: "error",
-        title: "Error",
-        message: err.message || "Could not delete the auction listing.",
-        duration: 4000,
-      });
+      appToast.error("Error", err.message || "Could not delete the auction listing.");
     },
   });
 }

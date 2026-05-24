@@ -6,6 +6,7 @@ import { VisuallyHidden } from "radix-ui";
 import { useGetAddresses, useGetProfile } from "@/features/profile";
 import { cn } from "@/lib/utils";
 import { usePlaceBid, useGetSavedPaymentMethods } from "../../api/bidding.queries";
+import { useAppToast } from "@/lib/toast/app-toast";
 import type { PlaceBidFlowState, PlaceBidModalProps, DeliveryAddress, SavedPaymentMethod } from "../../types/place-bid.types";
 
 import { AddressSelectStep } from "@/features/profile";
@@ -28,6 +29,7 @@ export function PlaceBidModal({
   const { data: savedPaymentMethods = [] } = useGetSavedPaymentMethods();
   const placeBidMutation = usePlaceBid();
   const { data: profile } = useGetProfile();
+  const appToast = useAppToast();
 
   // State orchestrator
   const [flowState, setFlowState] = useState<PlaceBidFlowState>({
@@ -116,7 +118,7 @@ export function PlaceBidModal({
         step: "success",
       }));
     } catch (err) {
-      console.error("Failed to place bid:", err);
+      appToast.fromApiError(err, "Could not place your bid. Please try again.");
     }
   };
 
