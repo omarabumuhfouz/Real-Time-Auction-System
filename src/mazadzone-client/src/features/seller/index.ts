@@ -6,13 +6,15 @@
  */
 
 export { BecomeSellerPage } from "./components/BecomeSellerPage";
-export { SellerProfilePage } from "./components/SellerProfilePage";
-export { useBecomeSeller } from "./api/seller.mutations";
+export { SellerReviewsTab } from "./components/SellerReviewsTab";
+export { SellerAuctionsTab } from "./components/SellerAuctionsTab";
+export { useBecomeSeller, useSubmitSellerReview } from "./api/seller.mutations";
 export {
   useGetSellerProfile,
   useGetSellerReviews,
   useGetSellerProfileAuctions,
   useCreateReviewReply,
 } from "./api/seller.queries";
-export type { BecomeSellerInput, BecomeSellerResponse } from "./api/seller.mutations";
+export type { BecomeSellerInput, BecomeSellerResponse, SubmitSellerReviewInput } from "./api/seller.mutations";
 export type { SellerProfile, SellerReview, ReviewReply } from "./types/seller.types";
+

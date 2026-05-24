@@ -12,4 +12,6 @@ export interface OrderActivity {
     title: string;
     imageUrl: string;
   };
+  sellerId?: string;
+  sellerName?: string;
 }

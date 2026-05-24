@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency.utils";
 import type { BidHistoryEntry } from "../../types/auction.types";
@@ -7,6 +8,8 @@ interface BidHistoryRowProps {
 }
 
 export function BidHistoryRow({ entry }: BidHistoryRowProps) {
+  const bidderId = `bidder-${entry.bidderName.toLowerCase().replace(/\s/g, "-").replace(/\./g, "")}`;
+
   return (
     <div
       className={cn(
@@ -16,17 +19,23 @@ export function BidHistoryRow({ entry }: BidHistoryRowProps) {
     >
       <div className="flex items-center gap-3">
         {/* Avatar */}
-        <div className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold select-none",
-          entry.isHighest ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-        )}>
+        <Link
+          href={`/users/${bidderId}`}
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold select-none cursor-pointer transition-all hover:scale-105 ring-2 ring-transparent hover:ring-primary/50",
+            entry.isHighest ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+          )}
+        >
           {entry.bidderInitial}
-        </div>
+        </Link>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-foreground">
+            <Link
+              href={`/users/${bidderId}`}
+              className="text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+            >
               {entry.bidderName}
-            </span>
+            </Link>
             {entry.isHighest && (
               <span className="text-[10px] font-bold text-primary-foreground bg-primary px-2 py-0.5 rounded-full leading-none shadow-sm">
                 Highest Bid

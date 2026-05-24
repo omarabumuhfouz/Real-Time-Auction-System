@@ -32,3 +32,43 @@ export function useBecomeSeller() {
     },
   });
 }
+
+export interface SubmitSellerReviewInput {
+  reviewerId: string;
+  sellerId: string;
+  rating: number;
+  comment: string;
+  orderId: string;
+}
+
+/**
+ * Mutation to submit a public review for a seller based on a delivered order.
+ */
+export function useSubmitSellerReview(sellerId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<{ success: boolean }>, Error, SubmitSellerReviewInput>({
+    mutationFn: async (input: SubmitSellerReviewInput) => {
+      /*
+      // --- REAL API CALL (Uncomment when backend is ready) ---
+      const response = await api.post(`/sellers/${input.sellerId}/reviews`, input);
+      return response;
+      */
+      
+      // Mock simulation:
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return {
+        data: { success: true },
+        message: "Review submitted successfully",
+        success: true,
+        timestamp: new Date().toISOString(),
+      };
+    },
+    onSuccess: () => {
+      // Invalidate target seller queries
+      void queryClient.invalidateQueries({ queryKey: ["seller", "reviews", sellerId] });
+      void queryClient.invalidateQueries({ queryKey: ["public-profile", sellerId] });
+    },
+  });
+}
+
