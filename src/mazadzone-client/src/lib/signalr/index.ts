@@ -1,5 +1,6 @@
 export { createHubConnection, startConnection, stopConnection } from "./connection-factory";
 export { createBiddingHubClient } from "./bidding-hub.client";
+export { createNotificationsHubClient } from "./notifications-hub.client";
 export type {
   BidPlacedEvent,
   AuctionEndedEvent,
@@ -7,3 +8,7 @@ export type {
   PlaceBidPayload,
   BiddingHubClient,
 } from "./bidding-hub.client";
+export type {
+  NotificationReceivedEvent,
+  NotificationsHubClient,
+} from "./notifications-hub.client";
