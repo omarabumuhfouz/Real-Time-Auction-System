@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
-import { useNotificationStore } from "@/stores/notification.store";
+import { useAppToast } from "@/lib/toast/app-toast";
 import { isTokenExpired } from "@/lib/auth/token";
 import { ROUTES } from "@/config/routes.config";
 
@@ -27,8 +27,7 @@ export function useRequireRole(
   const accessToken = useAuthStore((state) => state.accessToken);
   const isHydrated = useAuthStore((state) => state.isHydrated);
   
-  // Notifications
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   const {
     redirectToLogin = ROUTES.AUTH.LOGIN,
@@ -47,23 +46,13 @@ export function useRequireRole(
     if (bypassTesting) return;
 
     if (!isTokenValid) {
-      addNotification({
-        type: "error",
-        title: "Access Denied",
-        message: loginMessage,
-        duration: 4000,
-      });
+      appToast.error("Access Denied", loginMessage);
       router.push(redirectToLogin);
       return;
     }
 
     if (!hasRole) {
-      addNotification({
-        type: "warning",
-        title: "Seller Privilege Required",
-        message: unauthorizedMessage,
-        duration: 4000,
-      });
+      appToast.warning("Seller Privilege Required", unauthorizedMessage);
       router.push(redirectToUnauthorized);
     }
   }, [
@@ -76,7 +65,7 @@ export function useRequireRole(
     loginMessage,
     unauthorizedMessage,
     router,
-    addNotification,
+    appToast,
   ]);
 
   return {

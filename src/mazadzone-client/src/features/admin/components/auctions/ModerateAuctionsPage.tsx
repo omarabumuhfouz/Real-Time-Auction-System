@@ -10,7 +10,7 @@ import {
   exportAuctionsApi,
   type UseModerateAuctionsFilters,
 } from "../../api/queries";
-import { useNotificationStore } from "@/stores/notification.store";
+import { useAppToast } from "@/lib/toast/app-toast";
 import type { AuctionStatus } from "../../types/admin.types";
 
 export function ModerateAuctionsPage() {
@@ -32,7 +32,7 @@ export function ModerateAuctionsPage() {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   const { data, isLoading } = useModerateAuctions(filters);
 
@@ -87,20 +87,10 @@ export function ModerateAuctionsPage() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      addNotification({
-        type: "success",
-        title: "Export Successful",
-        message: "Your auction data export has been downloaded.",
-        duration: 4000,
-      });
+      appToast.success("Export Successful", "Your auction data export has been downloaded.");
     } catch (error) {
       console.error("Export failed", error);
-      addNotification({
-        type: "error",
-        title: "Export Failed",
-        message: "There was an error generating your export. Please try again.",
-        duration: 5000,
-      });
+      appToast.error("Export Failed", "There was an error generating your export. Please try again.");
     } finally {
       setIsExporting(false);
     }

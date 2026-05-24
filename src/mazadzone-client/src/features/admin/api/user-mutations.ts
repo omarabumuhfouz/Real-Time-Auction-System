@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { useNotificationStore } from "@/stores/notification.store";
+import { useAppToast } from "@/lib/toast/app-toast";
 import { updateMockUserStatus } from "./queries";
 
 export interface SuspendUserParams {
@@ -19,7 +19,7 @@ export interface BanUserParams {
  */
 export function useSuspendUser() {
   const queryClient = useQueryClient();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   return useMutation({
     mutationFn: async ({ userId, reason }: SuspendUserParams) => {
@@ -40,20 +40,11 @@ export function useSuspendUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "moderate-users"] });
-      addNotification({
-        type: "success",
-        title: "User Suspended",
-        message: "The user account has been successfully suspended.",
-        duration: 4000,
-      });
+      appToast.success("User Suspended", "The user account has been successfully suspended.");
     },
-    onError: (error: any) => {
-      addNotification({
-        type: "error",
-        title: "Action Failed",
-        message: error.message || "Failed to suspend the user. Please try again.",
-        duration: 5000,
-      });
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : "Failed to suspend the user. Please try again.";
+      appToast.error("Action Failed", msg);
     },
   });
 }
@@ -64,7 +55,7 @@ export function useSuspendUser() {
  */
 export function useBanUser() {
   const queryClient = useQueryClient();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   return useMutation({
     mutationFn: async ({ userId, reason }: BanUserParams) => {
@@ -85,20 +76,11 @@ export function useBanUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "moderate-users"] });
-      addNotification({
-        type: "success",
-        title: "User Banned",
-        message: "The user account has been successfully banned.",
-        duration: 4000,
-      });
+      appToast.success("User Banned", "The user account has been successfully banned.");
     },
-    onError: (error: any) => {
-      addNotification({
-        type: "error",
-        title: "Action Failed",
-        message: error.message || "Failed to ban the user. Please try again.",
-        duration: 5000,
-      });
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : "Failed to ban the user. Please try again.";
+      appToast.error("Action Failed", msg);
     },
   });
 }
@@ -109,7 +91,7 @@ export function useBanUser() {
  */
 export function useRestoreUser() {
   const queryClient = useQueryClient();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const appToast = useAppToast();
 
   return useMutation({
     mutationFn: async (userId: string) => {
@@ -130,20 +112,11 @@ export function useRestoreUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "moderate-users"] });
-      addNotification({
-        type: "success",
-        title: "User Restored",
-        message: "The user account has been successfully restored to Active status.",
-        duration: 4000,
-      });
+      appToast.success("User Restored", "The user account has been successfully restored to Active status.");
     },
-    onError: (error: any) => {
-      addNotification({
-        type: "error",
-        title: "Action Failed",
-        message: error.message || "Failed to restore the user. Please try again.",
-        duration: 5000,
-      });
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : "Failed to restore the user. Please try again.";
+      appToast.error("Action Failed", msg);
     },
   });
 }
