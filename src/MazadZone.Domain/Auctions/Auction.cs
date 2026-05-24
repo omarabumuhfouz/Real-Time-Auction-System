@@ -94,7 +94,6 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
         Address shippingAddress,
         decimal startBidAmount,
         decimal minBidAmount,
-        Currency currency,
         DateTime startTime,
         DateTime endTime,
         string title,
@@ -105,10 +104,10 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
     {
         if (startTime >= endTime) return AuctionErrors.InvalidTimeFrame;
 
-        var minBidResult = Money.Create(minBidAmount, currency);
+        var minBidResult = Money.Create(minBidAmount, Currency.Jod);
         if (minBidResult.IsFailure) return AuctionErrors.MinBidTooLow;
 
-        var startBidResult = Money.Create(startBidAmount, currency);
+        var startBidResult = Money.Create(startBidAmount, Currency.Jod);
         if (startBidResult.IsFailure) return AuctionErrors.StartBidTooLow;
 
         var auctionId = AuctionId.New();
