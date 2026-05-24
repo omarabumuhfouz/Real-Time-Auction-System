@@ -7,6 +7,7 @@ import { ROUTES } from "@/config/routes.config";
 import { useAuthStore } from "@/stores/auth.store";
 import { DesktopHeader, DesktopBottomRow } from "./DesktopHeader";
 import { MobileHeader } from "./MobileHeader";
+import { useRealtimeNotifications } from "@/features/notifications";
 
 /**
  * Header
@@ -21,6 +22,9 @@ export function Header() {
   // Auth state
   const { user, logout } = useAuthStore();
   let { isAuthenticated } = useAuthStore();
+
+  // Listen for real-time notifications
+  useRealtimeNotifications(user?.id);
 
   // NOTE: Hardcoded for testing by user.
   // In production, this should use user?.role and isAuthenticated from the store.
