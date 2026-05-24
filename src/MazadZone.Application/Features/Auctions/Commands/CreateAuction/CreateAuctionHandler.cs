@@ -1,3 +1,4 @@
+using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.ValueObjects;
@@ -11,12 +12,13 @@ public class CreateAuctionHandler
 (
     IAuctionRepository _auctionRepository,
     IUnitOfWork _unitOfWork,
+    IAuctionJobScheduler _auctionJobScheduler,
     ILogger<CreateAuctionHandler> _logger
 ): ICommandHandler<CreateAuctionCommand, AuctionId>
 {
     public async Task<Result<AuctionId>> Handle(CreateAuctionCommand request, CancellationToken cancellationToken)
     {
-        CreateAuctionLog.LogHandlingCreateAuction(_logger, request.ItemId.Value.ToString());
+        CreateAuctionLog.LogHandlingCreateAuction(_logger);
         
         var images = new List<Image>();
 
@@ -36,7 +38,6 @@ public class CreateAuctionHandler
             request.ShippingAddress,
             request.StartBidAmount,
             request.MinBidAmount,
-            request.Currency,
             request.StartTime,
             request.EndTime,
             request.Title,
@@ -46,7 +47,7 @@ public class CreateAuctionHandler
             );
 
         if (createResult.IsFailure) {
-            CreateAuctionLog.LogDomainViolation(_logger, request.ItemId.Value.ToString(), createResult.TopError.Message);
+            CreateAuctionLog.LogDomainViolation(_logger, createResult.TopError.Message);
             return Result.Failure<AuctionId>(createResult.TopError);
         }
 
@@ -54,8 +55,10 @@ public class CreateAuctionHandler
 
         _auctionRepository.Add(auction);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        CreateAuctionLog.LogAuctionCreated(_logger, auction.Id.Value);
 
-        CreateAuctionLog.LogAuctionCreated(_logger, request.ItemId.Value.ToString(), auction.Id.Value);
+        _auctionJobScheduler.ScheduleAuctionClosing(auction.Id.Value, auction.EndTime);
+        CreateAuctionLog.LogJobScheduled(_logger, auction.Id.Value, auction.EndTime);
 
         return Result.Success(auction.Id);
         

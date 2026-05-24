@@ -8,4 +8,5 @@ namespace MazadZone.Application.Features.Auctions.Commands.PlaceBid;
 public sealed record PlaceBidCommand(
     AuctionId AuctionId,
     BidderId BidderId,
+    string PaymentMethodId,
     Money Amount) : ICommand<Unit>;
