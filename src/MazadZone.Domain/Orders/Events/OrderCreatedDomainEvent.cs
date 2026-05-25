@@ -1,5 +1,3 @@
-using MazadZone.Domain.Users.ValueObjects;
-
 namespace MazadZone.Domain.Orders.Events;
 
 public sealed record OrderCreatedDomainEvent(OrderId OrderId, UserId BidderId) : IDomainEvent
