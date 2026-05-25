@@ -1,6 +1,8 @@
 using MazadZone.Domain.Auctions.Events;
 using MazadZone.Domain.Repositories;
 using MazadZone.Application.Services;
+using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace MazadZone.Application.Features.Auctions.Commands.PlaceBid.EventHandlers
 {
