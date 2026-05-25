@@ -14,10 +14,10 @@ public static class GetOpens
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/open", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly)
+        //    .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Get a list of all open disputes")
            .WithDescription("Retrieves a read-only list of all currently open and unassigned disputes.")
-           .Produces<IReadOnlyList<DisputeDto>>(StatusCodes.Status200OK)
+           .Produces<IReadOnlyList<DisputeListItemDto>>(StatusCodes.Status200OK)
            .ProducesProblem(StatusCodes.Status401Unauthorized)
            .ProducesProblem(StatusCodes.Status403Forbidden)
            .ProducesProblem(StatusCodes.Status500InternalServerError);

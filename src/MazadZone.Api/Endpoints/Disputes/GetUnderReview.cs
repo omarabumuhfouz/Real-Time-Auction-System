@@ -14,10 +14,10 @@ public static class GetUnderReview
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/under-review", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly)
+        //    .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Get a list of all disputes currently under review")
            .WithDescription("Retrieves a read-only list of all disputes that are actively being investigated by the support team.")
-           .Produces<IReadOnlyList<DisputeDto>>(StatusCodes.Status200OK)
+           .Produces<IReadOnlyList<DisputeListItemDto>>(StatusCodes.Status200OK)
            .ProducesProblem(StatusCodes.Status401Unauthorized)
            .ProducesProblem(StatusCodes.Status403Forbidden)
            .ProducesProblem(StatusCodes.Status500InternalServerError);

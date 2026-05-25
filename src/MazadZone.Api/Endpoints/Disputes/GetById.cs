@@ -15,7 +15,7 @@ public static class GetById
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/{id:guid}", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly)
+        //    .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Get a dispute by its unique identifier")
            .WithDescription("Retrieves the detailed information for a specific dispute using its unique identifier.")
            .Produces<DisputeDetailsDto>(StatusCodes.Status200OK)

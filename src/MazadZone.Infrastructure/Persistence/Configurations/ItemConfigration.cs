@@ -63,7 +63,7 @@ class ItemConfiguration : IEntityTypeConfiguration<Item>
                 .HasMaxLength(255)
                 .IsRequired(false);
 
-            imageBuilder.Property(img => img.isMain)
+            imageBuilder.Property(img => img.IsMain)
                 .IsRequired();
         });
 

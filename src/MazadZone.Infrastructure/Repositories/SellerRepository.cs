@@ -17,6 +17,7 @@ public class SellerRepository : GenericRepository<Seller, UserId>, ISellerReposi
 
     public Task<Seller?> GetByAuctionIdAsync(AuctionId auctionId, CancellationToken ct)
     {
+        
         // var query = from auction in _context.Auctions
         //             where auction.Id == auctionId
         //             join seller in _context.Sellers on auction.SellerId equals seller.Id
