@@ -11,13 +11,16 @@ public class OpenDisputeCommandHandler : ICommandHandler<OpenDisputeCommand, Uni
     private readonly ILogger<OpenDisputeCommandHandler> _logger;
 
     public OpenDisputeCommandHandler(
-        IOrderRepository orderRepository, 
+        IOrderRepository orderRepository,
         IUnitOfWork unitOfWork,
-        ILogger<OpenDisputeCommandHandler> logger)
+        ILogger<OpenDisputeCommandHandler> logger,
+        IDisputeRepository disputeRepository
+        )
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _disputeRepository = disputeRepository;
     }
 
     public async Task<Result<Unit>> Handle(OpenDisputeCommand request, CancellationToken ct)
@@ -34,29 +37,30 @@ public class OpenDisputeCommandHandler : ICommandHandler<OpenDisputeCommand, Uni
 
         if (!order.IsDisputable) return OrderErrors.CannotDispute;
 
-        var dispute = await _disputeRepository.GetByOrderIdAsync(request.OrderId, ct);
-
-        if (dispute is null)
-        {
-            return DisputeErrors.NotFound;
-            //Log here
-        }
-
         var titleResult = Title.Create(request.Title);
         if (titleResult.IsFailure) return titleResult.TopError;
 
         var descriptionResult = Description.Create(request.Description);
         if (descriptionResult.IsFailure) return descriptionResult.TopError;
 
+        var images = new List<Image>(); 
 
-        var disputeResult = dispute.Open(request.OrderId, request.DisputeTypeId, titleResult.Value, descriptionResult.Value, request.Images);
+if (request.Images is not null && request.Images.Any())
+{
+    foreach(var imageDto in request.Images)
+    {
+        var image = Image.Create(imageDto.Path, imageDto.AltText, imageDto.isMain);
+        if(image.IsFailure) return image.TopError;
+        
+        images.Add(image.Value); // ✅ Now this works perfectly
+    }
+}
 
-        if (disputeResult.IsFailure)
-        {
-            OpenDisputeLogs.LogDomainViolation(_logger, request.OrderId, disputeResult.TopError.Message);
-            return disputeResult.TopError;
-        }
 
+        var dispute = Dispute.Open(request.OrderId, request.DisputeTypeId, titleResult.Value, descriptionResult.Value, images);
+
+
+        _disputeRepository.Add(dispute);
         await _unitOfWork.SaveChangesAsync(ct);
 
         OpenDisputeLogs.LogSuccess(_logger, request.OrderId);

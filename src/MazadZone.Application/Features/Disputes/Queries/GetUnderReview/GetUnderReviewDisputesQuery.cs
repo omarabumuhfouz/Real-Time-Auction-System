@@ -1,3 +1,3 @@
 namespace MazadZone.Application.Features.Disputes.Queries.GetUnderReview;
 
-public record GetUnderReviewDisputesQuery() : IQuery<IReadOnlyList<DisputeDto>>;
+public record GetUnderReviewDisputesQuery() : IQuery<IReadOnlyList<DisputeListItemDto>>;

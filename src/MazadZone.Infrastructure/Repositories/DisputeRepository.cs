@@ -1,6 +1,7 @@
 using MazadZone.Domain.Disputes;
 using MazadZone.Domain.Orders;
 using MazadZone.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
@@ -13,8 +14,8 @@ public class DisputeRepository :GenericRepository<Dispute, DisputeId>, IDisputeR
         _context = context;
     }
 
-    public Task<Dispute?> GetByOrderIdAsync(OrderId orderId, CancellationToken ct)
+    public async Task<Dispute?> GetByOrderIdAsync(OrderId orderId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return await _context.Disputes.FirstOrDefaultAsync(d => d.OrderId == orderId, ct);
     }
 }

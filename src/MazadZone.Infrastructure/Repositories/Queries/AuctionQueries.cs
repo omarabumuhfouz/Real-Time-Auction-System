@@ -133,7 +133,7 @@ public partial class AuctionQueries (
             .Take(limit)
             .Select(a => new AuctionsListDto(
                 a.Id.Value,
-                a.Item.Images.Where(img => img.isMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
+                a.Item.Images.Where(img => img.IsMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
                 a.Item.Title,
                 a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault(),
                 a.StartTime,
@@ -223,7 +223,7 @@ public partial class AuctionQueries (
             .Take(parameters.PageSize)
             .Select(a => new MyBidAuctionDto(
                 a.Id.Value,
-                a.Item.Images.Where(img => img.isMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
+                a.Item.Images.Where(img => img.IsMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
                 a.Item.Title,
                 a.Bids.Where(b => b.BidderId == bidderId)
                     .OrderByDescending(b => b.PlacedAtUtc)
@@ -325,7 +325,7 @@ public partial class AuctionQueries (
                 a.Id.Value,
 
                 a.Item.Images
-                    .Where(img => img.isMain)
+                    .Where(img => img.IsMain)
                     .Select(img => img.Path)
                     .FirstOrDefault() ?? string.Empty,
 

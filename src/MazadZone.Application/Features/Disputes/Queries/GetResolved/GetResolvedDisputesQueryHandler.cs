@@ -1,7 +1,7 @@
 
 namespace MazadZone.Application.Features.Disputes.Queries.GetResolved;
 
-public class GetResolvedDisputesQueryHandler : IQueryHandler<GetResolvedDisputesQuery, IReadOnlyList<DisputeDto>>
+public class GetResolvedDisputesQueryHandler : IQueryHandler<GetResolvedDisputesQuery, IReadOnlyList<DisputeListItemDto>>
 {
     private readonly IDisputeQueries _repository;
 
@@ -10,8 +10,8 @@ public class GetResolvedDisputesQueryHandler : IQueryHandler<GetResolvedDisputes
         _repository = repository;
     }
 
-    public async Task<Result<IReadOnlyList<DisputeDto>>> Handle(GetResolvedDisputesQuery request, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<DisputeListItemDto>>> Handle(GetResolvedDisputesQuery request, CancellationToken ct)
     {
-        return Result.Success(await _repository.GetResolvedAsync(ct) ?? new List<DisputeDto>());
+        return Result.Success(await _repository.GetResolvedAsync(ct) ?? new List<DisputeListItemDto>());
     }
 }

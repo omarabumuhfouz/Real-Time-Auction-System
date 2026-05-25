@@ -64,7 +64,7 @@ public sealed class Item : Entity<ItemId>
 
         foreach (var image in images)
         {
-            var imageResult = Image.Create(image.Path, image.AltText, image.isMain);
+            var imageResult = Image.Create(image.Path, image.AltText, image.IsMain);
 
             if (imageResult.IsFailure)
                 return imageResult.TopError;

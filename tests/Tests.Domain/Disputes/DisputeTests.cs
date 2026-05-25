@@ -21,12 +21,10 @@ public class DisputeTests
         var images = new List<Image>();
 
         // Act
-        var result = Dispute.Create(orderId, disputeTypeId, title, description, images);
+        var dispute = Dispute.Open(orderId, disputeTypeId, title, description, images);
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
         
-        var dispute = result.Value;
         dispute.OrderId.ShouldBe(orderId);
         dispute.DisputeTypeId.ShouldBe(disputeTypeId);
         dispute.Title.ShouldBe(title);
@@ -51,10 +49,11 @@ public class DisputeTests
         var description = Description.Create("I have been waiting for 3 weeks.").Value;
 
         // Act
-        var result = dispute.Open(orderId, disputeTypeId, title, description);
+       var result =   Dispute.Open(orderId, disputeTypeId, title, description);
+
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.ShouldNotBeNull();
 
         var domainEvents = dispute.DomainEvents;
         domainEvents.Count.ShouldBe(1);
@@ -232,12 +231,12 @@ public class DisputeTests
 
     private static Dispute CreateValidDispute()
     {
-        return Dispute.Create(
+        return Dispute.Open(
             OrderId.New(),
             DisputeTypeId.New(),
             Title.Create("Valid Title").Value,
             Description.Create("Valid Description").Value,
             new List<Image>()
-        ).Value;
+        );
     }
 }
