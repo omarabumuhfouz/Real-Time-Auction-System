@@ -134,10 +134,8 @@ export function AuctionsPage() {
               {auctions.map((auction, index) => (
                 <AuctionCard
                   key={auction.id}
-                  auction={{
-                    ...auction,
-                    isFavorite: favorites.has(auction.id),
-                  }}
+                  auction={auction}
+                  isFavorite={favorites.has(auction.id)}
                   onFavoriteClick={handleFavoriteClick}
                   priority={index < 4}
                 />

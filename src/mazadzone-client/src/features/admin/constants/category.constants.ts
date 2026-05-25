@@ -12,8 +12,8 @@ import {
   ShoppingBag,
   Heart,
 } from "lucide-react";
-import * as Icons from "lucide-react";
-import React from "react";
+import { createElement } from "react";
+import type { ComponentType } from "react";
 
 export interface IconStyle {
   bg: string;
@@ -28,10 +28,25 @@ export interface CategoryIconOption {
   styles: IconStyle; // Page styles for table and details view
 }
 
-// Helper component to resolve icons dynamically
+const ICONS_BY_NAME: Record<string, ComponentType<{ className?: string }>> = {
+  Monitor,
+  Shirt,
+  Home,
+  Image,
+  Bike,
+  Car,
+  Gem,
+  Music,
+  FolderOpen,
+  Wrench,
+  ShoppingBag,
+  Heart,
+};
+
+// Helper component to resolve icons by name without importing the whole lucide set.
 export function CategoryIcon({ name, className }: { name: string; className?: string }) {
-  const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[name] || FolderOpen;
-  return React.createElement(IconComponent, { className });
+  const IconComponent = ICONS_BY_NAME[name] ?? FolderOpen;
+  return createElement(IconComponent, { className });
 }
 
 export const CATEGORY_ICONS: CategoryIconOption[] = [
