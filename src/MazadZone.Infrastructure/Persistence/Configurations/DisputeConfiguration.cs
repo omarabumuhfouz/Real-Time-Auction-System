@@ -61,6 +61,11 @@ public sealed class DisputeConfiguration : IEntityTypeConfiguration<Dispute>
                     // 1. Tell EF Core to store these in a separate table called "DisputeImages"
                     imageBuilder.ToTable("DisputeImages");
 
+                    imageBuilder.Property(i => i.Path)
+                    .HasColumnName("ImageUrl");
+
+                    imageBuilder.Property(i => i.AltText);
+
                     // 2. Link them back to the parent Dispute
                     imageBuilder.WithOwner().HasForeignKey("DisputeId");
 

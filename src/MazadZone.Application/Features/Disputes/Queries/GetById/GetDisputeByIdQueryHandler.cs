@@ -15,7 +15,7 @@ public class GetDisputeByIdQueryHandler : IQueryHandler<GetDisputeByIdQuery, Dis
 
     public async Task<Result<DisputeDetailsDto>> Handle(GetDisputeByIdQuery request, CancellationToken ct)
     {
-        var disputeDto = await _repository.GetByIdAsync(request.DisputeId, ct);
+        var disputeDto = await _repository.GetDetailsByIdAsync(request.DisputeId, ct);
         if (disputeDto is null)
         {
             DisputeLogs.LogDisputeNotFound(_logger, request.DisputeId);

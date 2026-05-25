@@ -985,8 +985,16 @@ namespace MazadZone.Infrastructure.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
+                            b1.Property<string>("AltText")
+                                .HasColumnType("nvarchar(max)");
+
                             b1.Property<Guid>("DisputeId")
                                 .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Path")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("ImageUrl");
 
                             b1.Property<bool>("isMain")
                                 .HasColumnType("bit");

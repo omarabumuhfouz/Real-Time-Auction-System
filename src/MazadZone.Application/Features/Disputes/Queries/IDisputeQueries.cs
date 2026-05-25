@@ -4,10 +4,10 @@ namespace MazadZone.Application.Features.Disputes.Queries;
 
 public interface IDisputeQueries : IScopedService
 {
-    Task<DisputeDetailsDto?> GetByIdAsync(DisputeId disputeId, CancellationToken ct);
-    Task<IReadOnlyList<DisputeDto>?> GetOpensAsync(CancellationToken ct);
-    Task<IReadOnlyList<DisputeDto>?> GetResolvedAsync(CancellationToken ct);
-    Task<IReadOnlyList<DisputeDto>?> GetUnderReviewsAsync(CancellationToken ct);
+    Task<DisputeDetailsDto?> GetDetailsByIdAsync(DisputeId disputeId, CancellationToken ct);
+    Task<IReadOnlyList<DisputeListItemDto>?> GetOpensAsync(CancellationToken ct);
+    Task<IReadOnlyList<DisputeListItemDto>?> GetResolvedAsync(CancellationToken ct);
+    Task<IReadOnlyList<DisputeListItemDto>?> GetUnderReviewsAsync(CancellationToken ct);
 
 
 }

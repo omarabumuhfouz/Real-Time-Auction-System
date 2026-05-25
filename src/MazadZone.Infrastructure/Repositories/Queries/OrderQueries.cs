@@ -11,6 +11,7 @@ using Polly;
 
 namespace MazadZone.Infrastructure.Repositories;
 
+
 public class OrderQueries : ResilientRepository , IOrderQueries
 {
 

@@ -17,6 +17,7 @@ public sealed class Dispute : AggregateRoot<DisputeId>
         Description = description;
         Title = title;
         DisputeTypeId = disputeTypeId;
+        Images = images ?? new List<Image>();
     }
 
     public OrderId OrderId { get; private init; }
@@ -32,20 +33,13 @@ public sealed class Dispute : AggregateRoot<DisputeId>
 
 
     public bool IsResolved => Status == DisputeStatus.Resolved;
-    public static Result<Dispute> Create(OrderId orderId,DisputeTypeId disputeTypeId, Title title, Description description,  List<Image> images)
+
+    public static Dispute Open(OrderId orderId,DisputeTypeId disputeTypeId,Title title,Description description, List<Image>? images = null)
     {
-        return new Dispute(DisputeId.New(), orderId, disputeTypeId, description, title, images);
-    }
+        var dispute = new Dispute(DisputeId.New(), orderId, disputeTypeId, description, title, images);
 
-    public Result Open(OrderId orderId,DisputeTypeId disputeTypeId,Title title,Description description, List<Image>? images = null)
-    {
-        // if (Dispute is not null) return OrderErrors.DisputeAlreadyExists;
-        // if (Status == OrderStatus.Pending || Status == OrderStatus.Confirmed) return OrderErrors.CannotDispute;
-
-        var dispute = Dispute.Create(orderId, disputeTypeId, title, description, images).Value;
-
-        RaiseDomainEvent(new DisputeOpenedDomainEvent(dispute.Id, orderId));
-        return Result.Success();
+        dispute.RaiseDomainEvent(new DisputeOpenedDomainEvent(dispute.Id, orderId));
+        return dispute;
     }
 
     /// <summary>

@@ -1,20 +1,22 @@
 using MazadZone.Api.Constants;
+using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Disputes.Commands.OpenDispute;
 using MazadZone.Domain.Orders;
+using MazadZone.Domain.Shared.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Disputes;
 
-public record OpenDisputeRequest(string Reason)
+public record OpenDisputeRequest(DisputeTypeId DisputeTypeId, string Title, string Description, List<ImageModelDto>? Images = null)
 {
-    public OpenDisputeCommand ToCommand(OrderId orderId) => new(orderId, DisputeTypeId.New(),null!,null!,null);
+    public OpenDisputeCommand ToCommand(OrderId orderId) => new(orderId, DisputeTypeId, Title, Description, Images);
 }
 
 public static class OpenDispute
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{id:guid}/open", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly)
+        app.MapPost("/orders/{id:guid}", HandleAsync)
+        //    .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Open a dispute for an order")
            .WithDescription("Initiates a formal dispute for an order, which typically pauses any pending payouts and flags the transaction for administrative review. A valid reason must be provided in the request body. Returns a 409 Conflict if the order is already disputed, or if it is in a state that cannot be disputed (e.g., canceled).")
            .Accepts<OpenDisputeRequest>("application/json")

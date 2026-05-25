@@ -18,6 +18,8 @@ using MazadZone.Api.Endpoints.Sellers;
 using MazadZone.Api.Endpoints.Auth;
 using MazadZone.Infrastructure.RealTime.Hubs;
 using Hangfire;
+using MazadZone.Api.Endpoints.Disputes;
+using MazadZone.Api.Endpoints.DisputeTypes;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -28,6 +30,17 @@ try
 
 
     var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    // Define a custom policy named "AllowAll"
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()    // Allows access from any domain
+              .AllowAnyHeader()    // Allows any headers (e.g., Content-Type, Authorization)
+              .AllowAnyMethod();   // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
+    });
+});
 
 
     builder.Services.AddSerilog((services, lc) => lc
@@ -56,7 +69,7 @@ using (var scope = app.Services.CreateScope())
     // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     // await seeder.SeedAsync();
 }
-
+app.UseCors("AllowAll");
     //Map Endpoints
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();
@@ -66,6 +79,8 @@ using (var scope = app.Services.CreateScope())
     app.MapUserEndpoints();
     app.MapSellerEndpoints();
     app.MapAuctionEndpoints();
+    app.MapDisputeEndpoints();
+    app.MapDisputeTypeEndpoints();
     app.MapAuthenticationEndpoints();
 
     if (app.Environment.IsDevelopment())
