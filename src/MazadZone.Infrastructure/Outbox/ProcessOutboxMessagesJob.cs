@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Primitives;
-using MazadZone.Application.Common.Messaging;
 using MazadZone.Infrastructure.Persistence;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Hosting;
@@ -59,11 +58,10 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
     private async Task ProcessMessagesAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        
+
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
 
-        // 1. Fetch top 20 unprocessed messages (batching prevents memory bloat)
         var messages = await dbContext.Set<OutboxMessage>()
             .Where(m => m.ProcessedOnUtc == null)
             .Take(_options.BatchSize)
@@ -75,39 +73,41 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
         {
             try
             {
-                // 2. Deserialize back into the pure Domain Event
-                var domainEvent = JsonConvert.DeserializeObject(
-                    message.Content, 
-                    Type.GetType(message.Type)!) as IDomainEvent;
+                // 1. Safe Type Resolution across assemblies
+                var type = Type.GetType(message.Type)
+                    ?? AppDomain.CurrentDomain.GetAssemblies()
+                        .Select(a => a.GetType(message.Type))
+                        .FirstOrDefault(t => t != null);
 
-                if (domainEvent is null) continue;
+                if (type is null)
+                {
+                    _logger.LogWarning("Could not resolve type: {MessageType} for message {MessageId}", message.Type, message.Id);
+                    continue;
+                }
 
-                // 3. Wrap it in our MediatR Envelope (like we did in the previous lesson)
-                var notification = CreateNotification(domainEvent);
+                // 2. Deserialize
+                var domainEvent = JsonConvert.DeserializeObject(message.Content, type) as IDomainEvent;
 
-                // 4. Publish it to MediatR With Polly retry policy to handle transient failures
-                await _retryPolicy.ExecuteAsync(async ()
-                     => await publisher.Publish(notification, stoppingToken));
+                if (domainEvent is null)
+                {
+                    _logger.LogWarning("Deserialized event is null for message {MessageId}", message.Id);
+                    continue;
+                }
 
-                // 5. Mark as processed
+                // 3. Publish DIRECTLY to MediatR (No Wrapper Needed)
+                await _retryPolicy.ExecuteAsync(async () =>
+                    await publisher.Publish(domainEvent, stoppingToken));
+
+                // 4. Mark as processed
                 message.ProcessedOnUtc = DateTime.UtcNow;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to process outbox message {message.Id}");
+                _logger.LogError(ex, "Failed to process outbox message {MessageId}", message.Id);
                 message.Error = ex.Message;
-                // Note: We don't mark ProcessedOnUtc here, so it will retry next loop.
-                // In a production app, you'd want a max-retry count so it doesn't loop forever.
             }
         }
 
-        // 6. Save the Processed states back to the DB
         await dbContext.SaveChangesAsync(stoppingToken);
-    }
-
-    private static INotification CreateNotification(IDomainEvent domainEvent)
-    {
-        var notificationType = typeof(DomainEventNotification<>).MakeGenericType(domainEvent.GetType());
-        return (INotification)Activator.CreateInstance(notificationType, domainEvent)!;
     }
 }
