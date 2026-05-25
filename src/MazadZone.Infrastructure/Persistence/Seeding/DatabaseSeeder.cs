@@ -362,7 +362,7 @@ public class DatabaseSeeder : IDatabaseSeeder
             ).Value;
 
             auction.MarkAsActive(DateTime.UtcNow.AddDays(-10).AddMinutes(1));
-            
+
             // Place bids: winner is activeBidders[(i + 1) % activeBidders.Count]
             var winner = activeBidders[(i + 1) % activeBidders.Count];
             var bidAmount = 100m + i * 50m + 20m;
@@ -435,13 +435,13 @@ public class DatabaseSeeder : IDatabaseSeeder
                         if (item.TargetDisputeStatus != null)
                         {
                             var disputeType = disputeTypes[0]; // "Item Not Received" / "Item Not As Described"
-                            var dispute = Dispute.Create(
+                            var dispute = Dispute.Open(
                                 order.Id,
                                 disputeType.Id,
                                 Title.Create("Dispute opened for verification").Value,
                                 Description.Create("The item had scratches not listed in the condition.").Value,
                                 new List<Image>()
-                            ).Value;
+                            );
 
                             if (item.TargetDisputeStatus == DisputeStatus.UnderReview)
                             {
