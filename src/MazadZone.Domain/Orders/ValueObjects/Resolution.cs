@@ -1,3 +1,5 @@
+using MazadZone.Domain.Disputes;
+
 namespace MazadZone.Domain.Orders;
 
 public sealed record Resolution

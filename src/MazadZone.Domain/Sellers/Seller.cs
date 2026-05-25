@@ -1,21 +1,19 @@
-using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Common;
 using MazadZone.Domain.Sellers.Events;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Sellers;
 
-public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity, IAuditableEntity
+public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditableEntity
 {
     private Seller() { } 
 
     private Seller(
-        SellerId id, 
+        UserId id, 
         string bankAccountNumber, 
-        string nationalId,
-        string? taxId = null) : base(id)
+        string nationalId) : base(id)
     {
         BankAccountNumber = bankAccountNumber;
-        TaxIdentificationNumber = taxId;
         NationalId = nationalId;
         Rating = 0;
         ReviewsCount = 0;
@@ -25,9 +23,12 @@ public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity, IAudita
     }
 
     public string BankAccountNumber { get; private set; }
-    public string? TaxIdentificationNumber { get; private set; }
+
     public decimal Rating { get; private set; }
     public int ReviewsCount { get; private set; }
+
+    public int ListedAuctionsCount { get; private set; }
+
 
     public DateTime CreatedOnUtc { get ; set ; }
     public DateTime? ModifiedOnUtc { get ; set ; }
@@ -44,6 +45,10 @@ public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity, IAudita
 
         RaiseDomainEvent(new SellerRatingUpdatedDomainEvent(Id, Rating));
     }
+
+    public void RecordListedAuction() => ListedAuctionsCount++;
+
+
 
     public void Verify()
     {
@@ -63,15 +68,12 @@ public sealed class Seller : AggregateRoot<SellerId>, IVerifiableEntity, IAudita
         return Result.Success();
     }
 
-    public static Result<Seller> BecomeSeller(BidderId bidderId, string bankAccountNumber, string nationalId)
+    public static Result<Seller> BecomeSeller(UserId bidderId, string bankAccountNumber, string nationalId)
     {
         if (string.IsNullOrWhiteSpace(bankAccountNumber)) return SellerErrors.InvalidBankAccount;
 
         if (string.IsNullOrWhiteSpace(nationalId)) return SellerErrors.InvalidNationalId;
 
-
-        var sellerId = SellerId.Load(bidderId.Value); 
-        
-        return new Seller(sellerId, bankAccountNumber, nationalId);
+        return new Seller(bidderId, bankAccountNumber, nationalId);
     }
 }

@@ -10,6 +10,8 @@ public static class SharedConstainst
     public const int MaxLandmarkLength = 50;
     public const int MaxReasonLength = 500;
     public const int MinReasonLength = 10;
+    public const int MaxTitleLength = 100;
+    
 
 
 }

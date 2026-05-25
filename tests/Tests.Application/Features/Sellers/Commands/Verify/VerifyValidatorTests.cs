@@ -32,7 +32,7 @@ public class VerifyValidatorTests
     {
         // Arrange
         // Passing an empty Guid to trigger the failure condition in your custom extension
-        var command = SellerHelper.CreateVerifyCommand() with { SellerId = SellerId.Empty };
+        var command = SellerHelper.CreateVerifyCommand() with { SellerId = UserId.Empty };
 
         // Act
         var result = _validator.TestValidate(command);

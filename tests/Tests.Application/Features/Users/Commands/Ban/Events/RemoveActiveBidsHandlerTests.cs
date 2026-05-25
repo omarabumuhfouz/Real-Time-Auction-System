@@ -67,9 +67,9 @@ public class RemoveActiveBidsHandlerTests : UserBaseTest<RemoveActiveBidsHandler
         var bannedUserId = UserId.New();
         var domainEvent = new UserBannedDomainEvent(bannedUserId, "Market manipulation.", "bidder@test.com");
 
-        var sellerOneId = SellerId.New();
-        var sellerTwoId = SellerId.New();
-        var innocentBidderId = BidderId.New();
+        var sellerOneId = UserId.New();
+        var sellerTwoId = UserId.New();
+        var innocentBidderId = UserId.New();
 
         var mockAffectedAuctions = AuctionHelper.CreateMockAffectedAuctions(sellerOneId, sellerTwoId, innocentBidderId);
 

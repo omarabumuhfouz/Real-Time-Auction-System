@@ -1,8 +1,9 @@
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Sellers.Events;
 
-public sealed record SellerCreatedDomainEvent(SellerId SellerId) : IDomainEvent
+public sealed record SellerCreatedDomainEvent(UserId SellerId) : IDomainEvent
 {
     public Guid Id => Guid.NewGuid();
 

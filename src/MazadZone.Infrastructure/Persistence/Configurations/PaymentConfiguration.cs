@@ -1,3 +1,5 @@
+using MazadZone.Domain.Orders;
+using MazadZone.Domain.Users;
 using MazadZone.Domain.ValueObjects;
 using MazadZone.Infrastructure.Common.Constants;
 using MazadZone.Infrastructure.Persistence.Converters;
@@ -71,9 +73,22 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         // Relationship with Transactions
         builder.HasMany(p => p.Transactions)
             .WithOne()
-            .HasForeignKey(t => t.PaymentId) 
+            .HasForeignKey(t => t.PaymentId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne<Order>()
+        .WithOne()
+        .HasForeignKey<Payment>(p => p.OrderId)
+        .IsRequired()
+        .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<User>()
+        .WithMany()
+        .HasForeignKey(p => p.UserId)
+        .IsRequired()
+        .OnDelete(DeleteBehavior.Restrict);
+
 
         builder.Navigation(p => p.Transactions)
             .HasField("_transactions")

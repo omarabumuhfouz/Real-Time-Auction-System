@@ -38,15 +38,14 @@ public sealed class BecomeSellerCommandHandler : ICommandHandler<BecomeSellerCom
             return BidderErrors.NotFound; ;
         }
 
-        var bidderId = BidderId.Load(request.UserId.Value);
-        var nationalId = await _bidderRepository.GetNationalIdByBidderIdAsync(bidderId, ct);
+        var nationalId = await _bidderRepository.GetNationalIdByBidderIdAsync(request.UserId, ct);
         if(nationalId is null)
         {
-            GlobalLogs.LogBidderNotFound(_logger, bidderId);
+            GlobalLogs.LogBidderNotFound(_logger, request.UserId);
             return BidderErrors.NotFound;
         }
 
-        var result = Seller.BecomeSeller(bidderId, bankAccountNumber: request.BankAccountNumber, nationalId: nationalId);
+        var result = Seller.BecomeSeller(request.UserId, bankAccountNumber: request.BankAccountNumber, nationalId: nationalId);
 
         if (result.IsFailure)
         {

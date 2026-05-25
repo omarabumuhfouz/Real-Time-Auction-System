@@ -1,4 +1,5 @@
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.ValueObjects;
 using MazadZone.Infrastructure.Common.Constants;
 using MazadZone.Infrastructure.Persistence.Converters;
@@ -19,7 +20,7 @@ class BidConfiguration : IEntityTypeConfiguration<Bid>
             .ValueGeneratedNever();
 
         builder.Property(b => b.BidderId)
-            .HasConversion(new BidderIdConverter())
+            .HasConversion(new UserIdIdConverter())
             .IsRequired();
 
         
@@ -27,42 +28,52 @@ class BidConfiguration : IEntityTypeConfiguration<Bid>
         builder.Property(b => b.Status).HasConversion<int>().IsRequired();
         builder.Property(b => b.GatewayAuthHoldId).IsRequired();
 
-        builder.ComplexProperty(b => b.Amount, moneyBuilder => 
-{
-    moneyBuilder.Property(m => m.Amount)
-        .HasColumnName("Amount")
-        .HasColumnType("decimal(18,4)")
-        .IsRequired();
+        builder.ComplexProperty(b => b.Amount, moneyBuilder =>
+        {
+            moneyBuilder.Property(m => m.Amount)
+                .HasColumnName("Amount")
+                .HasColumnType("decimal(18,4)")
+                .IsRequired();
 
-    moneyBuilder.Property(m => m.Currency)
-        .HasColumnName("AmountCurrency")
-        .HasMaxLength(AuctionConstants.MaxCurrencyCodeLength)
-        // 👇 USE THIS IF Currency IS A CLASS/RECORD:
-        .HasConversion(
-            currency => currency.Code, // Convert to string (adjust .Code to match your property name)
-            code => Currency.FromCode(code) // Convert back to object (adjust method to match yours)
-        )
-        // 👇 OR USE THIS ONLY IF Currency IS A STANDARD ENUM:
-        // .HasConversion<string>() 
-        .IsRequired();
-});
+            moneyBuilder.Property(m => m.Currency)
+                .HasColumnName("AmountCurrency")
+                .HasMaxLength(AuctionConstants.MaxCurrencyCodeLength)
+                .HasConversion(
+                    currency => currency.Code,
+                    code => Currency.FromCode(code)
+                )
+                .IsRequired();
+        });
 
-builder.ComplexProperty(b => b.DepositAmount, moneyBuilder => 
-{
-    moneyBuilder.Property(m => m.Amount)
-        .HasColumnName("DepositAmount")
-        .HasColumnType("decimal(18,4)")
-        .IsRequired();
+        builder.ComplexProperty(b => b.DepositAmount, moneyBuilder =>
+        {
+            moneyBuilder.Property(m => m.Amount)
+                .HasColumnName("DepositAmount")
+                .HasColumnType("decimal(18,4)")
+                .IsRequired();
 
-    moneyBuilder.Property(m => m.Currency)
-        .HasColumnName("DepositAmountCurrency")
-        .HasMaxLength(AuctionConstants.MaxCurrencyCodeLength)
-        .HasConversion(
-            currency => currency.Code, 
-            code => Currency.FromCode(code)
-        )
-        .IsRequired();
-});
+            moneyBuilder.Property(m => m.Currency)
+                .HasColumnName("DepositAmountCurrency")
+                .HasMaxLength(AuctionConstants.MaxCurrencyCodeLength)
+                .HasConversion(
+                    currency => currency.Code,
+                    code => Currency.FromCode(code)
+                )
+                .IsRequired();
+        });
+
+        builder.HasOne<Auction>()
+            .WithMany()
+            .HasForeignKey(b => b.AuctionId)
+            .IsRequired(true)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Bidder>()
+           .WithMany()
+           .HasForeignKey(b => b.BidderId)
+           .IsRequired()
+           .OnDelete(DeleteBehavior.Restrict);
+
         
 
     }

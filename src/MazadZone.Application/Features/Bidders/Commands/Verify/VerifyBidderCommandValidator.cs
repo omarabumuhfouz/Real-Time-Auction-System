@@ -6,6 +6,6 @@ public class VerifyBidderCommandValidator : AbstractValidator<VerifyBidderComman
 {
     public VerifyBidderCommandValidator()
     {
-        RuleFor(x => x.BidderId).MustBeValidBidderId();
+        RuleFor(x => x.BidderId).MustBeValidUserId();
     }
 }

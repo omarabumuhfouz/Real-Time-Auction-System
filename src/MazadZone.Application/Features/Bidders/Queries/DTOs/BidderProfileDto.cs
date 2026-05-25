@@ -1,15 +1,19 @@
-using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Bidders.DTOs;
 
 public record BidderProfileDto(
-    BidderId Id,
+    UserId Id,
     string FullName,
     string Email,
     string PhoneNumber,
+    string Status,
+    bool IsVerified,
+    DateTime MemberSince,
+    DateTime LastLogin,
     AddressDto Address,
-    int TotalBidsPlaced,      // Stats increase engagement
-    decimal ReliabilityScore, // Based on completed payments/wins
-    string NationalId,
-    DateTime MemberSince
+    int TotalBidsPlaced,      
+    int AuctionParticipatedCount,
+    int AuctionsWonCount,
+    int CompletedPurchasesCount
 );

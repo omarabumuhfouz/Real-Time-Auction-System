@@ -69,9 +69,9 @@ public class RemoveBidsOnSuspensionHandlerTests : UserBaseTest<RemoveBidsOnSuspe
         var suspendUntil = DateTime.UtcNow.AddDays(3);
         var domainEvent = UserHelper.CreateSuspensionEvent(suspendedUserId, suspendUntil);
 
-        var sellerOneId = SellerId.New();
-        var sellerTwoId = SellerId.New();
-        var innocentBidderId = BidderId.New();
+        var sellerOneId = UserId.New();
+        var sellerTwoId = UserId.New();
+        var innocentBidderId = UserId.New();
 
         var mockAffectedAuctions = AuctionHelper.CreateMockAffectedAuctions(sellerOneId, sellerTwoId, innocentBidderId);
 

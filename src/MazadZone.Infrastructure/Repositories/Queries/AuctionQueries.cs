@@ -149,7 +149,7 @@ public partial class AuctionQueries (
     {
         var rawAuctions = await _context.Auctions
             .AsNoTracking()
-            .Where(a => a.Bids.Any(b => b.BidderId == BidderId.Load(bidderId.Value)))
+            .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value))
             .Select(a => new 
             {
                 Id = a.Id.Value,
@@ -172,7 +172,7 @@ public partial class AuctionQueries (
     
     }
 
-    public async Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(BidderId bidderId, MyBidsQueryParameters parameters, CancellationToken ct)
+    public async Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(UserId bidderId, MyBidsQueryParameters parameters, CancellationToken ct)
     {
         var query = _context.Auctions
             .AsNoTracking()

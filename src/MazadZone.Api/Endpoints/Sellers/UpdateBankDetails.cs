@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Sellers.Commands.UpdateBankDetails;
 using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Sellers;
 
@@ -23,7 +24,7 @@ public static class UpdateBankDetails
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute]SellerId id,
+        [FromRoute] UserId id,
         [FromBody] UpdateBankDetailsRequest request,
         [FromServices] ISender sender,
         CancellationToken ct)

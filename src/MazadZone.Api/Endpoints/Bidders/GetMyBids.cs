@@ -18,7 +18,7 @@ public static class GetMyBids
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromQuery] BidderId bidderId,
+        [FromQuery] UserId bidderId,
         [FromQuery] int? page,
         [FromQuery] int? pageSize,
         [FromQuery] string? query,

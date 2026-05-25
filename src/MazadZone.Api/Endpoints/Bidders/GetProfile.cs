@@ -1,6 +1,7 @@
 using MazadZone.Application.Features.Bidders.Queries.GetBidderProfile;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Bidders;
 
@@ -20,7 +21,7 @@ public static class GetProfile
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute] BidderId id,
+        [FromRoute] UserId id,
         [FromServices] ISender sender,
         CancellationToken ct)
     {

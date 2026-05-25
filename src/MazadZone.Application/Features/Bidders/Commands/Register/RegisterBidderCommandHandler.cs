@@ -1,12 +1,9 @@
-﻿using AutoMapper;
-using MazadZone.Application.Features.Authentication.DTOs;
+﻿using MazadZone.Application.Features.Authentication.DTOs;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Services;
-using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;
 
@@ -25,7 +22,6 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         ITokenProvider tokenProvider,
         IUserRepository userRepository,
         IBidderRepository bidderRepository,
-        IMapper mapper,
         ILogger<RegisterBidderCommandHandler> logger
     )
     {
@@ -103,18 +99,22 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
     }
 
     private BidderProfileDto CreateBidderProfile(User user, Bidder bidder)
-    {
-        return new BidderProfileDto(
-            bidder.Id,
-            user.FullName.GetDisplayName(),
-            user.Email.Value,
-            user.PhoneNumber.Value,
-             AddressDto.FromAddress(bidder.DefaultShippingAddress),
-            0,
-            0,
-            bidder.NationalId,
-            user.CreatedOnUtc);
-
-    }
+{
+    return new BidderProfileDto(
+        Id: user.Id,
+        FullName: user.FullName.GetDisplayName(),
+        Email: user.Email.Value,
+        PhoneNumber: user.PhoneNumber.Value,
+        Status: user.Status.ToString(), // Adjust this based on your UserStatus enum/smart enum implementation
+        IsVerified: bidder.IsVerified,
+        MemberSince: user.CreatedOnUtc,
+        LastLogin: user.LastLogin,
+        Address: AddressDto.FromAddress(bidder.DefaultShippingAddress),
+        TotalBidsPlaced: bidder.TotalPidsPlaced, // Using the property name from your Bidder entity
+        AuctionParticipatedCount: bidder.AuctionParticipatedCount,
+        AuctionsWonCount: bidder.AuctionsWonCount,
+        CompletedPurchasesCount: bidder.CompletedPurchasesCount
+    );
+}
 
 }

@@ -1,4 +1,5 @@
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Categories;
 using MazadZone.Domain.Shared;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Infrastructure.Common.Constants;
@@ -28,37 +29,51 @@ class ItemConfiguration : IEntityTypeConfiguration<Item>
             .IsRequired();
 
         builder.Property(i => i.Description)
-    .HasColumnName("Description")
-    .HasConversion(
-        description => description.Value, // Convert to string (adjust .Value if your property is named .Text)
-        value => Description.Create(value).Value // Convert back to Description object (adjust method to match your domain)
-    )
-    .HasMaxLength(SharedConstainst.MaxDescriptionLength) // Descriptions are usually long, set a generous max length
-    .IsRequired();
-
-    builder.OwnsMany(i => i.Images, imageBuilder =>
-    {
-        imageBuilder.ToTable(TableNames.Images);
-
-        imageBuilder.WithOwner().HasForeignKey("ItemId");
-
-        imageBuilder.Property<int>("Id")
-            .ValueGeneratedOnAdd();
-            
-        imageBuilder.HasKey("Id");
-
-        imageBuilder.Property(img => img.Path)
-            .HasColumnName("ImageUrl")
-            .HasMaxLength(2048)
+            .HasColumnName("Description")
+            .HasConversion(new DescriptionConverter())
+            .HasMaxLength(SharedConstainst.MaxDescriptionLength) // Descriptions are usually long, set a generous max length
             .IsRequired();
 
-        imageBuilder.Property(img => img.AltText)
-            .HasMaxLength(255)
-            .IsRequired(false);
+        builder.Property(i => i.Condition)
+        .HasConversion(new DescriptionConverter())
+        .IsRequired(true)
+        .HasMaxLength(SharedConstainst.MaxDescriptionLength);
 
-        imageBuilder.Property(img => img.isMain)
+        builder.Property(i => i.Status)
+            .HasConversion<int>()
             .IsRequired();
-    });
+
+        builder.OwnsMany(i => i.Images, imageBuilder =>
+        {
+            imageBuilder.ToTable("ItemImages");
+
+            imageBuilder.WithOwner().HasForeignKey("ItemId");
+
+            imageBuilder.Property<int>("Id")
+                .ValueGeneratedOnAdd();
+
+            imageBuilder.HasKey("Id");
+
+            imageBuilder.Property(img => img.Path)
+                .HasColumnName("ImageUrl")
+                .HasMaxLength(2048)
+                .IsRequired();
+
+            imageBuilder.Property(img => img.AltText)
+                .HasMaxLength(255)
+                .IsRequired(false);
+
+            imageBuilder.Property(img => img.isMain)
+                .IsRequired();
+        });
+
+    builder.HasOne<Category>()
+    .WithMany()
+    .HasForeignKey(i => i.CategoryId)
+    .IsRequired()
+    .OnDelete(DeleteBehavior.Restrict);
+
+
         
     }
 }

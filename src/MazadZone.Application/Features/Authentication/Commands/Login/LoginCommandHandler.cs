@@ -14,13 +14,16 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, TokenDto>
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginCommandHandler> _logger;
+    private readonly IDateTimeProvider _dateTimeProvider;
+
 
     public LoginCommandHandler(
         IPasswordService passwordService,
         ITokenProvider tokenProvider,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        ILogger<LoginCommandHandler> logger
+        ILogger<LoginCommandHandler> logger,
+        IDateTimeProvider dateTimeProvider
     )
     {
         _passwordService = passwordService;
@@ -28,6 +31,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, TokenDto>
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _dateTimeProvider = dateTimeProvider;
     }
 
     public async Task<Result<TokenDto>> Handle(LoginCommand request, CancellationToken ct)
@@ -54,12 +58,15 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, TokenDto>
     var hashedRefreshToken = _tokenProvider.HashToken(rawRefreshToken);
 
     var addRefreshResult = user.AddRefreshToken(hashedRefreshToken);
-    
-    if (addRefreshResult.IsFailure) 
-    {
-        LoginLogs.LogAddRefreshTokenFailed(_logger, user.Id.Value, addRefreshResult.TopError.Code);
-        return addRefreshResult.TopError;
-    }
+
+
+    if (addRefreshResult.IsFailure)
+        {
+            LoginLogs.LogAddRefreshTokenFailed(_logger, user.Id.Value, addRefreshResult.TopError.Code);
+            return addRefreshResult.TopError;
+        }
+
+        user.RegisterLastLogin(_dateTimeProvider.Now);
 
     await _unitOfWork.SaveChangesAsync(ct);
 

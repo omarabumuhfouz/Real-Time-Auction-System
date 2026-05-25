@@ -10,7 +10,7 @@ public class SendNotificationOnBidderVerifiedHandlerTests : BidderBaseTest<SendN
     public async Task Handle_BidderVerifiedEventIsRaised_SendsInAppNotification()
     {
         // Arrange
-        var domainEvent = new BidderVerifiedDomainEvent(BidderId.New());
+        var domainEvent = new BidderVerifiedDomainEvent(UserId.New());
 
         // Act
         await Handler.Handle(domainEvent, default);

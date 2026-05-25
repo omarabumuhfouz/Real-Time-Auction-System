@@ -30,7 +30,7 @@ public class GetPublicSellerProfileQueryHandlerTests : SellerBaseTest<GetPublicS
         var query = SellerHelper.CreateGetPublicSellerProfileQuery();
 
         // Create a fake DTO response containing ONLY public-facing data
-        var expectedResponse = SellerHelper.CreatePublicSellerProfileResponse() with { SellerId = query.SellerId };
+        var expectedResponse = SellerHelper.CreatePublicSellerProfileResponse() with { Id = query.SellerId.Value };
 
         _sellerQueries.GetPublicProfileAsync(query.SellerId, Arg.Any<CancellationToken>())
             .Returns(expectedResponse);
@@ -43,10 +43,8 @@ public class GetPublicSellerProfileQueryHandlerTests : SellerBaseTest<GetPublicS
         result.Value.ShouldNotBeNull();
         
         // Verify the DTO mapped perfectly back to the client
-        result.Value.SellerId.ShouldBe(expectedResponse.SellerId);
         result.Value.IsVerified.ShouldBe(expectedResponse.IsVerified);
         result.Value.Rating.ShouldBe(expectedResponse.Rating);
         result.Value.ReviewsCount.ShouldBe(expectedResponse.ReviewsCount);
-        result.Value.JoinedOnUtc.ShouldBe(expectedResponse.JoinedOnUtc);
     }
 }

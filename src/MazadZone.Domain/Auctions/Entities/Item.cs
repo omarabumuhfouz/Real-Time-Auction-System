@@ -2,6 +2,7 @@ namespace MazadZone.Domain.Auctions;
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using MazadZone.Domain.Auctions.Enums;
 using MazadZone.Domain.Auctions.ValueObjects;
 using MazadZone.Domain.Categories;
 using MazadZone.Domain.Items;
@@ -18,6 +19,8 @@ public sealed class Item : Entity<ItemId>
         ItemId id,
         AuctionId auctionId,
         CategoryId categoryId,
+        ItemStatus status,
+        Description condition,
         string title,
         List<Image> images,
         Description description) : base(id)
@@ -32,6 +35,8 @@ public sealed class Item : Entity<ItemId>
     // --- Properties ---
     public CategoryId CategoryId { get; private set; }
     public AuctionId AuctionId { get; private set; }
+    public ItemStatus Status { get; private set; }
+    public Description Condition { get; private set; }
     public string Title { get; private set; }
     public Description Description { get; private set; }
 
@@ -42,6 +47,8 @@ public sealed class Item : Entity<ItemId>
     public static Result<Item> Create(
         AuctionId auctionId,
         CategoryId categoryId,
+        ItemStatus status,
+        Description condition,
         string title,
         string description,
         List<Image> images
@@ -66,6 +73,8 @@ public sealed class Item : Entity<ItemId>
             ItemId.New(),
             auctionId,
             categoryId,
+            status,
+            condition,
             title,
             images,
             descriptionResult.Value

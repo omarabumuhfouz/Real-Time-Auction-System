@@ -1,7 +1,9 @@
 
+using MazadZone.Domain.Users.ValueObjects;
+
 namespace MazadZone.Domain.Bidders.Events;
 
-public record BidderVerifiedDomainEvent(BidderId BidderId) : IDomainEvent
+public record BidderVerifiedDomainEvent(UserId BidderId) : IDomainEvent
 {
     public Guid Id => Guid.NewGuid();
 

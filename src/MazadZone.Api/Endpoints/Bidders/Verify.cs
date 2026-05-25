@@ -1,5 +1,6 @@
 using MazadZone.Domain.Bidders;
 using MazadZone.Application.Features.Bidders.Commands.Verify;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Bidders;
 
@@ -20,7 +21,7 @@ public static class Verify
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute] BidderId id,
+        [FromRoute] UserId id,
         [FromServices] ISender sender,
         CancellationToken ct)
     {

@@ -1,13 +1,12 @@
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Domain.Auctions;
 using MazadZone.Application.Features.Orders.Commands.Create;
-using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Api.Endpoints.Orders;
 
 public record CreateOrderRequest(
     AuctionId AuctionId,
-    BidderId BidderId,
+    UserId BidderId,
     BidId WinningBidId,
     AddressDto ReceiptAddress,
     decimal Amount)

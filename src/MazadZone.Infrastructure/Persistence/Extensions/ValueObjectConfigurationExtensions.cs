@@ -9,7 +9,7 @@ public static class ValueObjectConfigurationExtensions
     public static ComplexPropertyBuilder<Address> ConfigureAddressMapping(
         this ComplexPropertyBuilder<Address> builder)
     {
-        
+
         builder.Property(a => a.Street)
             .IsRequired()
             .HasMaxLength(SharedConstainst.MaxStreetLength);

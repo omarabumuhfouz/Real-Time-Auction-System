@@ -1,13 +1,11 @@
 using MazadZone.Application.Features.Auctions.Commands.PlaceBid;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.ValueObjects;
-using MediatR;
 
 namespace MazadZone.Api.Endpoints.Auctions;
 
-public record PlaceBidRequest(BidderId BidderId,string methodId, decimal Amount)
+public record PlaceBidRequest(UserId BidderId,string methodId, decimal Amount)
 {
     public PlaceBidCommand ToCommand(AuctionId auctionId) => new(auctionId, BidderId, methodId,Money.Create(Amount, Currency.Jod).Value);
 }

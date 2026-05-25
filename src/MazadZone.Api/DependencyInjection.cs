@@ -1,6 +1,9 @@
+using MazadZone.Api.Constants;
 using MazadZone.Api.OpenApi.Transformers;
 using MazadZone.Application;
 using MazadZone.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 namespace MazadZone.Api;
@@ -17,7 +20,9 @@ public static class DependencyInjection
         });
 
         services.AddInfrastructureServices(configuration)
-        .AddApplicationServices();
+        .AddApplicationServices()
+        .AddApiDocumentation()
+        .AddJwtAuthentication(configuration);
 
         return services;
     }
@@ -46,5 +51,51 @@ private static IServiceCollection AddApiDocumentation(this IServiceCollection se
 
         return builder;
     }
+
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+
+        // Register your provider as a Singleton so the IMemoryCache works correctly
+        services.AddSingleton<DatabaseKeyProvider>();
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(); // Kept empty, options configured below
+
+        // Inject the DatabaseKeyProvider into JwtBearerOptions
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<DatabaseKeyProvider>((options, keyProvider) =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+
+                    // Route the key resolution to our new DatabaseKeyProvider
+                    IssuerSigningKeyResolver = (token, securityToken, kid, validationParameters) =>
+                    {
+                        return keyProvider.GetKeys(token, securityToken, kid, validationParameters);
+                    }
+                };
+            });
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(Policies.AdminOnly, policy => policy.RequireRole(Roles.Admin));
+            options.AddPolicy(Policies.BidderOnly, policy => policy.RequireRole(Roles.Bidder));
+            options.AddPolicy(Policies.BidderAndSeller, policy => policy.RequireRole(Roles.Bidder, Roles.Seller));
+            options.AddPolicy(Policies.Shared, policy => policy.RequireRole(Roles.Admin, Roles.Bidder, Roles.Seller));
+        });
+
+        return services;
+    }
+
 }
 

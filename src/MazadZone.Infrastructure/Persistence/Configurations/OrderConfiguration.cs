@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MazadZone.Infrastructure.Persistence.Extensions;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.ValueObjects;
+using MazadZone.Domain.Disputes;
 
 
 namespace MazadZone.Infrastructure.Persistence.Configurations;
@@ -22,13 +23,20 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                      .HasConversion(new OrderIdConverter())
                      .ValueGeneratedNever();
 
+              builder.Property(o => o.DisputeId)
+              .HasConversion(new DisputeIdConverter())
+              .IsRequired(false);
+
               builder.Property(o => o.BidderId)
-                     .HasConversion(new BidderIdConverter())
+                     .HasConversion(new UserIdIdConverter())
                      .IsRequired();
 
               builder.Property(o => o.AuctionId)
                      .HasConversion(new AuctionIdConverter())
                      .IsRequired();
+
+              builder.Property(o => o.DisputeId)
+              .IsRequired(false);
 
               builder.Property(o => o.WinningBidId)
                      .HasConversion(new BidIdConverter())
@@ -64,19 +72,19 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
               builder.Property(o => o.CreatedOnUtc).IsRequired();
               builder.Property(o => o.ModifiedOnUtc).IsRequired(false);
 
-              builder.HasOne(o => o.Dispute)
-                     .WithOne()
-                     .HasForeignKey<Dispute>(d => d.OrderId)
-                     .IsRequired(false)
-                     .OnDelete(DeleteBehavior.Cascade);
-
-
 
               builder.HasOne(o => o.Feedback)
                      .WithOne()
                      .HasForeignKey<Feedback>(fb => fb.OrderId)
                      .IsRequired(false)
                      .OnDelete(DeleteBehavior.Cascade);
+
+              builder.HasOne<Dispute>()
+              .WithOne()
+              .HasForeignKey<Dispute>(d => d.OrderId)
+              .IsRequired(false)
+              .OnDelete(DeleteBehavior.Cascade);
+
 
 
               builder.Ignore(o => o.IsDisputable);

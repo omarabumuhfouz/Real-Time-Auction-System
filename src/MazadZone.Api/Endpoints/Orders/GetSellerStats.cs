@@ -22,7 +22,7 @@ public static class GetSellerStats
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute]SellerId sellerId,
+        [FromRoute]UserId sellerId,
         [FromServices]ISender sender,
         CancellationToken ct)
     {

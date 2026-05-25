@@ -1,10 +1,7 @@
 using MazadZone.Domain.Auctions.Enums;
 using MazadZone.Domain.Auctions.Events;
-using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Categories;
-using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Shared.ValueObjects;
-using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Domain.ValueObjects;
 
 namespace MazadZone.Domain.Auctions;
@@ -20,7 +17,7 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
     private Auction(
         AuctionId id,
         Item item,
-        SellerId sellerId,
+        UserId sellerId,
         Address shippingAddress,
         Money startBidAmount,
         Money minBidAmount,
@@ -43,7 +40,7 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
 
     public Item Item { get; private set; }
 
-    public SellerId SellerId { get; private set; }
+    public UserId SellerId { get; private set; }
 
     public Address ShippingAddress { get; private set; }
 
@@ -92,7 +89,9 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
 
     // --- Factory Method ---
     public static Result<Auction> Create(
-        SellerId sellerId,
+        UserId sellerId,
+        ItemStatus status,
+        Description condition,
         Address shippingAddress,
         decimal startBidAmount,
         decimal minBidAmount,
@@ -115,7 +114,7 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
         var auctionId = AuctionId.New();
 
 
-        var CreateItemResult = Item.Create(auctionId, categoryId, title, description, images);
+        var CreateItemResult = Item.Create(auctionId, categoryId,status, condition, title, description, images);
         if (CreateItemResult.IsFailure)
             return CreateItemResult.TopError;
 
@@ -250,7 +249,7 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
         return Result.Success(depositAmountResult.Value);
     }
     public Result<Bid> PlaceBid(
-        BidderId bidderId,
+        UserId bidderId,
         decimal amount,
         string gatewayAuthHoldId,
         DateTime utcNow)

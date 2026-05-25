@@ -1,6 +1,5 @@
 using MazadZone.Domain.Categories;
 using MazadZone.Domain.Shared;
-using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Infrastructure.Common.Constants;
 using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
@@ -24,17 +23,16 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .IsRequired(false);
 
         builder.Property(c => c.Name)
-            .HasConversion(
-                n => n.Value, // Write to DB
-                value => Name.Create(value).Value) // Read from DB
+            .HasConversion(new NameConverter())
             .HasColumnName("Name")
             .HasMaxLength(SharedConstainst.MaxNameLength)
             .IsRequired();
 
+        builder.HasIndex(c => c.Name);
+        
+
         builder.Property(c => c.Description)
-            .HasConversion(
-                d => d.Value, // Write to DB
-                value => Description.Create(value).Value) // Read from DB
+            .HasConversion(new DescriptionConverter())
             .HasColumnName("Description")
             .HasMaxLength(SharedConstainst.MaxDescriptionLength);
 

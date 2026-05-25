@@ -1,12 +1,10 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
-using MazadZone.Application.Common.Messaging;
-using MazadZone.Domain.Bidders;
 
 namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 
 public sealed record GetMyBidsQuery(
-    BidderId BidderId,
+    UserId BidderId,
     int Page = 1,
     int PageSize = 12,
     string? SearchTerm = null,

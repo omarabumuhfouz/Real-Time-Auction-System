@@ -7,6 +7,7 @@ using MazadZone.Infrastructure.Persistence.Extensions;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Shared;
 using MazadZone.Domain.ValueObjects;
+using MazadZone.Domain.Sellers;
 
 
 namespace MazadZone.Infrastructure.Persistence.Configurations;
@@ -22,11 +23,17 @@ class AuctionsConfiguration : IEntityTypeConfiguration<Auction>
         builder.Property(a => a.Id)
             .HasConversion( new AuctionIdConverter() )
             .ValueGeneratedNever();
-        
-            
+
+
         builder.Property(a => a.SellerId)
-            .HasConversion(new SellerIdConverter())
+            .HasConversion(new UserIdIdConverter())
             .IsRequired();
+
+        builder.HasOne<Seller>()
+        .WithMany()
+        .HasForeignKey(a => a.SellerId)
+        .IsRequired()
+        .OnDelete(DeleteBehavior.Restrict);
         
         builder.HasOne(a => a.Item)
             .WithOne() 
@@ -95,13 +102,7 @@ builder.ComplexProperty(a => a.MinBidAmount, moneyBuilder =>
             .IsRequired(false);
 
         builder.Property(a => a.CancellationReason)
-       .HasConversion(
-           // 1. Convert to string when saving to the database
-           reason => reason.Text, // (Or reason.Text, depending on your Reason class property)
-           
-           // 2. Convert back to Reason object when reading from the database
-           value => Reason.Create(value).Value
-       )
+       .HasConversion(new ReasonConverter())
        .HasColumnName("CancellationReason")
        .HasMaxLength(SharedConstainst.MaxReasonLength) // Set this to whatever max length your Reason validates against
        .IsRequired(false); // Explicitly mark it as nullable in the DB

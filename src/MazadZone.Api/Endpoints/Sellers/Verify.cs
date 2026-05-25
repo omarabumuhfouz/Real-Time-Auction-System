@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Sellers.Commands.Verify;
 using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Sellers;
 
@@ -20,7 +21,7 @@ public static class Verify
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute]SellerId id,
+        [FromRoute]UserId id,
         [FromServices] ISender sender,
         CancellationToken ct)
     {

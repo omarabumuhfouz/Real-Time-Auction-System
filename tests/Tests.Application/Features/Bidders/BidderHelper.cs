@@ -27,9 +27,9 @@ public static class BidderHelper
     }
 
     public static VerifyBidderCommand CreateVerifyBidderCommand()
-    => new VerifyBidderCommand(BidderId.New());
+    => new VerifyBidderCommand(UserId.New());
 
-    public static Bidder CreateUnverifiedBidder(BidderId id)
+    public static Bidder CreateUnverifiedBidder(UserId id)
     {
         // Adjust this instantiation based on your Bidder domain factory methods
         // Since Bidder ID typically matches User ID, we load it directly
@@ -42,15 +42,19 @@ public static class BidderHelper
     public static BidderProfileDto CreateValidBidderProfileDto()
     {
         return new BidderProfileDto(
-            BidderId.New(),                                  // Id
-            "Omar Abumuhfouz",                               // FullName
-            "omar.abumuhfouz@mazadzone.com",                 // Email
-            "0791234567",                                    // PhoneNumber
-            new AddressDto("Jordan", "Amman", "Queen Rania St", "11118"), // Address
-            0,                                               // TotalBidsPlaced
-            0.0m,                                            // ReliabilityScore (decimal)
-            "9876543210",                                    // NationalId (Added to match record signature)
-            DateTime.UtcNow                                  // MemberSince
+            Id: UserId.New(), 
+            FullName: "Omar Abumuhfouz",
+            Email: "omar.abumuhfouz@mazadzone.com",
+            PhoneNumber: "0791234567",
+            Status: "Active",
+            IsVerified: true,
+            MemberSince: DateTime.UtcNow.AddMonths(-12),
+            LastLogin: DateTime.UtcNow.AddHours(-2),
+            Address: new AddressDto("Jordan", "Amman", "Queen Rania St", "11118"),
+            TotalBidsPlaced: 42,
+            AuctionParticipatedCount: 10,
+            AuctionsWonCount: 3,
+            CompletedPurchasesCount: 3
         );
     }
 }

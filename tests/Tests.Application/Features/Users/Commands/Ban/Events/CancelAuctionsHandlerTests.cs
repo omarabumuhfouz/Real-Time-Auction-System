@@ -40,8 +40,8 @@ public class CancelAuctionsHandlerTests : UserBaseTest<CancelAuctionsHandler>
         var reason = "Fraudulent items detected.";
         var domainEvent = new UserBannedDomainEvent(userId, reason, "seller@test.com");
 
-        var bidderOne = BidderId.New();
-        var bidderTwo = BidderId.New();
+        var bidderOne = UserId.New();
+        var bidderTwo = UserId.New();
 
         var mockActiveAuctions = AuctionHelper.CreateMockActiveAuctions(bidderOne, bidderTwo);
 

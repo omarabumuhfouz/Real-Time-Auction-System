@@ -1,6 +1,3 @@
-using MazadZone.Domain.Primitives;
-using MazadZone.Domain.Users.ValueObjects;
-
 namespace MazadZone.Domain.Notifications;
 
 public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISoftDeletable
@@ -36,7 +33,7 @@ public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISo
 
     public static Notification Create(UserId userId, string title, string message)
     {
-        var notification = new Notification(new NotificationId(Guid.NewGuid()), userId, title, message);
+        var notification = new Notification(NotificationId.New(), userId, title, message);
         return notification;
     }
 
