@@ -9,11 +9,12 @@ using MzadZone.Domain.Payments.Entities;
 using MazadZone.Domain.Repositories;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Users.ValueObjects;
+using System.Threading.Tasks.Dataflow;
 
 namespace MazadZone.Application.Features.Auctions.EventHandlers;
 
 public class CreateOrderAndPaymentEventHandler(
-    IOrderRepository _orderRepository, 
+    IOrderRepository _orderRepository,
     IPaymentRepository _paymentRepository,
     IAuctionRepository _auctionRepository,
     IOrderJobScheduler _orderJobScheduler,
@@ -52,11 +53,29 @@ public class CreateOrderAndPaymentEventHandler(
 
         // 3. payment  
         var paymentResult = Payment.Create(order.Id, UserId.From(winningBid.BidderId.Value), winningBid.DepositAmount);
+
+        System.Console.WriteLine("\n\n\n\npaymentId: ", paymentResult.Value.Id.Value);
+        System.Console.WriteLine("OrderId: ", paymentResult.Value.OrderId.Value);
+        System.Console.WriteLine("capturedDateTime: ", paymentResult.Value.CapturedAuthHoldAtUtc?.ToString("yyyy-MM-dd HH:mm:ss"));
+        System.Console.WriteLine("Deposit Amount: ", paymentResult.Value.CapturedHoldedAmount.Amount);
+        System.Console.WriteLine("Status: ", paymentResult.Value.Status);
+        System.Console.WriteLine("Remaining Amount: ", paymentResult.Value.CapturedRemainingAmount);
+        System.Console.WriteLine("Transaction Statuses: ", string.Join(", ", paymentResult.Value.Transactions.Select(t => t.Status)));
+
         if (paymentResult.IsFailure)
         {
             _logger.LogError("Failed to initialize payment ledger.");
-            return; 
+            return;
         }
+
+        System.Console.WriteLine("\n\n\n\npaymentId: ", paymentResult.Value.Id.Value);
+        System.Console.WriteLine("OrderId: ", paymentResult.Value.OrderId.Value);
+        System.Console.WriteLine("capturedDateTime: ", paymentResult.Value.CapturedAuthHoldAtUtc?.ToString("yyyy-MM-dd HH:mm:ss"));
+        System.Console.WriteLine("Deposit Amount: ", paymentResult.Value.CapturedHoldedAmount.Amount);
+        System.Console.WriteLine("Status: ", paymentResult.Value.Status);
+        System.Console.WriteLine("Remaining Amount: ", paymentResult.Value.CapturedRemainingAmount);
+        System.Console.WriteLine("Transaction Statuses: ", string.Join(", ", paymentResult.Value.Transactions.Select(t => t.Status)));
+
         var payment = paymentResult.Value;
 
         // 4. record in domain
@@ -69,11 +88,11 @@ public class CreateOrderAndPaymentEventHandler(
         // if (string.IsNullOrEmpty(captureTransactionId))
         // {
         //     _logger.LogError("Gateway failure: Could not capture hold {HoldId}", winningBid.GatewayAuthHoldId);
-     
+
         // }
         // else
         // {
-           
+
         //     payment.RecordTransactionAttempt(captureTransactionId, TransactionType.DepositCaptured);
         //     payment.ResolveTransactionSuccess(captureTransactionId);
         // }

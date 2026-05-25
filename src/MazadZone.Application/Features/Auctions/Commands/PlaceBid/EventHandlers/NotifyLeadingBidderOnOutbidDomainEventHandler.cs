@@ -19,7 +19,7 @@ namespace MazadZone.Application.Features.Auctions.Commands.PlaceBid.EventHandler
 /// </remarks>
 /// <typeparam name="OutbidDomainEventHandler"></typeparam>
 
-public class OutbidDomainEventHandler (
+public class OutbidDomainEventHandler(
     ISender _sender
 ) : INotificationHandler<BidderOutbidDomainEvent>
 {

@@ -14,13 +14,14 @@ public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuction
     private readonly AppDbContext _context;
 
     public AuctionRepository(AppDbContext context) : base(context)
-     {
+    {
         _context = context;
-    }  
+    }
 
-    public async Task<Auction?> GetByIdAsync(AuctionId id, CancellationToken cancellationToken = default)
+    public async Task<Auction?> GetByIdWithBidsAsync(AuctionId id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<Auction>()
+            .Include(a => a.Bids)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -56,29 +57,29 @@ public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuction
     public Task<int> RemoveActiveBidsByBidderIdAsync(UserId bidderId, CancellationToken ct)
     {
         throw new NotImplementedException();
-         // var auctions = await _context.Auctions
-    //     .Include(a => a.Bids)
-    //     .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value && a.Status == AuctionStatus.Active))
-    //     .ToListAsync(ct);
+        // var auctions = await _context.Auctions
+        //     .Include(a => a.Bids)
+        //     .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value && a.Status == AuctionStatus.Active))
+        //     .ToListAsync(ct);
 
-    // int removedCount = 0;
+        // int removedCount = 0;
 
-    // foreach (var auction in auctions)
-    // {
-    //     var bidsToRemove = auction.Bids.Where(b => b.BidderId == bidderId.Value).ToList();
+        // foreach (var auction in auctions)
+        // {
+        //     var bidsToRemove = auction.Bids.Where(b => b.BidderId == bidderId.Value).ToList();
 
-    //     foreach (var bid in bidsToRemove)
-    //     {
-    //         bid.
-    //         removedCount++;
-    //     }
-    // }
+        //     foreach (var bid in bidsToRemove)
+        //     {
+        //         bid.
+        //         removedCount++;
+        //     }
+        // }
 
-    // if (removedCount > 0)
-    // {
-    //     await _context.SaveChangesAsync(ct);
-    // }
+        // if (removedCount > 0)
+        // {
+        //     await _context.SaveChangesAsync(ct);
+        // }
 
-    // return removedCount;
+        // return removedCount;
     }
 }

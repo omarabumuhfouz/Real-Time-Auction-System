@@ -4,6 +4,7 @@ using MazadZone.Application.Features.Auctions.Commands.EndAuction;
 using System;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
+using MazadZone.Application.Features.Auctions.Commands.ActivateAuction;
 
 namespace MazadZone.Infrastructure.Scheduling;
 
@@ -15,6 +16,14 @@ public class HangfireAuctionJobScheduler : IAuctionJobScheduler
         BackgroundJob.Schedule<ISender>(
             mediator => mediator.Send(new EndAuctionCommand(AuctionId.From(auctionId)), default),
             closeAt
+        );
+    }
+
+    public void ScheduleAuctionStarting(Guid auctionId, DateTimeOffset startAt)
+    {
+        BackgroundJob.Schedule<ISender>(
+            mediator => mediator.Send(new ActivateAuctionCommand(AuctionId.From(auctionId)), default),
+            startAt
         );
     }
 }

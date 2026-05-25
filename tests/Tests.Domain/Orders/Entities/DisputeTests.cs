@@ -8,7 +8,7 @@ public class DisputeTests
 {
     // --- Helper Methods ---
     private static OrderId GenerateOrderId() => OrderId.New(); // Adjust if your OrderId generation differs
-    
+
     private static Dispute CreateValidOpenDispute()
     {
         return Dispute.Create(GenerateOrderId(), "Item arrived damaged").Value;
@@ -28,7 +28,7 @@ public class DisputeTests
         // Assert
         result.IsFailure.ShouldBeTrue();
         // The error should bubble up from the Reason Value Object
-        result.TopError.ShouldNotBeNull(); 
+        result.TopError.ShouldNotBeNull();
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class DisputeTests
         dispute.IsResolved.ShouldBeFalse();
         dispute.Resolution.ShouldBeEquivalentTo(Resolution.Empty);
         dispute.ResolvedAtUtc.ShouldBeNull();
-        
+
         // Ensure CreatedAtUtc was set recently
         dispute.CreatedAtUtc.ShouldNotBe(default);
         dispute.CreatedAtUtc.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow.AddSeconds(2));
@@ -122,7 +122,7 @@ public class DisputeTests
         // Assert
         result.IsFailure.ShouldBeTrue();
         result.TopError.ShouldNotBeNull(); // Bubbles up from Resolution.Create
-        
+
         // Ensure state wasn't accidentally mutated
         dispute.Status.ShouldBe(DisputeStatus.Open);
         dispute.IsResolved.ShouldBeFalse();
@@ -144,7 +144,7 @@ public class DisputeTests
         dispute.IsResolved.ShouldBeTrue();
         dispute.Resolution.ShouldNotBeNull();
         dispute.Resolution!.Value.ShouldBe(resolutionText);
-        
+
         // Ensure ResolvedAtUtc was set
         dispute.ResolvedAtUtc.ShouldNotBeNull();
         dispute.ResolvedAtUtc.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow.AddSeconds(2));

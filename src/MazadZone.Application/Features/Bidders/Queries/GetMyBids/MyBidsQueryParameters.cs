@@ -1,4 +1,4 @@
-namespace MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 
 public sealed record MyBidsQueryParameters
 {

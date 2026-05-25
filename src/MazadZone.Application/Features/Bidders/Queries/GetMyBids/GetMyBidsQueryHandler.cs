@@ -4,7 +4,7 @@ using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
 using Microsoft.Extensions.Logging;
 
-namespace MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 
 public sealed class GetMyBidsQueryHandler : IQueryHandler<GetMyBidsQuery, PagedList<MyBidAuctionDto>>
 {

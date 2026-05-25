@@ -19,11 +19,13 @@ public sealed class Item : Entity<ItemId>
         AuctionId auctionId,
         CategoryId categoryId,
         string title,
-         Description description) : base(id)
+        List<Image> images,
+        Description description) : base(id)
     {
         AuctionId = auctionId;
         CategoryId = categoryId;
         Title = title;
+        _images = images;
         Description = description;
     }
 
@@ -37,7 +39,7 @@ public sealed class Item : Entity<ItemId>
     public IReadOnlyCollection<Image> Images => _images.AsReadOnly();
 
     // --- Factory Method ---
-    public static Result <Item> Create(
+    public static Result<Item> Create(
         AuctionId auctionId,
         CategoryId categoryId,
         string title,
@@ -51,11 +53,11 @@ public sealed class Item : Entity<ItemId>
         var descriptionResult = Description.Create(description);
         if (descriptionResult.IsFailure)
             return ItemErrors.InvalidDescription;
-        
+
         foreach (var image in images)
         {
-            var imageResult = Image.Create(image.Path, image.AltText,image.isMain);
-            
+            var imageResult = Image.Create(image.Path, image.AltText, image.isMain);
+
             if (imageResult.IsFailure)
                 return imageResult.TopError;
         }
@@ -65,13 +67,14 @@ public sealed class Item : Entity<ItemId>
             auctionId,
             categoryId,
             title,
+            images,
             descriptionResult.Value
         );
     }
 
     // --- Behaviors / Operations ---
 
-public Result AddImage(Image image)
+    public Result AddImage(Image image)
     {
         // 1. Check max limits
         if (_images.Count >= AuctionConstants.MaxImagesPerItem)
@@ -108,11 +111,11 @@ public Result AddImage(Image image)
     }
 
 
-        public Result DeleteImage(string  path)
+    public Result DeleteImage(string path)
     {
         // Find the image by its unique Path
         var existingImage = _images.FirstOrDefault(i => i.Path == path);
-        
+
         if (existingImage is null) return ItemErrors.ImageNotFound;
 
         _images.Remove(existingImage);
@@ -133,7 +136,7 @@ public Result AddImage(Image image)
 
         return Result.Success();
     }
-    
+
 
     public Result UpdateDetails(string newTitle, string newDescription)
     {
@@ -141,8 +144,8 @@ public Result AddImage(Image image)
             return ItemErrors.InvalidTitle;
 
         var descriptionResult = Description.Create(newDescription);
-        if (descriptionResult.IsFailure) 
-        return ItemErrors.InvalidDescription;
+        if (descriptionResult.IsFailure)
+            return ItemErrors.InvalidDescription;
 
         Title = newTitle;
         Description = descriptionResult.Value;

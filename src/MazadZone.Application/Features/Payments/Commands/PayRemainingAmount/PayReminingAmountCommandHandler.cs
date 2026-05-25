@@ -19,6 +19,7 @@ public class PayRemainingAmountCommandHandler(
     {
         // 1. get the payment for order
         var payment = await _paymentRepository.GetByOrderIdAsync(request.OrderId, cancellationToken);
+
         if (payment is null)
         {
             return Result.Failure<Unit>(PaymentErrors.NotFound);
@@ -37,7 +38,7 @@ public class PayRemainingAmountCommandHandler(
         //3. get the authId for old transaction (autherize amount 10%)
         var originalAuthHold = payment.Transactions
             .FirstOrDefault(t => t.Type == TransactionType.AuthorizationHold && t.Status == TransactionStatus.Success);
-        
+
         if (originalAuthHold is null)
         {
             return Result.Failure<Unit>(PaymentErrors.MissingAuthorizationHold);
@@ -45,15 +46,15 @@ public class PayRemainingAmountCommandHandler(
 
         // 4. Cupture the 90% remaning amount
         _logger.LogInformation("Attempting to charge remaining 90% ({Amount}) for Order {OrderId}", remainingAmount, request.OrderId);
-        
+
         // record try pay 90% to help admin tracing Pending payments if provider faliure 
         string remainingChargeIntentId = $"int_rem_{Guid.NewGuid()}"; // temprory
         payment.RecordTransactionAttempt(remainingChargeIntentId, TransactionType.RemainingAmountCapture);
 
         var gatewayTransactionId = await _paymentService.ChargeAmountAsync(
-            payment.UserId.Value, 
-            remainingAmount, 
-            request.PaymentMethodId, 
+            payment.UserId.Value,
+            remainingAmount,
+            request.PaymentMethodId,
             cancellationToken);
 
         if (string.IsNullOrEmpty(gatewayTransactionId))
@@ -65,11 +66,11 @@ public class PayRemainingAmountCommandHandler(
         }
 
         // capture 90% is sucess
-        payment.ResolveTransactionSuccess(remainingChargeIntentId); 
+        payment.ResolveTransactionSuccess(remainingChargeIntentId);
 
         // 5. capture the 10% to get 100% amount
         _logger.LogInformation("Remaining 90% paid. Capturing original 10% hold: {HoldId}", originalAuthHold.GatewayIntentId);
-        
+
         // record try capture 
         payment.RecordTransactionAttempt(originalAuthHold.GatewayIntentId, TransactionType.DepositCaptured);
 
@@ -80,7 +81,7 @@ public class PayRemainingAmountCommandHandler(
             // failure deposit 10%
             _logger.LogCritical("Fatal Financial Mismatch: Charged 90% but failed to capture 10% hold for Payment {PaymentId}", payment.Id);
             payment.ResolveTransactionFailure(originalAuthHold.GatewayIntentId, "Failed to capture original hold after charging remaining balance.");
-            
+
             // save the current status to enter the support from bank
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Failure<Unit>(PaymentErrors.CriticalPaymentMismatch);

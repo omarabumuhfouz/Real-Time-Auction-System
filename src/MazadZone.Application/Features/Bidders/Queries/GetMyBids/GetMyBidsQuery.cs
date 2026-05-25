@@ -3,7 +3,7 @@ using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Common.Messaging;
 using MazadZone.Domain.Bidders;
 
-namespace MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 
 public sealed record GetMyBidsQuery(
     BidderId BidderId,

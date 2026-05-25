@@ -1,5 +1,6 @@
 using MazadZone.Application.Services;
 using MazadZone.Domain.Orders;
+using MazadZone.Domain.Primitives.Results;
 using MazadZone.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,8 +19,8 @@ public sealed class PaymentQueries : IPaymentQueries
     {
         var order = await _dbContext.Orders
             .AsNoTracking()
-            .SingleOrDefaultAsync(o => o.Id.Value == orderId, cancellationToken);
+            .SingleOrDefaultAsync(o => o.Id == OrderId.From(orderId), cancellationToken);
 
-        return order?.TotalAmount ?? throw new InvalidOperationException($"Order not found for OrderId {orderId}");
+        return order?.TotalAmount;
     }
 }

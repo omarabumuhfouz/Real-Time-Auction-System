@@ -10,6 +10,7 @@ using MazadZone.Infrastructure.Authentication;
 using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
+using MzadZone.Domain.Payments.Entities;
 
 namespace MazadZone.Infrastructure.Persistence;
 
@@ -32,6 +33,8 @@ public class AppDbContext : DbContext
     public DbSet<Auction> Auctions { get; set; } = null!;
     public DbSet<Item> Items { get; set; } = null!;
     public DbSet<Bid> Bids { get; set; } = null!;
+    public DbSet<Payment> Payments { get; set; } = null!;
+    public DbSet<Transaction> Transactions { get; set; } = null!;
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -40,7 +43,7 @@ public class AppDbContext : DbContext
         modelBuilder.Ignore<Resolution>();
         modelBuilder.Ignore<Rating>();
         modelBuilder.Ignore<Comment>();
-        
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         base.OnModelCreating(modelBuilder);

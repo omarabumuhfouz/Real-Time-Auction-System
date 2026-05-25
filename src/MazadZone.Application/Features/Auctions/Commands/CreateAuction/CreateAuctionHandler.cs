@@ -14,12 +14,12 @@ public class CreateAuctionHandler
     IUnitOfWork _unitOfWork,
     IAuctionJobScheduler _auctionJobScheduler,
     ILogger<CreateAuctionHandler> _logger
-): ICommandHandler<CreateAuctionCommand, AuctionId>
+) : ICommandHandler<CreateAuctionCommand, AuctionId>
 {
     public async Task<Result<AuctionId>> Handle(CreateAuctionCommand request, CancellationToken cancellationToken)
     {
         CreateAuctionLog.LogHandlingCreateAuction(_logger);
-        
+
         var images = new List<Image>();
 
         foreach (var image in request.Images)
@@ -46,7 +46,8 @@ public class CreateAuctionHandler
             request.CatigoryId
             );
 
-        if (createResult.IsFailure) {
+        if (createResult.IsFailure)
+        {
             CreateAuctionLog.LogDomainViolation(_logger, createResult.TopError.Message);
             return Result.Failure<AuctionId>(createResult.TopError);
         }
@@ -57,10 +58,11 @@ public class CreateAuctionHandler
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         CreateAuctionLog.LogAuctionCreated(_logger, auction.Id.Value);
 
+        _auctionJobScheduler.ScheduleAuctionStarting(auction.Id.Value, auction.StartTime);
         _auctionJobScheduler.ScheduleAuctionClosing(auction.Id.Value, auction.EndTime);
         CreateAuctionLog.LogJobScheduled(_logger, auction.Id.Value, auction.EndTime);
 
         return Result.Success(auction.Id);
-        
+
     }
 }
