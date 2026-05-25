@@ -27,6 +27,7 @@ public sealed class Item : Entity<ItemId>
     {
         AuctionId = auctionId;
         CategoryId = categoryId;
+        Condition = condition;
         Title = title;
         _images = images;
         Description = description;

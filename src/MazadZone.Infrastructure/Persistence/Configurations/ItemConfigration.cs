@@ -1,4 +1,5 @@
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Auctions.ValueObjects;
 using MazadZone.Domain.Categories;
 using MazadZone.Domain.Shared;
 using MazadZone.Domain.Shared.ValueObjects;
@@ -19,10 +20,10 @@ class ItemConfiguration : IEntityTypeConfiguration<Item>
         builder.Property(i => i.Id)
             .HasConversion(new ItemIdConverter())
             .ValueGeneratedNever();
-        
+
         builder.Property(i => i.CategoryId)
             .HasConversion(new CategoryIdConverter())
-            .IsRequired();        
+            .IsRequired();
 
         builder.Property(i => i.Title)
             .HasMaxLength(AuctionConstants.MaxTitleLength)
@@ -49,6 +50,10 @@ class ItemConfiguration : IEntityTypeConfiguration<Item>
 
             imageBuilder.WithOwner().HasForeignKey("ItemId");
 
+            imageBuilder.Property<ItemId>("ItemId")
+                .HasConversion(new ItemIdConverter())
+                .IsRequired();
+
             imageBuilder.Property<int>("Id")
                 .ValueGeneratedOnAdd();
 
@@ -67,13 +72,13 @@ class ItemConfiguration : IEntityTypeConfiguration<Item>
                 .IsRequired();
         });
 
-    builder.HasOne<Category>()
-    .WithMany()
-    .HasForeignKey(i => i.CategoryId)
-    .IsRequired()
-    .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Category>()
+        .WithMany()
+        .HasForeignKey(i => i.CategoryId)
+        .IsRequired()
+        .OnDelete(DeleteBehavior.Restrict);
 
 
-        
+
     }
 }

@@ -1,387 +1,483 @@
-// using Bogus;
-// using MazadZone.Domain.Auctions;
-// using MazadZone.Domain.Bidders;
-// using MazadZone.Domain.Categories;
-// using MazadZone.Domain.Orders;
-// using MazadZone.Domain.Sellers;
-// using MazadZone.Domain.Users;
-// using MazadZone.Domain.Users.ValueObjects;
-// using MazadZone.Domain.Shared.ValueObjects;
-// using MazadZone.Domain.ValueObjects;
-// using MazadZone.Domain.Payments.Enums;
-// using MzadZone.Domain.Payments;
-// using MzadZone.Domain.Payments.Entities;
-// using Microsoft.EntityFrameworkCore;
-// using Microsoft.Extensions.Logging;
-// using System.Reflection;
+using Bogus;
+using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Auctions.Enums;
+using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Categories;
+using MazadZone.Domain.Orders;
+using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.ValueObjects;
+using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.ValueObjects;
+using MazadZone.Domain.Payments.Enums;
+using MzadZone.Domain.Payments;
+using MzadZone.Domain.Payments.Entities;
+using MazadZone.Domain.Disputes;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Reflection;
 
-// namespace MazadZone.Infrastructure.Persistence.Seeding;
+namespace MazadZone.Infrastructure.Persistence.Seeding;
 
-// public class DatabaseSeeder : IDatabaseSeeder
-// {
-//     private readonly AppDbContext _dbContext;
-//     private readonly ILogger<DatabaseSeeder> _logger;
+public class DatabaseSeeder : IDatabaseSeeder
+{
+    private readonly AppDbContext _dbContext;
+    private readonly ILogger<DatabaseSeeder> _logger;
 
-//     public DatabaseSeeder(AppDbContext dbContext, ILogger<DatabaseSeeder> logger)
-//     {
-//         _dbContext = dbContext;
-//         _logger = logger;
-//     }
+    public DatabaseSeeder(AppDbContext dbContext, ILogger<DatabaseSeeder> logger)
+    {
+        _dbContext = dbContext;
+        _logger = logger;
+    }
 
-//     private void ClearDomainEvents(object entity)
-//     {
-//         try
-//         {
-//             if (entity == null) return;
-//             var method = entity.GetType().GetMethod("ClearDomainEvents", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
-//             method?.Invoke(entity, null);
-//         }
-//         catch { /* ignore safely */ }
-//     }
+    private void ClearDomainEvents(object entity)
+    {
+        try
+        {
+            if (entity == null) return;
+            var method = entity.GetType().GetMethod("ClearDomainEvents", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+            method?.Invoke(entity, null);
+        }
+        catch { /* ignore safely */ }
+    }
 
-//     public async Task SeedAsync()
-//     {
-//         if (await _dbContext.Set<User>().AnyAsync()) return;
+    private void SetPrivateProperty(object entity, string propertyName, object value)
+    {
+        var prop = entity.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        prop?.SetValue(entity, value);
+    }
 
-//         // Extend timeout for heavy data seeding
-//         _dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
+    public async Task SeedAsync()
+    {
+        if (await _dbContext.Users.AnyAsync())
+        {
+            _logger.LogInformation("Database already seeded. Skipping...");
+            return;
+        }
 
-//         Randomizer.Seed = new Random(2026);
-//         var f = new Faker();
+        _logger.LogInformation("Starting database seeding with all kinds of states...");
+        Randomizer.Seed = new Random(2026);
+        var f = new Faker();
 
-//         _logger.LogInformation("Starting database seeding...");
+        // 1. Dispute Types
+        var disputeTypes = new List<DisputeType>
+        {
+            DisputeType.Create("Item Not Received", "Buyer claims they did not receive the purchased item.").Value,
+            DisputeType.Create("Item Not As Described", "Buyer claims the item condition differs from the listing description.").Value,
+            DisputeType.Create("Damaged Item", "Buyer claims the item arrived damaged due to shipping or handling.").Value
+        };
+        foreach (var dt in disputeTypes) ClearDomainEvents(dt);
+        await _dbContext.AddRangeAsync(disputeTypes);
+        await _dbContext.SaveChangesAsync();
 
-//         // =================================================================
-//         // PHASE 1: CATEGORIES
-//         // =================================================================
-//         _logger.LogInformation("Seeding Categories...");
-//         var rootCategories = new List<Category>();
-//         for (int i = 0; i < 10; i++)
-//         {
-//             rootCategories.Add(Category.Create(f.Commerce.Categories(1)[0], f.Lorem.Sentence()).Value);
-//         }
+        // 2. Categories & Subcategories
+        var rootCategories = new List<Category>
+        {
+            Category.Create("Electronics", "Phones, laptops, TVs, cameras, and other gadgets.").Value,
+            Category.Create("Fashion", "Clothing, watches, shoes, and accessories.").Value,
+            Category.Create("Vehicles", "Cars, motorcycles, and parts.").Value,
+            Category.Create("Art & Collectibles", "Paintings, sculptures, vintage items, and memorabilia.").Value,
+            Category.Create("Real Estate", "Apartments, villas, and commercial lands.").Value
+        };
+        foreach (var c in rootCategories) ClearDomainEvents(c);
+        await _dbContext.AddRangeAsync(rootCategories);
+        await _dbContext.SaveChangesAsync();
 
-//         var subCategories = new List<Category>();
-//         foreach (var rootCategory in rootCategories)
-//         {
-//             for (int i = 0; i < 4; i++) // 4 sub-categories per root
-//             {
-//                 subCategories.Add(Category.Create(f.Commerce.ProductName(), f.Lorem.Sentence(), rootCategory.Id).Value);
-//             }
-//         }
-//         var allCategories = rootCategories.Concat(subCategories).ToList();
+        var subCategories = new List<Category>
+        {
+            // Electronics
+            Category.Create("Smartphones", "Mobile phones and smart devices.", rootCategories[0].Id).Value,
+            Category.Create("Laptops", "Portable notebook computers.", rootCategories[0].Id).Value,
+            // Fashion
+            Category.Create("Watches", "Luxury wristwatches and timepieces.", rootCategories[1].Id).Value,
+            Category.Create("Apparel", "Clothing and garments.", rootCategories[1].Id).Value,
+            // Vehicles
+            Category.Create("Sports Cars", "High-performance passenger vehicles.", rootCategories[2].Id).Value,
+            Category.Create("Toys", "Replica toys and remote controlled vehicles.", rootCategories[2].Id).Value,
+            // Art
+            Category.Create("Paintings", "Oil and watercolor canvas artworks.", rootCategories[3].Id).Value,
+            Category.Create("Sports Memorabilia", "Signed jerseys, balls, and equipment.", rootCategories[3].Id).Value
+        };
+        foreach (var c in subCategories) ClearDomainEvents(c);
+        await _dbContext.AddRangeAsync(subCategories);
+        await _dbContext.SaveChangesAsync();
 
-//         foreach (var c in allCategories) ClearDomainEvents(c);
+        // 3. Users (Bidders, Sellers, and Mixed)
+        var users = new List<User>();
+        var bidders = new List<Bidder>();
+        var sellers = new List<Seller>();
 
-//         await _dbContext.AddRangeAsync(allCategories);
-//         await _dbContext.SaveChangesAsync();
-//         _logger.LogInformation("✅ Categories seeded.");
+        for (int i = 1; i <= 15; i++)
+        {
+            var roles = new HashSet<UserRole> { UserRole.Bidder };
+            if (i >= 9) // Users 9 to 15 will also be sellers
+            {
+                roles.Add(UserRole.Seller);
+            }
 
-//         // =================================================================
-//         // PHASE 2: USERS, BIDDERS, SELLERS
-//         // =================================================================
-//         _logger.LogInformation("Seeding Users, Bidders, and Sellers...");
-//         var users = new List<User>();
-//         var bidders = new List<Bidder>();
-//         var sellers = new List<Seller>();
+            var user = User.Create(
+                email: $"user{i}@mazadzone.com",
+                passwordHash: "Hash123!",
+                phoneNumber: $"07910020{i:00}",
+                firstName: f.Name.FirstName(),
+                secondName: f.Name.FirstName(),
+                thirdName: f.Name.FirstName(),
+                lastName: f.Name.LastName(),
+                roles: roles
+            ).Value;
 
-//         for (int i = 0; i < 1500; i++) // 1500 robust users
-//         {
-//             var user = User.Create(
-//                 email: f.Internet.Email(uniqueSuffix: i.ToString()),
-//                 passwordHash: "Hash123!",
-//                 phoneNumber: f.Phone.PhoneNumber("079#######"),
-//                 firstName: f.Name.FirstName(),
-//                 secondName: f.Name.FirstName(), // Assuming these are required
-//                 thirdName: f.Name.FirstName(),  // Assuming these are required
-//                 lastName: f.Name.LastName(),
-//                 roles: new HashSet<UserRole> { UserRole.Bidder }
-//             ).Value;
-//             users.Add(user);
+            // Apply specific user states
+            if (i == 14) // User 14 is Suspended
+            {
+                user.Suspend(Reason.Create("Violated shill bidding policies on platform.").Value, DateTime.UtcNow.AddDays(30));
+            }
+            else if (i == 15) // User 15 is Banned
+            {
+                user.Ban(Reason.Create("Abused chargeback system multiple times.").Value);
+            }
 
-//             // All users become bidders
-//             var address = Address.Create(f.Address.City(), f.Address.StreetName(), f.Address.BuildingNumber(), "Near mall").Value;
-//             var bidder = Bidder.CompleteProfile(user.Id, f.Random.Replace("##########"), address).Value;
-//             bidder.Verify();
-//             bidders.Add(bidder);
+            users.Add(user);
 
-//             // Make ~20% of bidders also sellers
-//             if (i % 4 == 0)
-//             {
-//                 user.AddRole(UserRole.Seller);
-//                 var seller = Seller.BecomeSeller(bidder.Id, f.Finance.Account(12), f.Random.Replace("##########")).Value;
-//                 seller.Verify();
-//                 sellers.Add(seller);
-//             }
-//         }
+            var address = Address.Create(f.Address.City(), f.Address.StreetName(), f.Address.BuildingNumber(), "Landmark location").Value;
+            var bidder = Bidder.CompleteProfile(user.Id, f.Random.Replace("##########"), address).Value;
+            bidder.Verify();
+            bidders.Add(bidder);
 
-//         foreach (var u in users) ClearDomainEvents(u);
-//         foreach (var b in bidders) ClearDomainEvents(b);
-//         foreach (var s in sellers) ClearDomainEvents(s);
+            if (roles.Contains(UserRole.Seller))
+            {
+                var seller = Seller.BecomeSeller(user.Id, f.Finance.Account(12), f.Random.Replace("##########")).Value;
+                seller.Verify();
+                sellers.Add(seller);
+            }
+        }
 
-//         await _dbContext.AddRangeAsync(users);
-//         await _dbContext.AddRangeAsync(bidders);
-//         await _dbContext.AddRangeAsync(sellers);
-//         await _dbContext.SaveChangesAsync();
-//         _logger.LogInformation("✅ Users, Bidders, and Sellers seeded.");
+        foreach (var u in users) ClearDomainEvents(u);
+        foreach (var b in bidders) ClearDomainEvents(b);
+        foreach (var s in sellers) ClearDomainEvents(s);
 
-//         // =================================================================
-//         // PHASE 3: AUCTIONS AND BIDS
-//         // =================================================================
-//         _logger.LogInformation("Seeding 10,000 Auctions and heavily simulating Bids, Orders, and Payments...");
+        await _dbContext.AddRangeAsync(users);
+        await _dbContext.AddRangeAsync(bidders);
+        await _dbContext.AddRangeAsync(sellers);
+        await _dbContext.SaveChangesAsync();
 
-//         int totalAuctions = 10000;
-//         int batchSize = 1000;
-//         int numberOfBatches = totalAuctions / batchSize;
+        var activeSellers = sellers.Where(s => users.First(u => u.Id == s.Id).Status == UserStatus.Active).ToList();
+        var activeBidders = bidders.Where(b => users.First(u => u.Id == b.Id).Status == UserStatus.Active).ToList();
 
-//         for (int batch = 0; batch < numberOfBatches; batch++)
-//         {
-//             _logger.LogInformation($"--- Processing Batch {batch + 1}/{numberOfBatches} (1,000 Auctions) ---");
+        // 4. Seeding Auctions in various states
+        var categorySmartphones = subCategories[0];
+        var categoryLaptops = subCategories[1];
+        var categoryWatches = subCategories[2];
+        var categoryApparel = subCategories[3];
+        var categoryToys = subCategories[5];
+        var categoryPaintings = subCategories[6];
+        var categorySportsMemorabilia = subCategories[7];
 
-//             var auctions = new List<Auction>();
-//             var orders = new List<Order>();
-//             var payments = new List<Payment>();
-//             var bidsToAdd = new List<object>(); // Explicit tracking for bids
+        var shippingAddress = Address.Create("Amman", "Queen Rania St", "102", "Opposite to University of Jordan").Value;
 
-//             for (int i = 0; i < batchSize; i++)
-//             {
-//                 try
-//                 {
-//                     var isHistorical = f.Random.Bool(0.75f); // 75% historical for heavy order/payment generation
-//                     var startTime = isHistorical ? f.Date.Past(1).ToUniversalTime() : f.Date.Recent(5).ToUniversalTime();
-//                     var endTime = startTime.AddDays(f.Random.Int(3, 10)).ToUniversalTime();
+        // --- Auction 1: Pending Auction (in the future) ---
+        var pendingAuction = Auction.Create(
+            sellerId: activeSellers[0].Id,
+            status: ItemStatus.LikeNew,
+            condition: Description.Create("Immaculate condition, original packaging included.").Value,
+            shippingAddress: shippingAddress,
+            startBidAmount: 500m,
+            minBidAmount: 20m,
+            startTime: DateTime.UtcNow.AddDays(2),
+            endTime: DateTime.UtcNow.AddDays(7),
+            title: "Vintage Leica M6 Camera",
+            description: "A rare and pristine vintage camera from 1984. Perfect for collectors.",
+            images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+            categoryId: categoryPaintings.Id
+        ).Value;
 
-//                     var seller = f.PickRandom(sellers);
-//                     var category = f.PickRandom(subCategories);
-//                     var address = Address.Create(f.Address.City(), f.Address.StreetName(), f.Address.BuildingNumber(), "Landmark").Value;
+        // --- Auction 2: Active Auction (No Bids) ---
+        var activeNoBidsAuction = Auction.Create(
+            sellerId: activeSellers[1].Id,
+            status: ItemStatus.New,
+            condition: Description.Create("Brand new, factory sealed.").Value,
+            shippingAddress: shippingAddress,
+            startBidAmount: 900m,
+            minBidAmount: 15m,
+            startTime: DateTime.UtcNow.AddDays(-1),
+            endTime: DateTime.UtcNow.AddDays(3),
+            title: "iPhone 15 Pro Max 256GB",
+            description: "Sealed box titanium design. Full warranty included.",
+            images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+            categoryId: categorySmartphones.Id
+        ).Value;
+        activeNoBidsAuction.MarkAsActive(DateTime.UtcNow.AddHours(-23));
 
-//                     var startAmount = Math.Round(f.Random.Decimal(50, 500), 2);
-//                     var minBidAmount = Math.Round(f.Random.Decimal(5, 20), 2);
+        // --- Auction 3: Active Auction (With Bids) ---
+        var activeWithBidsAuction = Auction.Create(
+            sellerId: activeSellers[2].Id,
+            status: ItemStatus.Good,
+            condition: Description.Create("Pre-owned, minor desk dives on buckle.").Value,
+            shippingAddress: shippingAddress,
+            startBidAmount: 8000m,
+            minBidAmount: 100m,
+            startTime: DateTime.UtcNow.AddDays(-2),
+            endTime: DateTime.UtcNow.AddDays(2),
+            title: "Rolex Submariner Date",
+            description: "2022 model, oyster steel, black dial, complete set.",
+            images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+            categoryId: categoryWatches.Id
+        ).Value;
+        activeWithBidsAuction.MarkAsActive(DateTime.UtcNow.AddDays(-2).AddMinutes(1));
 
-//                     var auctionResult = Auction.Create(
-//                         sellerId: seller.Id,
-//                         shippingAddress: address,
-//                         startBidAmount: Money.Create(startAmount, Currency.Jod).Value.Amount,
-//                         minBidAmount: Money.Create(minBidAmount, Currency.Jod).Value.Amount,
-//                         startTime: startTime,
-//                         endTime: endTime,
-//                         title: f.Commerce.ProductName(),
-//                         description: f.Commerce.ProductDescription(),
-//                         images: new List<Image> 
-//                         { 
-//                             Image.Create(f.Image.PicsumUrl(), "Main View").Value,
-//                             Image.Create(f.Image.PicsumUrl(), "Angle View").Value,
-//                             Image.Create(f.Image.PicsumUrl(), "Detail View").Value
-//                         },
-//                         categoryId: category.Id
-//                     );
+        // Simulating bids on activeWithBidsAuction
+        // Bidder 1 bids 8000
+        activeWithBidsAuction.PlaceBid(activeBidders[0].Id, 8000m, "auth_hold_1", DateTime.UtcNow.AddDays(-2).AddHours(2));
+        // Bidder 2 bids 8100
+        activeWithBidsAuction.PlaceBid(activeBidders[1].Id, 8100m, "auth_hold_2", DateTime.UtcNow.AddDays(-2).AddHours(4));
+        // Bidder 3 bids 8300
+        activeWithBidsAuction.PlaceBid(activeBidders[2].Id, 8300m, "auth_hold_3", DateTime.UtcNow.AddDays(-2).AddHours(6));
 
-//                     if (auctionResult.IsFailure) continue;
-//                     var auction = auctionResult.Value;
+        // --- Auction 4: Cancelled by Seller ---
+        var cancelledSellerAuction = Auction.Create(
+            sellerId: activeSellers[0].Id,
+            status: ItemStatus.Fair,
+            condition: Description.Create("Scratches on the wooden top.").Value,
+            shippingAddress: shippingAddress,
+            startBidAmount: 150m,
+            minBidAmount: 10m,
+            startTime: DateTime.UtcNow.AddDays(1),
+            endTime: DateTime.UtcNow.AddDays(4),
+            title: "Drafting Table Oak",
+            description: "Solid oak table with adjustable tilt mechanism.",
+            images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+            categoryId: categoryLaptops.Id
+        ).Value;
+        cancelledSellerAuction.MarkAsCancelled(DateTime.UtcNow, "Seller withdrew the item due to accidental damage.");
 
-//                     // --- SIMULATE BIDS ---
-//                     Bidder finalWinningBidder = null;
+        // --- Auction 5: Cancelled by Admin ---
+        var cancelledAdminAuction = Auction.Create(
+            sellerId: activeSellers[1].Id,
+            status: ItemStatus.New,
+            condition: Description.Create("Brand new packaging.").Value,
+            shippingAddress: shippingAddress,
+            startBidAmount: 300m,
+            minBidAmount: 20m,
+            startTime: DateTime.UtcNow.AddDays(-1),
+            endTime: DateTime.UtcNow.AddDays(5),
+            title: "Counterfeit Designer Bag",
+            description: "High quality replica designer bag.",
+            images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+            categoryId: categoryApparel.Id
+        ).Value;
+        cancelledAdminAuction.MarkAsActive(DateTime.UtcNow.AddDays(-1).AddMinutes(1));
+        cancelledAdminAuction.MarkAsCancelledByAdmin();
 
-//                     if (startTime < DateTime.UtcNow)
-//                     {
-//                         var simTime = startTime.AddMinutes(f.Random.Int(1, 10));
-//                         var activeResult = auction.MarkAsActive(simTime); 
+        // --- Auction 6: Ended Auction (No Bids) ---
+        var endedNoBidsAuction = Auction.Create(
+            sellerId: activeSellers[2].Id,
+            status: ItemStatus.Fair,
+            condition: Description.Create("Slightly faded canvas colors.").Value,
+            shippingAddress: shippingAddress,
+            startBidAmount: 200m,
+            minBidAmount: 15m,
+            startTime: DateTime.UtcNow.AddDays(-5),
+            endTime: DateTime.UtcNow.AddDays(-1),
+            title: "Abstract Oil Painting",
+            description: "A mid-century modern oil painting, artist unknown.",
+            images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+            categoryId: categoryPaintings.Id
+        ).Value;
+        endedNoBidsAuction.MarkAsActive(DateTime.UtcNow.AddDays(-5).AddMinutes(1));
+        endedNoBidsAuction.MarkAsEnded(DateTime.UtcNow.AddDays(-1).AddMinutes(5));
 
-//                         // If it fails because it's ALREADY active, we treat it as a success so bids can be placed
-//                         bool isAuctionActive = activeResult.IsSuccess || activeResult.TopError?.Code == AuctionErrorCodes.CannotStart;
-//                         if (!isAuctionActive) _logger.LogWarning($"MarkAsActive failed: {activeResult.TopError?.Message}");
+        // --- Helper list to add auctions ---
+        var auctions = new List<Auction>
+        {
+            pendingAuction,
+            activeNoBidsAuction,
+            activeWithBidsAuction,
+            cancelledSellerAuction,
+            cancelledAdminAuction,
+            endedNoBidsAuction
+        };
 
-//                         var biddersWhoCanBid = bidders.Where(b => b.Id.Value != seller.Id.Value).ToList();
-//                         if (biddersWhoCanBid.Any() && isAuctionActive)
-//                         {
-//                             int numBids = f.Random.Int(5, 25); // Heavy bid simulation
+        // --- Ended Auctions with Bids, leading to Order States ---
+        var orderAuctions = new List<(Auction Auction, Bidder Winner, OrderStatus TargetStatus, bool AddFeedback, bool AddReply, DisputeStatus? TargetDisputeStatus)>();
 
-//                             Bidder previousBidder = null;
-//                             decimal currentLeadingAmount = startAmount;
+        var orderStatuses = new[]
+        {
+            (TargetStatus: OrderStatus.Pending, AddFeedback: false, AddReply: false, TargetDisputeStatus: (DisputeStatus?)null),
+            (TargetStatus: OrderStatus.Confirmed, AddFeedback: false, AddReply: false, TargetDisputeStatus: (DisputeStatus?)null),
+            (TargetStatus: OrderStatus.Shipped, AddFeedback: false, AddReply: false, TargetDisputeStatus: (DisputeStatus?)null),
+            (TargetStatus: OrderStatus.Delivered, AddFeedback: true, AddReply: false, TargetDisputeStatus: (DisputeStatus?)null),
+            (TargetStatus: OrderStatus.Delivered, AddFeedback: true, AddReply: true, TargetDisputeStatus: (DisputeStatus?)null),
+            (TargetStatus: OrderStatus.Delivered, AddFeedback: false, AddReply: false, TargetDisputeStatus: DisputeStatus.Open),
+            (TargetStatus: OrderStatus.Delivered, AddFeedback: false, AddReply: false, TargetDisputeStatus: DisputeStatus.Resolved)
+        };
 
-//                             for (int b = 0; b < numBids; b++)
-//                             {
-//                                 simTime = simTime.AddMinutes(f.Random.Int(5, 120));
-//                                 if (simTime >= endTime || (!isHistorical && simTime >= DateTime.UtcNow)) break;
+        var titles = new[]
+        {
+            "PlayStation 5 Console",
+            "MacBook Pro 16 M3 Max",
+            "Tesla Model 3 Toy Replica",
+            "Leather Jacket Classic",
+            "Signed Football Messi",
+            "Samsung 65-inch QLED TV",
+            "GoPro Hero 12"
+        };
 
-//                                 var bidder = f.PickRandom(biddersWhoCanBid);
+        var descriptions = new[]
+        {
+            "Standard disc edition console with 1 controller.",
+            "Apple M3 Max chip, 36GB RAM, 1TB SSD. Space black.",
+            "Diecast scale replica model with working doors.",
+            "Genuine lambskin leather, black color, size L.",
+            "Authentic football signed by Lionel Messi. With COA.",
+            "Smart TV with direct full array. HDR 10+ compatible.",
+            "Waterproof action camera with accessories bundle."
+        };
 
-//                                 // Ensure we massively clear the minimum increment constraints
-//                                 var nextBidAmount = Math.Round(currentLeadingAmount + f.Random.Decimal(25, 100), 2);
+        var categories = new[]
+        {
+            categorySmartphones,
+            categoryLaptops,
+            categoryToys,
+            categoryApparel,
+            categorySportsMemorabilia,
+            categorySmartphones,
+            categoryPaintings
+        };
 
-//                                 var checkResult = auction.CheckPlaceBid(bidder.Id, nextBidAmount, simTime);
+        for (int i = 0; i < orderStatuses.Length; i++)
+        {
+            var target = orderStatuses[i];
+            var auction = Auction.Create(
+                sellerId: activeSellers[i % activeSellers.Count].Id,
+                status: ItemStatus.LikeNew,
+                condition: Description.Create("Very lightly used, perfect function.").Value,
+                shippingAddress: shippingAddress,
+                startBidAmount: 100m + i * 50m,
+                minBidAmount: 10m,
+                startTime: DateTime.UtcNow.AddDays(-10),
+                endTime: DateTime.UtcNow.AddDays(-3),
+                title: titles[i],
+                description: descriptions[i],
+                images: new List<Image> { Image.Create("https://picsum.photos/400", "Main View", true).Value },
+                categoryId: categories[i].Id
+            ).Value;
 
-//                                 if (checkResult.IsSuccess && checkResult.Value != null)
-//                                 {
-//                                     var authId = $"AUTH_{f.Random.AlphaNumeric(12)}";
-//                                     var placeResult = auction.PlaceVerifiedBid(checkResult.Value, authId, simTime);
+            auction.MarkAsActive(DateTime.UtcNow.AddDays(-10).AddMinutes(1));
+            
+            // Place bids: winner is activeBidders[(i + 1) % activeBidders.Count]
+            var winner = activeBidders[(i + 1) % activeBidders.Count];
+            var bidAmount = 100m + i * 50m + 20m;
+            auction.PlaceBid(winner.Id, bidAmount, $"auth_intent_{i}", DateTime.UtcNow.AddDays(-5));
 
-//                                     if (placeResult.IsSuccess)
-//                                     {
-//                                         bidsToAdd.Add(checkResult.Value); // Explicitly track Bid entity
+            auction.MarkAsEnded(DateTime.UtcNow.AddDays(-3).AddMinutes(5));
 
-//                                         // IMPORTANT: Release the OUTBID bidder's funds so they don't hit credit limits!
-//                                         if (previousBidder != null) {
-//                                             previousBidder.ReleaseActiveBid(Money.Create(currentLeadingAmount, Currency.Jod).Value);
-//                                         }
+            auctions.Add(auction);
+            orderAuctions.Add((auction, winner, target.TargetStatus, target.AddFeedback, target.AddReply, target.TargetDisputeStatus));
+        }
 
-//                                         var bidMoney = Money.Create(nextBidAmount, Currency.Jod).Value;
-//                                         bidder.AddActiveBid(bidMoney);
+        // Save all auctions and bids
+        foreach (var a in auctions) ClearDomainEvents(a);
+        await _dbContext.AddRangeAsync(auctions);
+        await _dbContext.SaveChangesAsync();
 
-//                                         previousBidder = bidder;
-//                                         currentLeadingAmount = nextBidAmount;
-//                                     }
-//                                     else
-//                                     {
-//                                         _logger.LogWarning($"PlaceVerifiedBid failed: {placeResult.TopError?.Message}");
-//                                     }
-//                                 }
-//                                 else if (checkResult.IsFailure)
-//                                 {
-//                                     _logger.LogWarning($"CheckPlaceBid failed: {checkResult.TopError?.Message}");
-//                                 }
-//                             }
+        // 5. Create Orders, Payments, Feedbacks and Disputes
+        foreach (var item in orderAuctions)
+        {
+            var auction = item.Auction;
+            var winner = item.Winner;
+            var leadingBid = auction.CurrentLeadingBid;
 
-//                             finalWinningBidder = previousBidder;
-//                         }
+            var order = Order.Create(
+                auction.Id,
+                winner.Id,
+                leadingBid.Id,
+                winner.DefaultShippingAddress,
+                leadingBid.Amount.Amount
+            ).Value;
 
-//                         if (isHistorical && isAuctionActive)
-//                         {
-//                             var endResult = auction.MarkAsEnded(endTime.AddMinutes(f.Random.Int(1, 60)));
-//                             if (endResult.IsFailure && endResult.TopError?.Code != AuctionErrorCodes.CannotEnd && endResult.TopError?.Code != AuctionErrorCodes.AlreadyEnded) 
-//                                 _logger.LogWarning($"MarkAsEnded failed: {endResult.TopError?.Message}");
+            // Generate Payment matching the flow
+            var payment = Payment.Create(order.Id, winner.Id, leadingBid.Amount).Value;
 
-//                             // Auction ended: Release the winning bidder's active hold (it converts to Order/Payment)
-//                             if (finalWinningBidder != null && auction.CurrentLeadingBid?.Amount != null) 
-//                             {
-//                                 finalWinningBidder.ReleaseActiveBid(auction.CurrentLeadingBid.Amount);
-//                             }
-//                         }
-//                     }
-//                     auctions.Add(auction);
+            if (item.TargetStatus >= OrderStatus.Confirmed)
+            {
+                // Record Authorization Hold Success
+                payment.RecordTransactionAttempt($"pi_auth_{order.Id.Value}", TransactionType.AuthorizationHold);
+                payment.ResolveTransactionSuccess($"pi_auth_{order.Id.Value}");
 
-//                     // --- SIMULATE ORDERS, PAYMENTS, DISPUTES, FEEDBACKS ---
-//                     if (auction.IsEnded && auction.HasBids && finalWinningBidder != null)
-//                     {
-//                         var leadingBid = auction.CurrentLeadingBid;
-//                         if (leadingBid == null || leadingBid.Amount == null) continue; 
+                // Record Deposit Capture Success
+                payment.RecordTransactionAttempt($"pi_cap_{order.Id.Value}", TransactionType.DepositCaptured);
+                payment.ResolveTransactionSuccess($"pi_cap_{order.Id.Value}");
 
-//                         finalWinningBidder.RecordWin();
+                // Record Remaining Amount Capture Success
+                payment.RecordTransactionAttempt($"pi_rem_{order.Id.Value}", TransactionType.RemainingAmountCapture);
+                payment.ResolveTransactionSuccess($"pi_rem_{order.Id.Value}");
 
-//                         var orderResult = Order.Create(
-//                             auction.Id,
-//                             finalWinningBidder.Id,
-//                             leadingBid.Id,
-//                             finalWinningBidder.DefaultShippingAddress,
-//                             leadingBid.Amount.Amount
-//                         );
+                // Confirm Order
+                order.Confirm();
 
-//                         if (orderResult.IsSuccess && orderResult.Value != null)
-//                         {
-//                             var order = orderResult.Value;
-//                             var paymentResult = Payment.Create(order.Id, UserId.From(finalWinningBidder.Id.Value), leadingBid.Amount);
+                if (item.TargetStatus >= OrderStatus.Shipped)
+                {
+                    order.Ship();
 
-//                             if (paymentResult.IsSuccess && paymentResult.Value != null)
-//                             {
-//                                 var payment = paymentResult.Value;
+                    if (item.TargetStatus >= OrderStatus.Delivered)
+                    {
+                        order.Deliver();
 
-//                                 // Complete Gateway Simulation sequence
-//                                 string authIntentId = $"pi_{f.Random.AlphaNumeric(24)}";
-//                                 payment.RecordTransactionAttempt(authIntentId, TransactionType.AuthorizationHold);
-//                                 payment.ResolveTransactionSuccess(authIntentId);
+                        if (item.AddFeedback)
+                        {
+                            order.AddFeedback(5, "Absolutely beautiful product, exceeded my expectations!");
 
-//                                 string depositIntentId = $"pi_{f.Random.AlphaNumeric(24)}";
-//                                 payment.RecordTransactionAttempt(depositIntentId, TransactionType.DepositCaptured);
-//                                 payment.ResolveTransactionSuccess(depositIntentId);
+                            if (item.AddReply)
+                            {
+                                order.ReplyToFeedback("Thank you so much for your feedback! Enjoy it!");
+                            }
+                        }
 
-//                                 string remainingIntentId = $"pi_{f.Random.AlphaNumeric(24)}";
-//                                 payment.RecordTransactionAttempt(remainingIntentId, TransactionType.RemainingAmountCapture);
-//                                 payment.ResolveTransactionSuccess(remainingIntentId);
+                        if (item.TargetDisputeStatus != null)
+                        {
+                            var disputeType = disputeTypes[0]; // "Item Not Received" / "Item Not As Described"
+                            var dispute = Dispute.Create(
+                                order.Id,
+                                disputeType.Id,
+                                Title.Create("Dispute opened for verification").Value,
+                                Description.Create("The item had scratches not listed in the condition.").Value,
+                                new List<Image>()
+                            ).Value;
 
-//                                 if (payment.Status == PaymentStatus.Completed)
-//                                 {
-//                                     order.Confirm();
-//                                     finalWinningBidder.RecordPaymentSuccess(leadingBid.Amount);
+                            if (item.TargetDisputeStatus == DisputeStatus.UnderReview)
+                            {
+                                dispute.UnderReview();
+                            }
+                            else if (item.TargetDisputeStatus == DisputeStatus.Resolved)
+                            {
+                                dispute.UnderReview();
+                                dispute.Resolve(Resolution.Create("Refund of 50 JOD issued to buyer. Dispute closed.").Value);
+                                SetPrivateProperty(dispute, "Status", DisputeStatus.Resolved);
+                            }
 
-//                                     var shippingRoll = f.Random.Int(1, 100);
-//                                     if (shippingRoll > 15) // 85% get shipped
-//                                     {
-//                                         order.Ship();
+                            // Associate with order
+                            SetPrivateProperty(order, "DisputeId", dispute.Id);
+                            ClearDomainEvents(dispute);
+                            await _dbContext.AddAsync(dispute);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Payment Pending state: we can just add a pending transaction hold attempt
+                payment.RecordTransactionAttempt($"pi_pending_{order.Id.Value}", TransactionType.AuthorizationHold);
+            }
 
-//                                         if (shippingRoll > 35) // Most get delivered
-//                                         {
-//                                             order.Deliver();
+            ClearDomainEvents(order);
+            ClearDomainEvents(payment);
 
-//                                             // High probability feedback/disputes for robust test data
-//                                             var postDeliveryRoll = f.Random.Int(1, 100);
-//                                             if (postDeliveryRoll > 50) // 50% chance of feedback
-//                                             {
-//                                                 var feedbackResult = order.AddFeedback(f.Random.Int(3, 5), f.Rant.Review());
-//                                                 if (feedbackResult.IsSuccess && order.Feedback != null)
-//                                                 {
-//                                                     _dbContext.Add(order.Feedback); // Explicitly track
-//                                                 }
-//                                             }
-//                                             else if (postDeliveryRoll < 20) // 20% chance of dispute
-//                                             {
-//                                                 var disputeResult = order.OpenDispute(f.Lorem.Sentence());
-//                                                 if (disputeResult.IsSuccess && order.Dispute != null)
-//                                                 {
-//                                                     _dbContext.Add(order.Dispute); // Explicitly track
+            if (order.Feedback != null) ClearDomainEvents(order.Feedback);
 
-//                                                     if (f.Random.Bool())
-//                                                     {
-//                                                         order.ResolveDispute("Resolved: Refund issued to buyer.");
-//                                                     }
-//                                                 }
-//                                             }
-//                                         }
-//                                     }
-//                                 }
-//                                 payments.Add(payment);
-//                             }
-//                             else
-//                             {
-//                                 _logger.LogWarning($"Payment.Create failed: {paymentResult.TopError?.Message}");
-//                             }
-//                             orders.Add(order);
-//                         }
-//                         else
-//                         {
-//                             _logger.LogWarning($"Order.Create failed: {orderResult.TopError?.Message}");
-//                         }
-//                     }
-//                 }
-//                 catch (Exception ex)
-//                 {
-//                     _logger.LogWarning(ex, "Failed to simulate auction/order flow for index {Index}. Skipping this item.", i);
-//                 }
-//             }
+            await _dbContext.AddAsync(order);
+            await _dbContext.AddAsync(payment);
+        }
 
-//             // Pre-process Domain Events to avoid network/worker crashes
-//             foreach (var a in auctions) ClearDomainEvents(a);
-//             foreach (var o in orders) ClearDomainEvents(o);
-//             foreach (var p in payments) ClearDomainEvents(p);
-//             foreach (var b in bidsToAdd) ClearDomainEvents(b);
-
-//             // Sync and save the Batch
-//             _dbContext.UpdateRange(bidders);
-//             await _dbContext.AddRangeAsync(auctions);
-//             await _dbContext.AddRangeAsync(bidsToAdd); // Insert Bids explicitly
-//             await _dbContext.AddRangeAsync(orders);
-//             await _dbContext.AddRangeAsync(payments);
-
-//             await _dbContext.SaveChangesAsync();
-
-//             // Clear EF Core tracking for the massive lists to prevent OutOfMemory issues
-//             foreach(var entity in auctions) _dbContext.Entry(entity).State = EntityState.Detached;
-//             foreach(var entity in bidsToAdd) _dbContext.Entry(entity).State = EntityState.Detached;
-//             foreach(var entity in orders) _dbContext.Entry(entity).State = EntityState.Detached;
-//             foreach(var entity in payments) _dbContext.Entry(entity).State = EntityState.Detached;
-
-//             _logger.LogInformation($"✅ Batch {batch + 1} completed.");
-//         }
-
-//         _logger.LogInformation("🎉 Database seeding completed successfully.");
-//     }
-// }
+        await _dbContext.SaveChangesAsync();
+        _logger.LogInformation("🎉 Database seeding completed successfully with all entity states!");
+    }
+}

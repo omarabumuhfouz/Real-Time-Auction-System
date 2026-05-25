@@ -20,8 +20,8 @@ public sealed class Payment : AggregateRoot<PaymentId>
     {
         OrderId = orderId;
         UserId = userId;
-        CapturedHoldedAmount = capturedHoldedAmount;
-        CapturedRemainingAmount = capturedRemainingAmount;
+        CapturedHoldedAmount = capturedHoldedAmount ?? Money.Zero();
+        CapturedRemainingAmount = capturedRemainingAmount ?? Money.Zero();
         Status = PaymentStatus.Pending;
         CreatedAtUtc = DateTime.UtcNow;
     }
