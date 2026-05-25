@@ -1,7 +1,7 @@
 using FluentValidation;
 using MazadZone.Domain.Bidders;
 
-namespace MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 
 public sealed class GetMyBidsValidator : AbstractValidator<GetMyBidsQuery>
 {

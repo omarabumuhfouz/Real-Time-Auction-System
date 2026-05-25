@@ -1,7 +1,7 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
-using MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Domain.Bidders;

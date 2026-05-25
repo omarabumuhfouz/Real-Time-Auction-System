@@ -1,7 +1,7 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
-using MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Services;
@@ -149,7 +149,7 @@ public partial class AuctionQueries (
     {
         var rawAuctions = await _context.Auctions
             .AsNoTracking()
-            .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value))
+            .Where(a => a.Bids.Any(b => b.BidderId == BidderId.Load(bidderId.Value)))
             .Select(a => new 
             {
                 Id = a.Id.Value,
@@ -176,7 +176,7 @@ public partial class AuctionQueries (
     {
         var query = _context.Auctions
             .AsNoTracking()
-            .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value));
+            .Where(a => a.Bids.Any(b => b.BidderId == bidderId));
 
         if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
         {
@@ -193,11 +193,11 @@ public partial class AuctionQueries (
 
         query = tab switch
         {
-            "leading" => query.Where(a => a.Status != AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Leading)),
-            "outbid" => query.Where(a => a.Status != AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Outbid)),
+            "leading" => query.Where(a => a.Status != AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId && b.Status == BidStatus.Leading)),
+            "outbid" => query.Where(a => a.Status != AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId && b.Status == BidStatus.Outbid)),
             "ended" => query.Where(a => a.Status == AuctionStatus.Ended),
-            "lost" => query.Where(a => a.Status == AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Outbid)),
-            "won" => query.Where(a => a.Status == AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId.Value && b.Status == BidStatus.Leading)),
+            "lost" => query.Where(a => a.Status == AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId && b.Status == BidStatus.Outbid)),
+            "won" => query.Where(a => a.Status == AuctionStatus.Ended && a.Bids.Any(b => b.BidderId == bidderId && b.Status == BidStatus.Leading)),
             _ => query
         };
 
@@ -211,8 +211,8 @@ public partial class AuctionQueries (
                 ? query.OrderBy(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault())
                 : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault()),
             "YourBidAmount" => isAsc
-                ? query.OrderBy(a => a.Bids.Where(b => b.BidderId == bidderId.Value).OrderByDescending(b => b.PlacedAtUtc).Select(b => b.Amount.Amount).FirstOrDefault())
-                : query.OrderByDescending(a => a.Bids.Where(b => b.BidderId == bidderId.Value).OrderByDescending(b => b.PlacedAtUtc).Select(b => b.Amount.Amount).FirstOrDefault()),
+                ? query.OrderBy(a => a.Bids.Where(b => b.BidderId == bidderId).OrderByDescending(b => b.PlacedAtUtc).Select(b => b.Amount.Amount).FirstOrDefault())
+                : query.OrderByDescending(a => a.Bids.Where(b => b.BidderId == bidderId).OrderByDescending(b => b.PlacedAtUtc).Select(b => b.Amount.Amount).FirstOrDefault()),
             _ => isAsc ? query.OrderBy(a => a.CreatedOnUtc) : query.OrderByDescending(a => a.CreatedOnUtc)
         };
 
@@ -225,13 +225,13 @@ public partial class AuctionQueries (
                 a.Id.Value,
                 a.Item.Images.Where(img => img.isMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
                 a.Item.Title,
-                a.Bids.Where(b => b.BidderId == bidderId.Value)
+                a.Bids.Where(b => b.BidderId == bidderId)
                     .OrderByDescending(b => b.PlacedAtUtc)
                     .Select(b => b.Amount.Amount)
                     .FirstOrDefault(),
                 a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault(),
                 (int)a.Status,
-                a.Bids.Where(b => b.BidderId == bidderId.Value)
+                a.Bids.Where(b => b.BidderId == bidderId)
                     .OrderByDescending(b => b.PlacedAtUtc)
                     .Select(b => (int)b.Status)
                     .FirstOrDefault(),

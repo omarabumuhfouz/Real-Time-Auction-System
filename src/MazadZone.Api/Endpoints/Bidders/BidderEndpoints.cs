@@ -18,5 +18,6 @@ public static class BidderEndpoints
         Register.MapEndpoint(bidderGroup);
         GetProfile.MapEndpoint(bidderGroup);
         Verify.MapEndpoint(bidderGroup);
+        GetMyBids.MapEndpoint(bidderGroup);
     }
 }

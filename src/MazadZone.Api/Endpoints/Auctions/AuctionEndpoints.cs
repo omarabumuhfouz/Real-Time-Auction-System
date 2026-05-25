@@ -17,7 +17,6 @@ public static class AuctionEndpoints
         GetAuctions.MapEndpoint(auctionGroup);
         GetAuctionById.MapEndpoint(auctionGroup);
         GetSimilarAuctions.MapEndpoint(auctionGroup);
-        GetMyBids.MapEndpoint(auctionGroup);
 
         CreateAuction.MapEndpoint(auctionGroup);
         PlaceBid.MapEndpoint(auctionGroup);

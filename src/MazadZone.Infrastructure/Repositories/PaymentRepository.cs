@@ -15,12 +15,13 @@ public class PaymentRepository : GenericRepository<Payment, PaymentId>, IPayment
     {
         _context = context;
     }
-    
+
 
     public async Task<Payment?> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        return await DbSet.SingleOrDefaultAsync(
-            payment => payment.OrderId.Value == orderId,
-            cancellationToken);
+        var typedOrderId = OrderId.From(orderId);
+
+        return await _context.Payments.Include(x => x.Transactions).FirstOrDefaultAsync(x => x.OrderId == typedOrderId);
+
     }
 }

@@ -1,10 +1,11 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
-using MazadZone.Application.Features.Auctions.Queries.GetMyBids;
+using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 using MazadZone.Domain.Bidders;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
-namespace MazadZone.Api.Endpoints.Auctions;
+namespace MazadZone.Api.Endpoints.Bidders;
 
 public static class GetMyBids
 {
@@ -18,25 +19,25 @@ public static class GetMyBids
 
     private static async Task<IResult> HandleAsync(
         [FromQuery] BidderId bidderId,
-        [FromQuery] int page,
-        [FromQuery] int pageSize,
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
         [FromQuery] string? query,
         [FromQuery] Guid? categoryId,
-        [FromQuery] string tab,
-        [FromQuery] string sortBy,
-        [FromQuery] string sortDirection,
+        [FromQuery] string? tab,
+        [FromQuery] string? sortBy,
+        [FromQuery] string? sortDirection,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
         var getMyBidsQuery = new GetMyBidsQuery(
             bidderId,
-            page == 0 ? 1 : page,
-            pageSize == 0 ? 12 : pageSize,
+            page ?? 1,
+            pageSize ?? 12,
             query,
             categoryId,
-            string.IsNullOrEmpty(tab) ? "all" : tab,
-            string.IsNullOrEmpty(sortBy) ? "EndTime" : sortBy,
-            string.IsNullOrEmpty(sortDirection) ? "desc" : sortDirection);
+            tab ?? "all",
+            sortBy ?? "EndTime",
+            sortDirection ?? "desc");
 
         var result = await sender.Send(getMyBidsQuery, ct);
         return result.Match(onValue: value => Results.Ok(value), onError: e => e.ToProblem());

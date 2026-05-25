@@ -5,4 +5,5 @@ namespace MazadZone.Application.Services;
 public interface IAuctionJobScheduler : IScopedService
 {
     void ScheduleAuctionClosing(Guid auctionId, DateTimeOffset closeAt);
+    void ScheduleAuctionStarting(Guid auctionId, DateTimeOffset startAt);
 }
