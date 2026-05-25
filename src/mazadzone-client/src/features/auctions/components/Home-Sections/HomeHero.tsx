@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { MoveRight } from "lucide-react";
@@ -15,6 +13,7 @@ export function HomeHero() {
           src={homeHeroImg}
           alt="MazadZone Hero"
           fill
+          sizes="100vw"
           className="object-contain object-center"
           priority
         />

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, Users, CircleDollarSign } from "lucide-react";
@@ -9,19 +10,23 @@ import { ROUTES } from "@/config/routes.config";
 import { formatCurrency } from "@/utils/currency.utils";
 import { CountdownTimer } from "./CountdownTimer";
 import { PlaceBidButton } from "@/features/bidding";
+import { getAuctionImageFallback } from "../../utils/image.utils";
 import type { AuctionCardProps } from "../../types/auction.types";
 
-export function AuctionCard({
+const AuctionCardComponent = ({
   auction,
+  isFavorite,
   onFavoriteClick,
   priority = false,
   className,
-}: AuctionCardProps) {
-  const { id, title, imageUrl, pricing, timing, isFavorite, isOwner, status } = auction;
+}: AuctionCardProps) => {
+  const { id, title, imageUrl, pricing, timing, isOwner, status } = auction;
+  const favorite = isFavorite ?? auction.isFavorite;
   const isUpcoming = status === "Upcoming";
   const isEnded = status === "Ended";
   const displayPrice = pricing.currentBid ?? pricing.startingPrice;
   const auctionDetailsHref = ROUTES.AUCTIONS.DETAIL(id);
+  const fallbackImageUrl = getAuctionImageFallback(title, 800, 600);
 
   return (
     <article
@@ -40,9 +45,13 @@ export function AuctionCard({
             src={imageUrl}
             alt={title}
             fill
-            sizes="311px"
+            sizes="(min-width: 1280px) 311px, (min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             priority={priority}
+            onError={(event) => {
+              event.currentTarget.src = fallbackImageUrl;
+              event.currentTarget.srcset = fallbackImageUrl;
+            }}
           />
         </Link>
 
@@ -51,15 +60,15 @@ export function AuctionCard({
           onClick={() => onFavoriteClick(id)}
           className={cn(
             "absolute right-3 top-3 z-10 flex size-10 items-center justify-center rounded-full transition-all",
-            isFavorite
+            favorite
               ? "bg-primary text-primary-foreground"
               : "bg-foreground/60 text-white hover:bg-foreground/80",
           )}
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          aria-pressed={isFavorite}
+          aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+          aria-pressed={favorite}
         >
           <Heart
-            className={cn("size-5", isFavorite && "fill-current")}
+            className={cn("size-5", favorite && "fill-current")}
             strokeWidth={2}
           />
         </button>
@@ -129,4 +138,6 @@ export function AuctionCard({
       </div>
     </article >
   );
-}
+};
+
+export const AuctionCard = memo(AuctionCardComponent);

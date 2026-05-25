@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -86,7 +84,6 @@ export function BrowseCategoriesSection() {
                     fill
                     sizes="96px"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
                   />
                 </div>
 

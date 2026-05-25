@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThumbnailStrip } from "./ThumbnailStrip";
+import { getAuctionImageFallback } from "../../../utils/image.utils";
 
 export interface ImageLightboxProps {
   images: string[];
@@ -24,6 +25,7 @@ export interface ImageLightboxProps {
  */
 export function ImageLightbox({ images, title, initialIndex, onClose }: ImageLightboxProps) {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const fallbackImageUrl = getAuctionImageFallback(title, 1200, 900);
 
   const goNext = useCallback(() => {
     setActiveIndex((prev) => (prev + 1) % images.length);
@@ -97,7 +99,10 @@ export function ImageLightbox({ images, title, initialIndex, onClose }: ImageLig
             fill
             sizes="(max-width: 1280px) 95vw, 1200px"
             className="rounded-xl object-contain animate-in fade-in duration-300"
-            priority
+            onError={(event) => {
+              event.currentTarget.src = fallbackImageUrl;
+              event.currentTarget.srcset = fallbackImageUrl;
+            }}
           />
 
           {images.length > 1 && (

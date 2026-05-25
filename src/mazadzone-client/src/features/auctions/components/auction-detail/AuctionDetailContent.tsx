@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuctionImageGallery } from "./image-gallery";
@@ -8,10 +9,12 @@ import { SellerInfo } from "./SellerInfo";
 import { BidHistory } from "./BidHistory";
 import { ItemDetailsTab } from "./ItemDetailsTab";
 import { SimilarItems } from "./SimilarItems";
-import { useAuthStore } from "@/stores/auth.store";
 import { ROUTES } from "@/config/routes.config";
 import type { AuctionSummary, Seller } from "../../types/auction.types";
-import { PlaceBidModal } from "@/features/bidding";
+
+const PlaceBidModal = dynamic(
+  () => import("@/features/bidding").then((module) => module.PlaceBidModal),
+);
 
 interface AuctionDetailContentProps {
   auction: AuctionSummary;
@@ -25,7 +28,6 @@ export function AuctionDetailContent({
   auction,
 }: AuctionDetailContentProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(auction.isFavorite);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 

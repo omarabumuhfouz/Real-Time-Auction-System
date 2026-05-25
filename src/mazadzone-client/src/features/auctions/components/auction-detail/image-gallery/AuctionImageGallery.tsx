@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ZoomIn } from "lucide-react";
 import { ThumbnailStrip } from "./ThumbnailStrip";
 import { ImageLightbox } from "./ImageLightbox";
+import { getAuctionImageFallback } from "../../../utils/image.utils";
 
 interface AuctionImageGalleryProps {
   images: string[];
@@ -26,6 +27,7 @@ export function AuctionImageGallery({ images, title }: AuctionImageGalleryProps)
 
   const allImages = images.length > 0 ? images : ["/placeholder.jpg"];
   const mainImage = allImages[activeIndex];
+  const fallbackImageUrl = getAuctionImageFallback(title);
 
   return (
     <>
@@ -56,6 +58,10 @@ export function AuctionImageGallery({ images, title }: AuctionImageGalleryProps)
             sizes="(max-width: 768px) 100vw, 800px"
             className="object-cover transition-all duration-700 ease-out animate-in fade-in zoom-in-95"
             priority
+            onError={(event) => {
+              event.currentTarget.src = fallbackImageUrl;
+              event.currentTarget.srcset = fallbackImageUrl;
+            }}
           />
 
           {/* Vignette */}

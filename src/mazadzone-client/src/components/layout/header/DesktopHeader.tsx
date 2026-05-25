@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { Search, Gavel, Package, Bell, User, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Search, Gavel, Package, User, ChevronDown, LayoutDashboard } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,9 +22,6 @@ export interface DesktopHeaderProps {
   role: string | undefined;
   logout: () => void;
   mounted: boolean;
-  handleCategoryClick: (category: string) => void;
-  handleSellClick: () => void;
-  isSeller: boolean;
   pathname: string;
 }
 
@@ -33,17 +29,23 @@ export const DesktopHeader = ({
   isAuthenticated,
   logout,
   mounted,
-  handleCategoryClick,
-  handleSellClick,
-  isSeller,
   pathname,
 }: DesktopHeaderProps) => {
-  const user = useAuthStore((state) => state.user);
-  const { data: serverUnreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
-  const notifications = useNotificationStore((state) => state.notifications);
-  const storeUnreadCount = useNotificationStore((state) => state.getUnreadCount());
+  const userId = useAuthStore((state) => state.user?.id);
+  const { data: serverUnreadCount = 0 } = useGetUnreadCount(userId || "", {
+    enabled: isAuthenticated,
+  });
+  const hasLocalNotifications = useNotificationStore(
+    (state) => state.notifications.length > 0,
+  );
+  const localUnreadCount = useNotificationStore((state) =>
+    state.notifications.reduce(
+      (count, notification) => count + (notification.isRead ? 0 : 1),
+      0,
+    ),
+  );
 
-  const unreadCount = notifications.length > 0 ? storeUnreadCount : serverUnreadCount;
+  const unreadCount = hasLocalNotifications ? localUnreadCount : serverUnreadCount;
 
 
   return (
@@ -65,8 +67,13 @@ export const DesktopHeader = ({
           <span className="cursor-pointer text-primary">EN</span>
         </div>
 
-        {mounted && (
-          <div className="flex items-center gap-6">
+        <div
+          className={cn(
+            "flex items-center gap-6",
+            !mounted && "invisible pointer-events-none select-none",
+          )}
+          aria-hidden={!mounted}
+        >
             {!isAuthenticated ? (
               <div className="flex items-center gap-2">
                 <Link href={ROUTES.AUTH.LOGIN} className="text-lg font-medium hover:text-primary transition-colors">
@@ -111,7 +118,6 @@ export const DesktopHeader = ({
               </>
             )}
           </div>
-        )}
       </div>
 
     </>

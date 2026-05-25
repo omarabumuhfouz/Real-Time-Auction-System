@@ -82,9 +82,6 @@ export function Header() {
           role={role}
           logout={logout}
           mounted={mounted}
-          handleCategoryClick={handleCategoryClick}
-          handleSellClick={handleSellClick}
-          isSeller={isSeller}
           pathname={pathname}
         />
 

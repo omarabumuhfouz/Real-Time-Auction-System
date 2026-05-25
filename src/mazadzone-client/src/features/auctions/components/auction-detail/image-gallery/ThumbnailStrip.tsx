@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { getAuctionImageFallback } from "../../../utils/image.utils";
 
 export interface ThumbnailStripProps {
   images: string[];
@@ -53,6 +54,11 @@ export function ThumbnailStrip({
             fill
             sizes="80px"
             className="object-cover"
+            onError={(event) => {
+              const fallbackImageUrl = getAuctionImageFallback(title, 160, 160);
+              event.currentTarget.src = fallbackImageUrl;
+              event.currentTarget.srcset = fallbackImageUrl;
+            }}
           />
           {activeIndex === index && (
             <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
