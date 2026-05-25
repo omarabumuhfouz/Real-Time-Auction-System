@@ -18,7 +18,7 @@ public class OrderRepository :  GenericRepository<Order, OrderId>,IOrderReposito
     public async Task<Order?> GetWithDispute(OrderId id, CancellationToken ct)
     {
         return await _dbContext.Orders
-            .Include(o => o.Dispute)
+            // .Include(o => o.Dispute)
             .FindByIdAsync(id, ct);
     }
 

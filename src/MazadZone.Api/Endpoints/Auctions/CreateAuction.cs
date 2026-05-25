@@ -2,16 +2,16 @@ using MazadZone.Application.Features.Auctions.Commands.CreateAuction;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Auctions.ValueObjects;
+using MazadZone.Domain.Auctions.Enums;
 using MazadZone.Domain.Categories;
-using MazadZone.Domain.Sellers;
-using MazadZone.Domain.ValueObjects;
-using MediatR;
+using MazadZone.Domain.Shared.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Auctions;
 
 public record CreateAuctionRequest(
-    SellerId SellerId,
+    UserId SellerId,
+    ItemStatus Status,
+    Description Condition,
     AddressDto ShippingAddress,
     decimal StartBidAmount,
     decimal MinBidAmount,
@@ -24,6 +24,8 @@ public record CreateAuctionRequest(
 {
     public CreateAuctionCommand ToCommand() => new(
         SellerId,
+        Status,
+        Condition,
         ShippingAddress.ToAddress(),
         StartBidAmount,
         MinBidAmount,

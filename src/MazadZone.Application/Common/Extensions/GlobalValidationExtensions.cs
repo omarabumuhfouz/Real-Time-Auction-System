@@ -8,25 +8,7 @@ namespace MazadZone.Application.Common.Validation;
 
 public static class GlobalValidationExtensions
 {
-    public static IRuleBuilderOptions<T, BidderId> MustBeValidBidderId<T>(this IRuleBuilder<T, BidderId> ruleBuilder)
-    {
-        return ruleBuilder
-            .NotEmpty()
-            .WithMessage("Bidder ID is required and cannot be empty.")
-            .Must(id => id.Value != Guid.Empty)
-            .WithMessage("Invalid BidderId.");
-    }
-
-    public static IRuleBuilderOptions<T, SellerId> MustBeValidSellerId<T>(this IRuleBuilder<T, SellerId> ruleBuilder)
-    {
-        return ruleBuilder
-            .NotEmpty()
-            .WithMessage("Seller identifier is required.")
-            .Must(id => id.Value != Guid.Empty)
-            .WithMessage("Invalid SellerId.");
-    }
-
-
+    
     public static IRuleBuilderOptions<T, UserId> MustBeValidUserId<T>(this IRuleBuilder<T, UserId> ruleBuilder)
     {
         return ruleBuilder
@@ -62,6 +44,24 @@ public static class GlobalValidationExtensions
             .WithMessage($"{nameOfCategory}  is required and cannot be empty.")
             .Must(id => id.Value != Guid.Empty)
             .WithMessage("Invalid {PropertyName}."); // This will use the property name in the error message    
+    }
+
+    public static IRuleBuilderOptions<T, DisputeTypeId> MustBeValidDisputeTypeId<T>(this IRuleBuilder<T, DisputeTypeId> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty()
+            .WithMessage("Dispute Type id  is required and cannot be empty.")
+            .Must(id => id.Value != Guid.Empty)
+            .WithMessage("Invalid Dispute Type Id."); // This will use the property name in the error message    
+    }
+
+    public static IRuleBuilderOptions<T, DisputeId> MustBeValidDisputeId<T>(this IRuleBuilder<T, DisputeId> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty()
+            .WithMessage("Dispute id  is required and cannot be empty.")
+            .Must(id => id.Value != Guid.Empty)
+            .WithMessage("Invalid Dispute Id."); // This will use the property name in the error message    
     }
 
     

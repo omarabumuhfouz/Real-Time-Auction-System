@@ -40,7 +40,22 @@ try
 
     builder.Services.AddOpenApi();
 
+
+
     var app = builder.Build();
+
+// Apply pending migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // This will create the DB and apply all migrations if they don't exist
+    dbContext.Database.Migrate(); 
+    
+    // Optional: You can also call a DatabaseSeeder here to insert dummy data!
+    // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    // await seeder.SeedAsync();
+}
 
     //Map Endpoints
     app.MapNotificationEndpoints();

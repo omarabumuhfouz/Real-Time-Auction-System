@@ -17,7 +17,7 @@ public class GetBidderProfileValidatorTests
     public void Validate_ValidQuery_PassesValidation()
     {
         // Arrange
-        var query = new GetBidderProfileQuery(BidderId.New());
+        var query = new GetBidderProfileQuery(UserId.New());
 
         // Act
         var result = _validator.TestValidate(query);
@@ -31,7 +31,7 @@ public class GetBidderProfileValidatorTests
     public void Validate_BidderIdIsEmpty_FailsValidation()
     {
         // Arrange
-        var query = new GetBidderProfileQuery(BidderId.Empty);
+        var query = new GetBidderProfileQuery(UserId.Empty);
 
         // Act
         var result = _validator.TestValidate(query);

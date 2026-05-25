@@ -1,4 +1,5 @@
 using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users;
 using MazadZone.Infrastructure.Common.Constants;
 using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
@@ -12,26 +13,30 @@ internal sealed class SellerConfiguration : IEntityTypeConfiguration<Seller>
     {
         builder.ToTable(TableNames.Sellers);
 
-        // Primary Key
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id)
-               .HasConversion(new SellerIdConverter()) // Ensure you have this converter
+               .HasConversion(new UserIdIdConverter()) 
                .ValueGeneratedNever();
 
-        // Primitives
         builder.Property(s => s.BankAccountNumber).HasMaxLength(100).IsRequired();
-        builder.Property(s => s.NationalId).HasMaxLength(50).IsRequired();
-        builder.Property(s => s.TaxIdentificationNumber).HasMaxLength(50).IsRequired(false); // Nullable
+        builder.Property(s => s.ListedAuctionsCount).HasDefaultValue(0);
+
         
         builder.Property(s => s.Rating)
-               .HasColumnType("decimal(3, 2)") // E.g., 4.95
+               .HasColumnType("decimal(3, 2)") 
                .IsRequired();
                
         builder.Property(s => s.ReviewsCount).IsRequired();
         builder.Property(s => s.IsVerified).IsRequired();
 
-        // Auditable Properties
         builder.Property(s => s.CreatedOnUtc).IsRequired();
         builder.Property(s => s.ModifiedOnUtc).IsRequired(false);
+
+        builder.HasOne<User>()
+        .WithOne()
+        .HasForeignKey<Seller>(s => s.Id)
+        .IsRequired()
+        .OnDelete(DeleteBehavior.Restrict);
+    
     }
 }

@@ -26,7 +26,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         result.TopError.ShouldBe(BidderErrors.NotFound);
 
         // Verify isolation: We aborted immediately without hitting other data dependencies
-        await _bidderRepository.DidNotReceiveWithAnyArgs().GetNationalIdByBidderIdAsync(BidderId.Load(command.UserId.Value), default);
+        await _bidderRepository.DidNotReceiveWithAnyArgs().GetNationalIdByBidderIdAsync(command.UserId, default);
         await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
     }
 
@@ -40,7 +40,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
-        _bidderRepository.GetNationalIdByBidderIdAsync(BidderId.Load(user.Id.Value), Arg.Any<CancellationToken>())
+        _bidderRepository.GetNationalIdByBidderIdAsync(user.Id, Arg.Any<CancellationToken>())
             .Returns((string?)null);
 
         // Act
@@ -67,7 +67,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
-        _bidderRepository.GetNationalIdByBidderIdAsync(BidderId.Load(user.Id.Value), Arg.Any<CancellationToken>())
+        _bidderRepository.GetNationalIdByBidderIdAsync(user.Id, Arg.Any<CancellationToken>())
             .Returns("9991012345"); // National ID is present
 
         // Act
@@ -93,7 +93,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
-        _bidderRepository.GetNationalIdByBidderIdAsync(BidderId.Load(user.Id.Value), Arg.Any<CancellationToken>())
+        _bidderRepository.GetNationalIdByBidderIdAsync(user.Id, Arg.Any<CancellationToken>())
             .Returns(expectedNationalId);
 
         Seller capturedSeller = null!;

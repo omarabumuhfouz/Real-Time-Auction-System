@@ -6,6 +6,6 @@ public sealed class VerifySellerValidator : AbstractValidator<VerifySellerComman
 {
     public VerifySellerValidator()
     {
-        RuleFor(x => x.SellerId).MustBeValidSellerId();
+        RuleFor(x => x.SellerId).MustBeValidUserId();
     }
 }

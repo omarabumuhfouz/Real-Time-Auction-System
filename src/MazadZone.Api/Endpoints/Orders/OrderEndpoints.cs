@@ -21,9 +21,7 @@ public static class OrderEndpoints
         Ship.MapEndpoint(orderGroup);
         Deliver.MapEndpoint(orderGroup);
         Cancel.MapEndpoint(orderGroup);
-        OpenDispute.MapEndpoint(orderGroup);
-        ResolveDispute.MapEndpoint(orderGroup);
-        AddFeedback.MapEndpoint(orderGroup);
+                AddFeedback.MapEndpoint(orderGroup);
         ReplyToFeedback.MapEndpoint(orderGroup);
 
         GetDetails.MapEndpoint(orderGroup);

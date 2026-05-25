@@ -34,8 +34,9 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public PasswordHash PasswordHash { get; private set; }
     public UserStatus Status { get; private set; } = UserStatus.Active; // Default status
     public HashSet<UserRole> Roles { get; private set; }
-    public Reason? EnforcementReason { get; private set; } = null;
-    public DateTime? SuspensionUntil { get; private set; } = null;
+    public Reason EnforcementReason { get; private set; } = Reason.Empty;
+    public DateTime? SuspensionUntil { get; private set; }
+    public DateTime LastLogin { get; private set; } = DateTime.UtcNow;
 
     public DateTime CreatedOnUtc { get; set; }
     public DateTime? ModifiedOnUtc { get; set; }
@@ -170,7 +171,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
             }
 
             var result = Activate();
-            if(result.IsFailure) return result.TopError;
+            if (result.IsFailure) return result.TopError;
         }
 
         _hashedRefreshTokens.RemoveAll(r => r.IsExpired);
@@ -184,6 +185,8 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
 
         return Result.Success();
     }
+
+    public void RegisterLastLogin(DateTime lastLoginDate) => LastLogin = lastLoginDate;
 
     // 3. Logic to revoke all tokens (useful for "Logout everywhere" or "Password Change")
 
@@ -277,6 +280,9 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
 
         Roles.Remove(role);
     }
-
+public bool HasActiveRefreshToken(string hashedToken)
+{
+    return _hashedRefreshTokens.Any(t => t.Token == hashedToken && t.IsActive);
+}
 
 }

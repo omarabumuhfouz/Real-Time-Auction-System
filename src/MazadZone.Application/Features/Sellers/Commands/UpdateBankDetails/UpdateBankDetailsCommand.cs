@@ -1,6 +1,5 @@
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Sellers.Commands.UpdateBankDetails;
 
-public sealed record UpdateBankDetailsCommand(SellerId SellerId, string NewAccountNumber) : ICommand<Unit>;
+public sealed record UpdateBankDetailsCommand(UserId SellerId, string NewAccountNumber) : ICommand<Unit>;

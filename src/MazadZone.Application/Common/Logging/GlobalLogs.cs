@@ -10,13 +10,13 @@ public static partial class GlobalLogs
         EventId = MazadLogEvents.Global.NotFound,
         Level = LogLevel.Warning,
         Message = "Resource missing: Bidder with ID {bidderId} could not be found.")]
-    public static partial void LogBidderNotFound(ILogger logger, BidderId bidderId);
+    public static partial void LogBidderNotFound(ILogger logger, UserId bidderId);
 
     [LoggerMessage(
         EventId = MazadLogEvents.Global.NotFound,
         Level = LogLevel.Warning,
         Message = "Resource missing: Seller with ID {sellerId} could not be found.")]
-    public static partial void LogSellerNotFound(ILogger logger, SellerId sellerId);
+    public static partial void LogSellerNotFound(ILogger logger, UserId sellerId);
 
     [LoggerMessage(
         EventId = MazadLogEvents.Global.NotFound,

@@ -7,7 +7,7 @@ public sealed class UpdateBankDetailsValidator : AbstractValidator<UpdateBankDet
 {
     public UpdateBankDetailsValidator()
     {
-        RuleFor(x => x.SellerId).MustBeValidSellerId();
+        RuleFor(x => x.SellerId).MustBeValidUserId();
         RuleFor(x => x.NewAccountNumber).MustBeValidBankAccount();
     }
 }

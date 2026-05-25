@@ -1,6 +1,7 @@
 namespace MazadZone.Infrastructure.Common.Constants;
 public static class TableNames
 {
+    public const string DisputeTypes = nameof(DisputeTypes);
     public const string Users = nameof(Users);
     public const string HashedRefreshTokens = nameof(HashedRefreshTokens);
     public const string OutboxMessages = nameof(OutboxMessages);

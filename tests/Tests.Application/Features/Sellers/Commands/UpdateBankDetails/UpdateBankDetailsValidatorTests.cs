@@ -31,7 +31,7 @@ public class UpdateBankDetailsValidatorTests
     public void Validate_SellerIdIsEmpty_FailsValidation()
     {
         // Arrange
-        var command = SellerHelper.CreateUpdateBankDetailsCommand() with { SellerId = SellerId.Empty };
+        var command = SellerHelper.CreateUpdateBankDetailsCommand() with { SellerId = UserId.Empty };
 
         // Act
         var result = _validator.TestValidate(command);

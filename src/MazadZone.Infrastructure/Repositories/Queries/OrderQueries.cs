@@ -5,7 +5,7 @@ using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Orders;
-using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
 using MzadZone.Domain.Payments;
 using Polly;
 
@@ -123,7 +123,7 @@ public class OrderQueries : ResilientRepository , IOrderQueries
         });
     }
 
-    public async Task<SellerOrderStatsDto> GetSellerStatsAsync(SellerId sellerId, CancellationToken ct = default)
+    public async Task<SellerOrderStatsDto> GetSellerStatsAsync(UserId sellerId, CancellationToken ct = default)
     {
         // 1. We use aggregate functions directly in SQL. 
         // 2. We use conditional aggregation (COUNT(CASE WHEN...)) to pivot rows into columns.

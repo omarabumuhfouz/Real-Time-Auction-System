@@ -24,26 +24,20 @@ public sealed class FeedbackConfiguration : IEntityTypeConfiguration<Feedback>
 
         builder.Property(f => f.Rating)
             .IsRequired()
-            .HasColumnName("Rating") 
-            .HasConversion(
-                rating => rating.Value, 
-                value => Rating.Create(value).Value); 
+            .HasColumnName("Rating")
+            .HasConversion(new RatingConverter());
 
         builder.Property(f => f.Comment)
             .IsRequired()
-            .HasMaxLength(OrderConstants.MaxCommentLength) 
+            .HasMaxLength(OrderConstants.MaxCommentLength)
             .HasColumnName("Comment")
-            .HasConversion(
-                comment => comment.Value, 
-                value => Comment.Create(value).Value); 
+            .HasConversion(new CommentConverter());
 
         builder.Property(f => f.Reply)
-            .IsRequired() 
+            .IsRequired()
             .HasMaxLength(OrderConstants.MaxCommentLength)
             .HasColumnName("Reply")
-             .HasConversion(
-                comment => comment.Value, 
-                value => Comment.FromDatabase(value)); 
+             .HasConversion(new CommentConverter());
 
         builder.Property(f => f.CreatedAtUtc)
             .IsRequired();

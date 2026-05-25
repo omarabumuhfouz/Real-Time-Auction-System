@@ -24,26 +24,30 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, T
         _logger = logger;
     }
 
-    async Task<Result<TokenDto>> IRequestHandler<RefreshTokenCommand, Result<TokenDto>>.Handle(RefreshTokenCommand request, CancellationToken ct)
+    public async Task<Result<TokenDto>> Handle(RefreshTokenCommand request, CancellationToken ct)
     {
-        var hashedToken = _tokenProvider.HashToken(request.RefreshToken);
+        var hashedOldToken = _tokenProvider.HashToken(request.RefreshToken);
 
-        var user = await _userRepository.GetByRefreshTokenAsync(hashedToken, ct);
+        var user = await _userRepository.GetByRefreshTokenAsync(hashedOldToken, ct);
 
         if (user is null)
         {
             return UserErrors.InvalidToken;
-        }
+        };
 
+        // Generate the new token and hash it
         string newRefreshToken = _tokenProvider.GenerateRefreshToken();
-        var hashRefreshToken = _tokenProvider.HashToken(newRefreshToken);
-        var rotationResult = user.RotateRefreshToken(request.RefreshToken, hashRefreshToken);
+        var hashedNewToken = _tokenProvider.HashToken(newRefreshToken);
 
+        //  FIX: Pass the HASHED old token, not the raw one!
+        var rotationResult = user.RotateRefreshToken(hashedOldToken, hashedNewToken);
         if (rotationResult.IsFailure) return rotationResult.TopError;
 
+        //  Generate new access token and save
         string newAccessToken = _tokenProvider.GenerateAccessToken(user);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        // Return the RAW new refresh token to the user (never return the hash)
         return new TokenDto(newAccessToken, newRefreshToken);
     }
 }

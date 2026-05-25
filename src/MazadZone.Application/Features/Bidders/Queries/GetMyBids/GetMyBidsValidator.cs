@@ -1,6 +1,3 @@
-using FluentValidation;
-using MazadZone.Domain.Bidders;
-
 namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 
 public sealed class GetMyBidsValidator : AbstractValidator<GetMyBidsQuery>
@@ -11,7 +8,7 @@ public sealed class GetMyBidsValidator : AbstractValidator<GetMyBidsQuery>
     public GetMyBidsValidator()
     {
         RuleFor(x => x.BidderId)
-            .NotEqual(BidderId.Empty)
+            .NotEqual(UserId.Empty)
             .WithMessage("A valid bidder id is required.");
 
         RuleFor(x => x.Page)

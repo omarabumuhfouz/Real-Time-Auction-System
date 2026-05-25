@@ -59,6 +59,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.Property(u => u.LastLogin)
+        .IsRequired();
+
         builder.HasIndex(u => u.Email)
             .IsUnique();
 
@@ -92,6 +95,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasField("_hashedRefreshTokens")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-
+        
     }
 }

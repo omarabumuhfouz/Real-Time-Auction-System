@@ -30,7 +30,7 @@ public class VerifyBidderCommandValidatorTests
     public void Validate_BidderIdIsEmpty_FailsValidation()
     {
         // Arrange
-        var command = BidderHelper.CreateVerifyBidderCommand() with { BidderId = BidderId.Empty };
+        var command = BidderHelper.CreateVerifyBidderCommand() with { BidderId = UserId.Empty };
 
         // Act
         var result = _validator.TestValidate(command);

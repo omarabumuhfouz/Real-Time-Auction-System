@@ -2,6 +2,7 @@ using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Infrastructure.Persistence;
+using MazadZone.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
@@ -15,35 +16,41 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
         _context = context;
     }
 
-    public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken)
+    public Task<User?> GetByEmailAsync(Email email, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return _context.Users.FirstOrDefaultAsync(u => u.Email.Equals(email), ct);
     }
 
-    public Task<User?> GetByIdWithTokensAsync(UserId id, CancellationToken cancellationToken)
+    public Task<User?> GetByIdWithTokensAsync(UserId id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return _context.Users
+             .Include(u => u.HashedRefreshTokens)
+             .FindByIdAsync(id, ct);
     }
 
-    public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+    public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return _context.Users
+        .Include(u => u.HashedRefreshTokens)
+        .FirstOrDefaultAsync(u => u.HashedRefreshTokens.Any(hrt => hrt.Token == refreshToken), ct);
     }
 
-    public Task<bool> IsBidderAsync(UserId userId, CancellationToken cancellationToken)
+    public async Task<bool> IsBidderAsync(UserId userId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return await _context.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == userId && u.IsBidder, ct);
     }
 
-    public Task<bool> IsEmailInUseAsync(Email email, CancellationToken cancellationToken)
+    public Task<bool> IsEmailInUseAsync(Email email, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return _context.Users.AsNoTracking().AnyAsync(u => u.Email.Equals(email), ct);
     }
 
     public async Task<bool> IsUserSellerAsync(UserId userId, CancellationToken cancellationToken)
     {
         return await _context.Users
             .AsNoTracking()
-            .AnyAsync(u => u.Id == userId.Value && u.IsSeller);
+            .AnyAsync(u => u.Id == userId && u.IsSeller);
     }
 }

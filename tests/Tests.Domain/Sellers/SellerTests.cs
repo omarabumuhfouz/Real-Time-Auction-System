@@ -2,6 +2,7 @@ using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Sellers.Events;
+using MazadZone.Domain.Users.ValueObjects;
 using Shouldly;
 
 namespace Tests.Domain.Sellers;
@@ -17,7 +18,7 @@ public class SellerTests
     public void BecomeSeller_BankAccountIsInvalid_ReturnsInvalidBankAccountError(string? invalidBankAccount)
     {
         // Arrange
-        var bidderId = BidderId.New();
+        var bidderId = UserId.New();
         var nationalId = "9991012345";
 
         // Act
@@ -35,7 +36,7 @@ public class SellerTests
     public void BecomeSeller_NationalIdIsInvalid_ReturnsInvalidNationalIdError(string? invalidNationalId)
     {
         // Arrange
-        var bidderId = BidderId.New();
+        var bidderId = UserId.New();
         var bankAccount = "JO99ASEB000000123456789";
 
         // Act
@@ -50,7 +51,7 @@ public class SellerTests
     public void BecomeSeller_ValidInputs_CreatesSellerAndRaisesSellerCreatedDomainEvent()
     {
         // Arrange
-        var bidderId = BidderId.New();
+        var bidderId = UserId.New();
         var bankAccount = "JO99ASEB000000123456789";
         var nationalId = "9991012345";
 
@@ -185,7 +186,7 @@ public class SellerTests
     private static Seller CreateValidSeller()
     {
         return Seller.BecomeSeller(
-            BidderId.New(), 
+            UserId.New(), 
             "JO99ASEB000000123456789", 
             "9991012345").Value;
     }

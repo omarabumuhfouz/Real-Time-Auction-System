@@ -10,7 +10,7 @@ public static class ChangeEmail
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/email", HandleAsync)
-        //    .RequireAuthorization() 
+           .RequireAuthorization() 
            .WithSummary("Change user email")
            .WithDescription("Updates the email address of the currently authenticated user. Returns a 409 Conflict if the requested new email address is already registered to another account.")
            .Accepts<ChangeEmailRequest>("application/json")

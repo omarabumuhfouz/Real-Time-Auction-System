@@ -64,6 +64,16 @@ public static IRuleBuilderOptions<T, string> MustBeValidName<T>(this IRuleBuilde
             .MaximumLength(SharedConstainst.MaxDescriptionLength) // Or use SharedConstainst.MaxDescriptionLength
             .WithMessage("Description cannot exceed 500 characters.");
     }
+    public static IRuleBuilderOptions<T, string> MustBeValidTitle<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty()
+            .WithMessage("Title is required.")
+            .MaximumLength(SharedConstainst.MaxTitleLength) // Or use SharedConstainst.MaxDescriptionLength
+            .WithMessage($"Description cannot exceed {SharedConstainst.MaxTitleLength} characters.");
+    }
+
+
 
     public static IRuleBuilderOptions<T, string> MustBeValidResolution<T>(this IRuleBuilder<T, string> ruleBuilder)
     {

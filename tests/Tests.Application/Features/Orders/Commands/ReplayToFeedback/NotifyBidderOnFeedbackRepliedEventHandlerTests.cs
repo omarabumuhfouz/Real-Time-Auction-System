@@ -1,6 +1,4 @@
 using MazadZone.Application.Features.Orders.Events.NotifyBidderOnFeedbackReplied;
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 
@@ -12,7 +10,7 @@ public class NotifyBidderOnFeedbackRepliedEventHandlerTests : OrderBaseTest<Noti
     public async Task Handle_FeedbackReplied_SendsNotificationToBidder()
     {
         // Arrange
-        var domainEvent = new FeedbackRepliedDomainEvent(OrderId.New(), BidderId.New());
+        var domainEvent = new FeedbackRepliedDomainEvent(OrderId.New(), UserId.New());
 
         // Act
         await Handler.Handle(domainEvent, default);

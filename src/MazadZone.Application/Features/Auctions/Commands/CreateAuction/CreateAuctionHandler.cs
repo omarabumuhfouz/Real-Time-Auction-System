@@ -1,7 +1,6 @@
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Repositories;
-using MazadZone.Domain.ValueObjects;
 
 namespace MazadZone.Application.Features.Auctions.Commands.CreateAuction;
 /// <summary>
@@ -35,6 +34,8 @@ public class CreateAuctionHandler
 
         var createResult = Auction.Create(
             request.SellerId,
+            request.Status,
+            request.Condition,
             request.ShippingAddress,
             request.StartBidAmount,
             request.MinBidAmount,

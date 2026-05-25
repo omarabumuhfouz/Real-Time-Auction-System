@@ -97,7 +97,6 @@ public class RegisterBidderCommandHandlerTests : BidderBaseTest<RegisterBidderCo
         result.Value.TokenInfo.Token.ShouldBe("mock_access_token");
         result.Value.TokenInfo.RefreshToken.ShouldBe("mock_refresh_token");
         result.Value.ProfileInfo.Email.ShouldBe(command.Email);
-        result.Value.ProfileInfo.NationalId.ShouldBe(command.NationalId);
 
         // Assert - Data Integrity (Verify Traps)
         capturedUser.ShouldNotBeNull();

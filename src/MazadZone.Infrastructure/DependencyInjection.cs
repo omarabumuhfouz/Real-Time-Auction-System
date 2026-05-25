@@ -1,5 +1,3 @@
-using System;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,8 +11,7 @@ using MazadZone.Infrastructure.Configuration;
 using MazadZone.Infrastructure.Outbox;
 using MazadZone.Infrastructure.Persistence;
 using MazadZone.Infrastructure.Persistence.Interceptors;
-using MazadZone.Infrastructure.Scheduling;
-using MazadZone.Infrastructure.Services; // مسار خدمة الدفع الوهمية
+using AuthService.Infrastructure.Backgrounds; 
 
 namespace MazadZone.Infrastructure;
 
@@ -26,11 +23,12 @@ public static class DependencyInjection
             .AddOutboxPattern(configuration)
             .AddDatabase(configuration)
             .AddPollyPolicies(configuration)
-            .AddRedisServices(configuration)
             .AddServiceScanning()
             .AddSignalRServices()
-            .AddHangfireServices(configuration);
-         //   .AddPaymentService();
+            .AddHangfireServices(configuration)
+            .AddCachingServices(configuration)
+            .AddBackgroundServices();
+
 
 
 
@@ -47,11 +45,14 @@ public static class DependencyInjection
 
         // 1. Register Interceptors
         services.AddSingleton<InsertOutboxMessagesInterceptor>();
+        services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
 
         // 2. Register EF Core
         services.AddDbContext<AppDbContext>((sp, options) =>
         {
             var interceptor = sp.GetRequiredService<InsertOutboxMessagesInterceptor>();
+            var auditableInterceptor = sp.GetRequiredService<UpdateAuditableEntitiesInterceptor>();
+
             options.UseSqlServer(connectionString, sqlOptions =>
             {
                 sqlOptions.EnableRetryOnFailure(
@@ -59,7 +60,9 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(resilienceOptions.MaxDelaySeconds),
                     errorNumbersToAdd: null
                 );
-            }).AddInterceptors(interceptor);
+
+            })
+                   .AddInterceptors(interceptor, auditableInterceptor);
         });
 
         // 3. Register Dapper
@@ -82,7 +85,7 @@ public static class DependencyInjection
         configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
 
         var retryPolicy = Policy
-            .Handle<Exception>() 
+            .Handle<Exception>()
             .WaitAndRetryAsync(options.RetryCount, retryAttempt =>
                 TimeSpan.FromSeconds(Math.Pow(options.BaseDelaySeconds, retryAttempt)),
                 (exception, timeSpan, retryCount, context) =>
@@ -95,14 +98,17 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddRedisServices(this IServiceCollection services, IConfiguration configuration)
+   private static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddStackExchangeRedisCache(options =>
+
+        services.AddMemoryCache();
+services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = configuration.GetConnectionString("Redis");
+            // Optional: Adds a prefix to all keys so you don't clash with other apps sharing the same Redis instance
             options.InstanceName = "MazadZone_"; 
         });
-        services.AddScoped<ICacheService, RedisCacheService>();
+services.AddScoped<ICacheService, RedisCacheService>();
         return services;
     }
 
@@ -161,4 +167,13 @@ public static class DependencyInjection
     //     services.AddScoped<IPaymentService, PaymentService>();
     //     return services;
     // }
+
+    public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
+    {
+
+        services.AddHostedService<KeyRotationService>();
+        return services;
+    }
+
+
 }

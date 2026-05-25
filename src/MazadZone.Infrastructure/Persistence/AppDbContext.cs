@@ -1,13 +1,13 @@
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Categories;
+using MazadZone.Domain.Disputes;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
-using MazadZone.Domain.ValueObjects;
 using MazadZone.Infrastructure.Authentication;
-using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
 using MzadZone.Domain.Payments.Entities;
@@ -27,6 +27,8 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Feedback> Feedbacks { get; set; } = null!;
     public DbSet<Dispute> Disputes { get; set; } = null!;
+    public DbSet<DisputeType> DisputeTypes { get; set; } = null!;
+    public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Bidder> Bidders { get; set; } = null!;
     public DbSet<Seller> Sellers { get; set; } = null!;

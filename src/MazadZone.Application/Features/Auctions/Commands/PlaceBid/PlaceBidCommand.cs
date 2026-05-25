@@ -1,12 +1,9 @@
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Bidders;
-using MazadZone.Domain.Users;
-using MazadZone.Domain.ValueObjects;
 
 namespace MazadZone.Application.Features.Auctions.Commands.PlaceBid;
 
 public sealed record PlaceBidCommand(
     AuctionId AuctionId,
-    BidderId BidderId,
+    UserId BidderId,
     string PaymentMethodId,
     Money Amount) : ICommand<Unit>;

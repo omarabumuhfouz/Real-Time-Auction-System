@@ -15,7 +15,7 @@ public class KeyRotationService(IServiceProvider serviceProvider) : BackgroundSe
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // For first Attempt
-        // await RotateKeysAsync(); 
+        await RotateKeysAsync(); 
 
         var periodicTimer = new PeriodicTimer(_rotationInterval);
 

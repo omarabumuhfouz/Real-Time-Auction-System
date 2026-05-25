@@ -27,13 +27,14 @@ public class LogoutCommandHandler : ICommandHandler<LogoutCommand, Unit>
 {
     var hashedToken = _tokenProvider.HashToken(request.RefreshToken);
 
-    var user = await _userRepository.GetByIdAsync(request.UserId, ct);
-    
-    if (user is null)
-    {
-        GlobalLogs.LogUserNotFound(_logger, request.UserId);
-        return UserErrors.NotFound;
-    }
+    var user = await _userRepository.GetByIdWithTokensAsync(request.UserId, ct);
+
+        if (user is null)
+        {
+            GlobalLogs.LogUserNotFound(_logger, request.UserId);
+            return UserErrors.NotFound;
+        }
+
 
     if (request.IsLogoutFromAllDevices)
     {

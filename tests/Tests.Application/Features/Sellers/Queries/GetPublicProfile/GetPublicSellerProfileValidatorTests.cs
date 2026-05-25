@@ -31,7 +31,7 @@ public class GetPublicSellerProfileValidatorTests
     public void Validate_SellerIdIsEmpty_FailsValidation()
     {
         // Arrange
-        var query = SellerHelper.CreateGetPublicSellerProfileQuery() with { SellerId = SellerId.Empty };
+        var query = SellerHelper.CreateGetPublicSellerProfileQuery() with { SellerId = UserId.Empty };
 
         // Act
         var result = _validator.TestValidate(query);

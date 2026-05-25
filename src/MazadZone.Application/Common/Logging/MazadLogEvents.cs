@@ -76,6 +76,8 @@ public static partial class MazadLogEvents
     public static class Authentication
     {
         // Refresh Token Events
+        public const int FailedRefreshTokenAttempt = 1999;
+        public const int TokenRefreshSuccess = 2000;
         public const int InvalidRefreshTokenProvided = 2001;
         public const int TokenRotationRejected = 2002;
         public const int TokenRefreshedSuccess = 2003;
@@ -267,7 +269,17 @@ public static partial class MazadLogEvents
         public const int CreationSuccess = 5301;
 
         public const int GetByIdSuccess = 5831;
-        
+
+    }
+
+public static class DisputeTypes
+    {
+        // Create Dispute Type: 6000 - 6009
+        public const int DomainViolation = 6000;
+        public const int CreateSuccess = 6001;
+        public const int DeleteSuccess = 6002;
+        public const int RestoreSuccess = 6003;
+        public const int UpdateSuccess = 6024;
     }
 
 

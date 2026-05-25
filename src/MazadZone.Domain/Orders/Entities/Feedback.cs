@@ -1,6 +1,7 @@
 namespace MazadZone.Domain.Orders;
 
 using MazadZone.Domain.Primitives;
+using MazadZone.Domain.Users.ValueObjects;
 
 public sealed class Feedback : Entity<FeedbackId>
 {

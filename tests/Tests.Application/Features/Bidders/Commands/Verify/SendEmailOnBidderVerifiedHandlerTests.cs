@@ -12,7 +12,7 @@ public class SendEmailOnBidderVerifiedHandlerTests : BidderBaseTest<SendEmailOnB
     public async Task Handle_BidderProfileDoesNotExist_AbortsAndLogs()
     {
         // Arrange
-        var domainEvent = new BidderVerifiedDomainEvent(BidderId.New());
+        var domainEvent = new BidderVerifiedDomainEvent(UserId.New());
 
         // Simulate a missing database record
         _bidderQueries.GetBidderProfile(domainEvent.BidderId, Arg.Any<CancellationToken>())
@@ -30,7 +30,7 @@ public class SendEmailOnBidderVerifiedHandlerTests : BidderBaseTest<SendEmailOnB
     public async Task Handle_BidderExists_SendsHtmlEmail()
     {
         // Arrange
-        var bidderId = BidderId.New();
+        var bidderId = UserId.New();
         var domainEvent = new BidderVerifiedDomainEvent(bidderId);
 
         // Construct the DTO that the read model will return

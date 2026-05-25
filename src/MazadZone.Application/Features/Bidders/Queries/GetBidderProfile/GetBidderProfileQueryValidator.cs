@@ -6,6 +6,6 @@ public class GetBidderProfileQueryValidator : AbstractValidator<GetBidderProfile
 {
     public GetBidderProfileQueryValidator()
     {
-        RuleFor(x => x.BidderId).MustBeValidBidderId();
+        RuleFor(x => x.BidderId).MustBeValidUserId();
     }
 }

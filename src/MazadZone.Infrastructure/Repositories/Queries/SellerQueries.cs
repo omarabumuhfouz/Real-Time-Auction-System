@@ -1,60 +1,99 @@
 using Dapper;
 using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Features.Sellers.Queries;
-using MazadZone.Application.Features.Sellers.Queries.GetPrivateDetails;
 using MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 using MazadZone.Application.Features.Sellers.Queries.GetUnverifiedSellers;
 using MazadZone.Application.Features.Sellers.Queries.GetDashboard;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
+using Polly;
+using MazadZone.Application.Features.Orders.Queries.DTOs;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public sealed class SellerQueries : ISellerQueries
+public sealed class SellerQueries : ResilientRepository, ISellerQueries
 {
-    private readonly ISqlConnectionFactory _connectionFactory;
-
-    public SellerQueries(ISqlConnectionFactory connectionFactory)
+    public SellerQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy) : base(sqlFactory, resiliencePolicy)
     {
-        _connectionFactory = connectionFactory;
     }
 
-    public async Task<PublicSellerProfileResponse?> GetPublicProfileAsync(SellerId sellerId, CancellationToken cancellationToken)
+
+    public async Task<PublicSellerProfileResponse?> GetPublicProfileAsync(UserId sellerId, CancellationToken cancellationToken)
     {
-        using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = """
+        const string sql = @"
             SELECT 
-                Id AS SellerId, 
-                Rating, 
-                ReviewsCount, 
-                IsVerified, 
-                CreatedOnUtc AS JoinedOnUtc
-            FROM Sellers
-            WHERE Id = @SellerId
-            """;
+            u.Id , 
+            u.FirstName + ' ' + u.LastName AS FullName,
+            u.Email,
+            u.PhoneNumber,
+            s.IsVerified,
+            u.CreatedOnUtc AS MemberSince,
+            u.LastLogin,
+            s.Rating, 
+            s.ReviewsCount, 
+            s.ListedAuctionsCount,
+            b.TotalBidsPlaced,
+            b.AuctionParticipatedCount,
+            b.AuctionsWonCount,
+            b.CompletedPurchasesCount
+            f.Id as FeedbackId,
+            f.Rating,
+                COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced,
+                COALESCE(b.AuctionParticipatedCount, 0) AS AuctionParticipatedCount,
+                COALESCE(b.AuctionsWonCount, 0) AS AuctionsWonCount,
+                COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
+            
+            FROM Users 
+            JOIN Sellers s b ON u.Id = s.Id
+            JOIN Bidders b ON u.Id = b.Id
+            WHERE u.Id = @SellerId;
 
-        var command = new CommandDefinition(sql, new { SellerId = sellerId.Value }, cancellationToken: cancellationToken);
-        return await connection.QuerySingleOrDefaultAsync<PublicSellerProfileResponse>(command);
-    }
+            -- Get Feedbacks
 
-    public async Task<PrivateSellerDetailsResponse?> GetPrivateProfileAsync(SellerId sellerId, CancellationToken cancellationToken)
-    {
-        using var connection = _connectionFactory.CreateConnection();
-
-        const string sql = """
             SELECT 
-                Id AS SellerId, 
-                BankAccountNumber, 
-                TaxIdentificationNumber, 
-                IsVerified, 
-                Rating
-            FROM Sellers
-            WHERE Id = @SellerId
-            """;
+            f.Id,
+            u.FirstName + ' ' + u.LastName AS AuthorName,
+            f.Rating,
+            f.Comment,
+            f.Reply,
+            f.CreatedAtUtc AS CreatedAt
+            FROM Orders o
+            JOIN Feedbacks f on o.Id = f.OrderId
+            JOIN Users u on o.BidderId = u.Id 
+            JOIN Auctions a ON o.AuctionId = a.Id
+            WHERE a.SellerId = @SellerId
+            ORDER BY f.CreatedAtUtc DESC;
+            ";
+        return await ExecuteResilientAsync(async connection =>
+        {
+            using var multi = await connection.QueryMultipleAsync(sql, new { SellerId = sellerId.Value });
 
-        var command = new CommandDefinition(sql, new { SellerId = sellerId.Value }, cancellationToken: cancellationToken);
-        return await connection.QuerySingleOrDefaultAsync<PrivateSellerDetailsResponse>(command);
+            var baseProfile = await multi.ReadSingleOrDefaultAsync<ProfileBaseResult>();
+            if (baseProfile is null) return null;
+
+            var feedbacks = (await multi.ReadAsync<FeedbackDto>()).ToList();
+
+            return new PublicSellerProfileResponse(
+                Id: baseProfile.Id,
+                FullName: baseProfile.FullName,
+                Email: baseProfile.Email,
+                PhoneNumber: baseProfile.PhoneNumber,
+                IsVerified: baseProfile.IsVerified,
+                MemberSince: baseProfile.MemberSince,
+                LastLogin: baseProfile.LastLogin,
+                Rating: baseProfile.Rating,
+                ReviewsCount: baseProfile.ReviewsCount,
+                ListedAuctionsCount: baseProfile.ListedAuctionsCount,
+                TotalBidsPlaced: baseProfile.TotalBidsPlaced,
+                AuctionParticipatedCount: baseProfile.AuctionParticipatedCount,
+                AuctionsWonCount: baseProfile.AuctionsWonCount,
+                CompletedPurchasesCount: baseProfile.CompletedPurchasesCount,
+                Feedbacks: feedbacks
+            );
+        });
+
+
     }
 
     public async Task<IReadOnlyList<UnverifiedSellerSummaryResponse>?> GetUnverifiedSellersAsync(CancellationToken cancellationToken)
@@ -63,22 +102,22 @@ public sealed class SellerQueries : ISellerQueries
 
         const string sql = """
             SELECT 
-                Id AS SellerId, 
-                BankAccountNumber, 
-                TaxIdentificationNumber,
-                CreatedOnUtc AS JoinedOnUtc
+                u.Id , 
+                u.FirstName
+                CreatedOnUtc AS JoinedOn
             FROM Sellers
+            JOIN Users u ON u.Id = Sellers.Id
             WHERE IsVerified = 0
             ORDER BY CreatedOnUtc ASC
             """;
 
         var command = new CommandDefinition(sql, cancellationToken: cancellationToken);
         var result = await connection.QueryAsync<UnverifiedSellerSummaryResponse>(command);
-        
+
         return result.AsList();
     }
 
-    public async Task<SellerDashboardResponse?> GetSellerDashboardAsync(SellerId sellerId, SellerDashboardFilter? filter, CancellationToken cancellationToken)
+    public async Task<SellerDashboardResponse?> GetSellerDashboardAsync(UserId sellerId, SellerDashboardFilter? filter, CancellationToken cancellationToken)
     {
         using var connection = _connectionFactory.CreateConnection();
 
@@ -133,4 +172,22 @@ public sealed class SellerQueries : ISellerQueries
             Auctions = auctions.AsList()
         };
     }
+
+
+private record ProfileBaseResult(
+    Guid Id,
+    string FullName,
+    string Email,
+    string PhoneNumber,
+    bool IsVerified,
+    DateTime MemberSince,
+    DateTime LastLogin,
+    decimal Rating,
+    int ReviewsCount,
+    int ListedAuctionsCount,
+    int TotalBidsPlaced,
+    int AuctionParticipatedCount,
+    int AuctionsWonCount,
+    int CompletedPurchasesCount
+    );
 }

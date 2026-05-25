@@ -10,7 +10,7 @@ public class GetBidderProfileQueryHandlerTests : BidderBaseTest<GetBidderProfile
     public async Task Handle_BidderProfileDoesNotExist_ReturnsNotFoundError()
     {
         // Arrange
-        var query = new GetBidderProfileQuery(BidderId.New());
+        var query = new GetBidderProfileQuery(UserId.New());
 
         // Simulate the Dapper/Read query returning null
         _bidderQueries.GetBidderProfile(query.BidderId)
@@ -28,7 +28,7 @@ public class GetBidderProfileQueryHandlerTests : BidderBaseTest<GetBidderProfile
     public async Task Handle_BidderExists_ReturnsProfile()
     {
         // Arrange
-        var bidderId = BidderId.New();
+        var bidderId = UserId.New();
         var query = new GetBidderProfileQuery(bidderId);
 
         // Create a fake DTO response that matches your BidderProfileDto shape

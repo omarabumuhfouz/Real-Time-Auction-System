@@ -3,6 +3,7 @@ using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace Tests.Application.Features.Orders.Events;
 
@@ -14,7 +15,7 @@ public class NotifyBidderOnOrderCreatedDomainEventHandlerTests : OrderBaseTest<N
         // Arrange
         var domainEvent = new OrderCreatedDomainEvent(
             OrderId.New(),
-            BidderId.New());
+            UserId.New());
 
         // Act
         await Handler.Handle(domainEvent, default);

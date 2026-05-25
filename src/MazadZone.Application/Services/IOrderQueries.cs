@@ -19,7 +19,7 @@ public interface IOrderQueries : IScopedService
     Task<OrderDetailsDto?> GetOrderByWinningBidAsync(BidId winningBidId, CancellationToken ct = default);
 
     // --- Analytics & Dashboard ---
-    Task<SellerOrderStatsDto> GetSellerStatsAsync(SellerId sellerId, CancellationToken ct = default);
+    Task<SellerOrderStatsDto> GetSellerStatsAsync(UserId sellerId, CancellationToken ct = default);
     Task<AdminGlobalStatsDto> GetGlobalStatsAsync(CancellationToken ct = default);
 
     // --- Payment Queries ---

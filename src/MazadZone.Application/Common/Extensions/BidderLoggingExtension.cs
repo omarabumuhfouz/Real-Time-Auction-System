@@ -10,6 +10,6 @@ internal static partial class BidderLoggingExtension
         EventId = 150,
         Level = LogLevel.Warning,
         Message = "Bidder profile not found for BidderId: {BidderId}.")]
-    public static partial void LogBidderNotFound(this ILogger logger, BidderId bidderId);
+    public static partial void LogBidderNotFound(this ILogger logger, UserId bidderId);
 
 }

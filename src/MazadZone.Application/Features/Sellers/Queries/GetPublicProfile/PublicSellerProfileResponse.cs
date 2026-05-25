@@ -1,10 +1,20 @@
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Sellers;
+using MazadZone.Application.Features.Orders.Queries.DTOs;
 
 namespace MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 public record PublicSellerProfileResponse(
-    SellerId SellerId, 
-    decimal Rating, 
-    int ReviewsCount, 
+    Guid Id,
+    string FullName,
+    string Email,
+    string PhoneNumber,
     bool IsVerified,
-    DateTime JoinedOnUtc);
+    DateTime MemberSince,
+    DateTime LastLogin,
+    decimal Rating,
+    int ReviewsCount,
+    int ListedAuctionsCount,
+    int TotalBidsPlaced,      
+    int AuctionParticipatedCount,
+    int AuctionsWonCount,
+    int CompletedPurchasesCount,
+    List<FeedbackDto> Feedbacks
+    );

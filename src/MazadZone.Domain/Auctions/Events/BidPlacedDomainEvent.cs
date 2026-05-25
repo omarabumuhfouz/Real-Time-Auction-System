@@ -1,4 +1,6 @@
 
+using MazadZone.Domain.Users.ValueObjects;
+
 namespace MazadZone.Domain.Auctions.Events;
 
 // Triggered for real-time SignalR updates to update the frontend UI for other bidders

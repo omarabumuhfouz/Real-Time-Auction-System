@@ -1,5 +1,4 @@
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.ValueObjects;
@@ -18,7 +17,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     private Order(
         OrderId id,
         AuctionId auctionId,
-        BidderId bidderId,
+        UserId bidderId,
         BidId winningBidId,
         Address receiptAddressId,
         Money totalAmount) : base(id)
@@ -34,7 +33,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     // --- Properties ---
 
     /// <summary>Gets the unique identifier of the bidder who placed the winning bid.</summary>
-    public BidderId BidderId { get; private init; }
+    public UserId BidderId { get; private init; }
 
     /// <summary>Gets the unique identifier of the winning bid associated with this order.</summary>
     public BidId WinningBidId { get; private init; }
@@ -51,7 +50,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 
 
     /// <summary>Gets the dispute entity associated with this order.</summary>
-    public Dispute? Dispute { get; private set; }
+    public DisputeId? DisputeId { get; private set; }
 
 
     /// <summary>Gets the feedback entity associated with this order.</summary>
@@ -61,11 +60,11 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     public DateTime? ModifiedOnUtc { get ; set ; }
 
 
-    public bool IsDisputable => Dispute is null && (Status == OrderStatus.Delivered || Status == OrderStatus.Shipped);
+    public bool IsDisputable => DisputeId is null && (Status == OrderStatus.Delivered || Status == OrderStatus.Shipped);
 
     public bool CanLeaveFeedback => Feedback is null && Status == OrderStatus.Delivered;
 
-    public bool HasActiveDispute => Dispute is not null && Dispute?.IsResolved == false;
+    public bool HasActiveDispute => DisputeId is not null;
 
     
     // --- Static Factory Method ---
@@ -81,7 +80,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A newly initialized <see cref="Order"/>.</returns>
     public static Result<Order> Create(
         AuctionId auctionId,
-        BidderId bidderId,
+        UserId bidderId,
         BidId winningBidId,
         Address receiptAddress,
         decimal totalAmount
@@ -177,36 +176,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
         return Result.Success();
     }
 
-    /// <summary>
-    /// Opens a dispute for the order. Disputes are allowed only after the order is confirmed/shipped.
-    /// </summary>
-    /// <param name="reasonText">The explanation for opening the dispute.</param>
-    /// <returns>A result representing the outcome of the operation.</returns>
-    public Result OpenDispute(string reasonText)
-    {
-        if (Dispute is not null) return OrderErrors.DisputeAlreadyExists;
-        if (Status == OrderStatus.Pending || Status == OrderStatus.Confirmed) return OrderErrors.CannotDispute;
-
-        var disputeResult = Dispute.Create(this.Id, reasonText);
-        if (disputeResult.IsFailure) return disputeResult.TopError;
-
-        Dispute = disputeResult.Value;
-        RaiseDomainEvent(new DisputeOpenedDomainEvent(Id, disputeResult.Value.Id));
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Resolves an existing dispute by delegating the logic to the <see cref="Dispute"/> entity.
-    /// </summary>
-    public Result ResolveDispute(string resolutionText)
-    {
-        if (Dispute is null) return OrderErrors.NoDispute;
-
-        var resolutionResult = Dispute.Resolve(resolutionText);
-        if (resolutionResult.IsFailure) return resolutionResult.TopError;
-        RaiseDomainEvent(new DisputeResolvedDomainEvent(Id, AuctionId, Dispute.Id, resolutionText));
-        return Result.Success();
-    }
+    
 
     /// <summary>
     /// Allows a seller to reply to the feedback left on this order.

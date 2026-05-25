@@ -1,9 +1,10 @@
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Shared.Interfaces;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Repositories;
-public interface IBidderRepository : IGenericRepository<Bidder, BidderId> , IScopedService
+public interface IBidderRepository : IGenericRepository<Bidder, UserId> , IScopedService
 {
-    Task<string?> GetNationalIdByBidderIdAsync(BidderId bidderId, CancellationToken cancellationToken);
+    Task<string?> GetNationalIdByBidderIdAsync(UserId bidderId, CancellationToken cancellationToken);
 
 }

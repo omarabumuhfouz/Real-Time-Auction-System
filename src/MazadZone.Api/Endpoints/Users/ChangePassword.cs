@@ -13,7 +13,7 @@ public static class ChangePassword
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/password", HandleAsync)
-        //    .RequireAuthorization()
+           .RequireAuthorization()
            .WithSummary("Change user password")
            .WithDescription("Updates the password for the currently authenticated user. The request requires the user to provide their current password for verification. Returns a 400 Bad Request if the new passwords do not match or fail to meet complexity requirements.")
            .Accepts<ChangePasswordRequest>("application/json")

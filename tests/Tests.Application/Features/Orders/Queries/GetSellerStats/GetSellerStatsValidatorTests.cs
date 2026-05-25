@@ -17,7 +17,7 @@ public class GetSellerStatsValidatorTests
     public void Validate_ValidQuery_PassesValidation()
     {
         // Arrange - Create a query with a properly initialized SellerId
-        var query = new GetSellerStatsQuery(SellerId.New());
+        var query = new GetSellerStatsQuery(UserId.New());
 
         // Act
         var result = _validator.TestValidate(query);
@@ -30,7 +30,7 @@ public class GetSellerStatsValidatorTests
     public void Validate_SellerIdIsEmpty_FailsValidation()
     {
         // Arrange
-        var query = new GetSellerStatsQuery(SellerId.Empty);
+        var query = new GetSellerStatsQuery(UserId.Empty);
 
         // Act
         var result = _validator.TestValidate(query);
