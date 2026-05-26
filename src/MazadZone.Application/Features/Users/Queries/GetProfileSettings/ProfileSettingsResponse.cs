@@ -1,5 +1,3 @@
-using AutoMapper;
-using FluentValidation.Validators;
 using MazadZone.Application.Features.Bidders.DTOs;
 
 namespace MazadZone.Application.Features.Users.Queries.GetProfileSettings;

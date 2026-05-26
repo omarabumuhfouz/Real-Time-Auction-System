@@ -39,6 +39,7 @@ public class GetAuctionsHandler
             return Result.Failure<PagedList<AuctionsListDto>>(AuctionErrors.NotFound);
         }
 
+
         _logger.SuccessRetrievedAuctions(query.SearchTerm, query.CategoryId?.Value, query.CurrentBidAmount, query.SortBy, query.SortDirection, auctions.TotalCount);
         return Result.Success(auctions);
 

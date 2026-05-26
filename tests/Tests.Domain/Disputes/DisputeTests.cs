@@ -103,7 +103,7 @@ public class DisputeTests
     {
         // Arrange
         var dispute = CreateValidDispute();
-        dispute.UnderReview(); // Set to UnderReview
+        dispute.UnderReview();
 
         // Act
         var result = dispute.UnderReview();
