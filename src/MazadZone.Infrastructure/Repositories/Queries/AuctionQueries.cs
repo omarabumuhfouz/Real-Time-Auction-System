@@ -342,10 +342,12 @@ public partial class AuctionQueries(
                 : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => (decimal?)b.Amount.Amount).FirstOrDefault() ?? a.StartBidAmount.Amount),
             _ => isAsc ? query.OrderBy(a => a.CreatedOnUtc) : query.OrderByDescending(a => a.CreatedOnUtc)
         };
-
+        Console.WriteLine("\n\nItemStatus: ", parameters.ItemStatus);
         if (!string.IsNullOrEmpty(parameters.ItemStatus) &&
         Enum.TryParse<ItemStatus>(parameters.ItemStatus, true, out var itemStatus))
         {
+            Console.WriteLine("\n\nItemStatus: ", parameters.ItemStatus);
+
             query = query.Where(a => a.Item.Status == itemStatus);
 
         }
