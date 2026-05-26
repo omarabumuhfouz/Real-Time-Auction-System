@@ -1,43 +1,52 @@
-namespace MazadZone.Application.Features.Orders.EventHandlers;
+namespace MazadZone.Application.Features.Auctions.Commands.EndAuction.EventHandlers;
 
 using MediatR;
-using MazadZone.Domain.Orders.Events;
 using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Repositories;
-using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Auctions.Events;
 
-public sealed class IncrementAuctionsWonOnOrderCreated : INotificationHandler<OrderCreatedDomainEvent>
+public sealed class IncrementAuctionsWonOnOrderCreated : INotificationHandler<AuctionEndedDomainEvent>
 {
     private readonly IBidderRepository _bidderRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<IncrementAuctionsWonOnOrderCreated> _logger;
+    private readonly IAuctionRepository _auctionRepository;
 
     public IncrementAuctionsWonOnOrderCreated(
         IBidderRepository bidderRepository,
         IUnitOfWork unitOfWork,
-        ILogger<IncrementAuctionsWonOnOrderCreated> logger
+        ILogger<IncrementAuctionsWonOnOrderCreated> logger,
+        IAuctionRepository auctionRepository
     )
     {
         _bidderRepository = bidderRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _auctionRepository = auctionRepository;
     }
 
-    public async Task Handle(OrderCreatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(AuctionEndedDomainEvent notification, CancellationToken cancellationToken)
     {
+        var auction = await _auctionRepository.GetByIdWithBidsAsync(notification.AuctionId, cancellationToken);
+        if (auction is null) return;
+
+        var bidderId = auction.CurrentLeadingBid?.BidderId;
+        if (bidderId is null) return;
+
+
+
         _logger.LogInformation(
-            "Processing win metrics calculation for Buyer: {BuyerId} from Order: {OrderId}", 
-            notification.BidderId, 
-            notification.OrderId);
+            "Processing win metrics calculation for Bidder: {BidderId}", 
+            bidderId);
 
         // Fetch the profile aggregate tracking entity using the Buyer's UserId
-        var bidder = await _bidderRepository.GetByIdAsync(notification.BidderId, cancellationToken);
+        var bidder = await _bidderRepository.GetByIdAsync(bidderId.Value, cancellationToken);
 
         if (bidder is null)
         {
             _logger.LogWarning(
                 "Profile metrics aggregate not found for winning user: {BuyerId}. Analytics increment bypassed.", 
-                notification.BidderId);
+                bidderId);
             return;
         }
 
@@ -49,6 +58,6 @@ public sealed class IncrementAuctionsWonOnOrderCreated : INotificationHandler<Or
 
         _logger.LogInformation(
             "Successfully incremented AuctionsWon for User: {BuyerId}.", 
-            notification.BidderId);
+            bidderId);
     }
 }
