@@ -1,5 +1,6 @@
 using MazadZone.Domain.Categories;
 using MazadZone.Infrastructure.Persistence;
+using MazadZone.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
@@ -28,7 +29,7 @@ public sealed class CategoryRepository : GenericRepository<Category, CategoryId>
         return await _context.Set<Category>()
             .AnyAsync(c => 
                 // 1. Match the name (case-insensitive depends on DB collation)
-                c.Name.Value == name &&
+                c.Name == name &&
                 
                 // 2. Match the parent (Handles both null and specific IDs)
                 c.ParentCategoryId == parentId &&
@@ -39,8 +40,9 @@ public sealed class CategoryRepository : GenericRepository<Category, CategoryId>
                 ct);
     }
 
-    public Task<bool> IsNameUniqueAsync(string name, CategoryId? parentId, CancellationToken ct)
+    public async Task<Category?> GetByIdForRestoreAsync(CategoryId id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return await _context.Categories.IgnoreQueryFilters().FirstOrDefaultAsync(i => i.Id == id && i.IsDeleted, ct);
     }
+
 }

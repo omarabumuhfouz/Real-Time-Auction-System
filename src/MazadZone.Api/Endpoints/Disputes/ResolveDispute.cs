@@ -6,7 +6,7 @@ namespace MazadZone.Api.Endpoints.Disputes;
 
 public record ResolveDisputeRequest(string Resolution)
 {
-    public ResolveDisputeCommand ToCommand(OrderId orderId) => new(orderId, Resolution);
+    public ResolveDisputeCommand ToCommand(DisputeId disputeId) => new(disputeId, Resolution);
 }
 
 public static class ResolveDispute
@@ -28,7 +28,7 @@ public static class ResolveDispute
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute]OrderId id,
+        [FromRoute]DisputeId id,
         [FromBody] ResolveDisputeRequest request,
         [FromServices] ISender sender,
         CancellationToken ct)

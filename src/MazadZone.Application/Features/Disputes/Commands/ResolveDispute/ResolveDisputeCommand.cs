@@ -1,3 +1,3 @@
 namespace MazadZone.Application.Features.Orders.Commands.ResolveDispute;
 
-public record ResolveDisputeCommand(OrderId OrderId, string Resolution) : ICommand<Unit>;
+public record ResolveDisputeCommand(DisputeId DisputeId, string Resolution) : ICommand<Unit>;

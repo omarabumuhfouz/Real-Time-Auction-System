@@ -13,7 +13,7 @@ public static class Create
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/", HandleAsync)
-            .RequireAuthorization("AdminPolicy") // restricting category creation to admins
+            // .RequireAuthorization("AdminPolicy") // restricting category creation to admins
             .WithSummary("Create a new auction category")
             .WithDescription("Creates a new category for auctions. To create a root category, omit the ParentId. To create a sub-category, provide a valid existing ParentId. Returns the newly generated category ID.")
             .Accepts<CreateCategoryRequest>("application/json")

@@ -10,6 +10,7 @@ public class CreateOrderValidator : AbstractValidator<CreateOrderCommand>
         RuleFor(x => x.BidderId).MustBeValidUserId();
         RuleFor(x => x.WinningBidId).MustBeValidBidId();
         RuleFor(x => x.Amount).GreaterThan(0);
+        
 
 
         RuleFor(x => x.ReceiptAddress)

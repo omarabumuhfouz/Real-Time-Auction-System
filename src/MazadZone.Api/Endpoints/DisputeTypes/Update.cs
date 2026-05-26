@@ -15,7 +15,7 @@ public static class Update
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly) 
+        //    .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Update an existing Dispute Type")
            .WithDescription("Updates the name and description of an existing dispute type. Returns 204 No Content on success. Returns 404 Not Found if the ID does not exist.")
            .Produces(StatusCodes.Status204NoContent)

@@ -1,6 +1,5 @@
 using MazadZone.Domain.Common;
 using MazadZone.Domain.Sellers.Events;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Sellers;
 

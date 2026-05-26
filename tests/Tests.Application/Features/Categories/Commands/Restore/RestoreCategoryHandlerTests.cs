@@ -11,7 +11,7 @@ public class RestoreCategoryHandlerTests : CategoryBaseTest<RestoreCategoryComma
     {
         // Arrange
         var categoryId = CategoryId.New();
-        _categoryRepository.GetByIdAsync(categoryId, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdForRestoreAsync(categoryId, Arg.Any<CancellationToken>())
             .Returns((Category?)null);
 
         var command = new RestoreCategoryCommand(categoryId);
@@ -33,7 +33,7 @@ public class RestoreCategoryHandlerTests : CategoryBaseTest<RestoreCategoryComma
         category.Delete(); 
         category.IsDeleted.ShouldBeTrue(); // Sanity check
 
-        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdForRestoreAsync(category.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
         var command = new RestoreCategoryCommand(category.Id);

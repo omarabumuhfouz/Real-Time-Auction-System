@@ -1,17 +1,44 @@
+using Dapper;
+using MazadZone.Application.Common.Interfaces;
 using MazadZone.Features.DisputeTypes.Queries.GetAll;
-using MazadZone.Features.DisputeTypes.Queries.GetById;
+using Polly;
 
 namespace MazadZone.Infrastructure.Repositories.Queries;
 
-public class DisputeTypeQueries : IDisputeTypeQueries
+public class DisputeTypeQueries : ResilientRepository ,IDisputeTypeQueries
 {
-    public Task<IReadOnlyList<DisputeTypeDto>> GetAllAsync(CancellationToken ct)
+    public DisputeTypeQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy)
+        : base(sqlFactory, resiliencePolicy) { }
+
+    public async Task<IReadOnlyList<DisputeTypeDto>> GetAllAsync(CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var sql = @"
+        SELECT 
+            [Id],
+            [Name],
+            [Description],
+            [IsActive]
+        FROM [DisputeTypes]
+        WHERE IsActive=1
+        ";
+
+        return (await ExecuteResilientAsync(connection =>
+            connection.QueryAsync<DisputeTypeDto>(sql))).AsList();
     }
 
-    public Task<DisputeTypeResponse> GetByIdAsync(DisputeTypeId id, CancellationToken ct)
+    public async Task<DisputeTypeDto> GetByIdAsync(DisputeTypeId id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var sql = @"
+        SELECT 
+         [Id],
+         [Name],
+         [Description],
+         [IsActive]
+      FROM [DisputeTypes]
+      WHERE Id = @DisputeTypeId";
+
+        return await ExecuteResilientAsync(connection =>
+                  connection.QueryFirstOrDefaultAsync<DisputeTypeDto>(sql, new { DisputeTypeId = id.Value }));
+        
     }
 }

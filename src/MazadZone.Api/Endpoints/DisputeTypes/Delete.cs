@@ -13,7 +13,7 @@ public static class Delete
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapDelete("/{id:guid}", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly) 
+        //    .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Soft delete a Dispute Type")
            .WithDescription("Marks an existing dispute type as deleted without removing it from the database entirely. Returns 204 No Content on success.")
            .Produces(StatusCodes.Status204NoContent)

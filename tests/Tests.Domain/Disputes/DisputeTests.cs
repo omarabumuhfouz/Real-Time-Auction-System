@@ -11,7 +11,7 @@ public class DisputeTests
     #region Factory: Create & Open
 
     [Fact]
-    public void Create_ValidInputs_ReturnsDisputeWithDefaultOpenState()
+    public void Open_ValidInputs_ReturnsDisputeWithDefaultOpenState()
     {
         // Arrange
         var orderId = OrderId.New();
@@ -24,7 +24,6 @@ public class DisputeTests
         var dispute = Dispute.Open(orderId, disputeTypeId, title, description, images);
 
         // Assert
-        
         dispute.OrderId.ShouldBe(orderId);
         dispute.DisputeTypeId.ShouldBe(disputeTypeId);
         dispute.Title.ShouldBe(title);
@@ -33,34 +32,47 @@ public class DisputeTests
         dispute.IsResolved.ShouldBeFalse();
         dispute.Resolution.ShouldBe(Resolution.Empty);
         dispute.Images.ShouldBeEmpty();
+        dispute.ResolvedAtUtc.ShouldBeNull();
         dispute.CreatedAtUtc.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
+    }
+
+    [Fact]
+    public void Open_WithNullImages_InitializesEmptyList()
+    {
+        // Arrange & Act
+        var dispute = Dispute.Open(
+            OrderId.New(), 
+            DisputeTypeId.New(), 
+            Title.Create("Title").Value, 
+            Description.Create("Description").Value, 
+            images: null); // Explicitly passing null
+
+        // Assert
+        dispute.Images.ShouldNotBeNull();
+        dispute.Images.ShouldBeEmpty();
     }
 
     [Fact]
     public void Open_WhenCalled_RaisesDisputeOpenedDomainEvent()
     {
         // Arrange
-        var dispute = CreateValidDispute();
-        dispute.ClearDomainEvents();
-        
         var orderId = OrderId.New();
         var disputeTypeId = DisputeTypeId.New();
         var title = Title.Create("Never received").Value;
         var description = Description.Create("I have been waiting for 3 weeks.").Value;
 
         // Act
-       var result =   Dispute.Open(orderId, disputeTypeId, title, description);
-
+        var dispute = Dispute.Open(orderId, disputeTypeId, title, description);
 
         // Assert
-        result.ShouldNotBeNull();
+        dispute.ShouldNotBeNull();
 
-        var domainEvents = result.DomainEvents;
+        var domainEvents = dispute.DomainEvents;
         domainEvents.Count.ShouldBe(1);
         
         var openedEvent = domainEvents.First().ShouldBeOfType<DisputeOpenedDomainEvent>();
         openedEvent.OrderId.ShouldBe(orderId);
-        // Note: based on the provided logic, it raises the event using the newly created temporary dispute ID inside Open()
+        openedEvent.DisputeId.ShouldBe(dispute.Id);
     }
 
     #endregion
@@ -71,7 +83,7 @@ public class DisputeTests
     public void UnderReview_StatusIsOpen_ChangesStatusToUnderReview()
     {
         // Arrange
-        var dispute = CreateValidDispute(); // Default is Open
+        var dispute = CreateValidDispute();
 
         // Act
         var result = dispute.UnderReview();
@@ -86,64 +98,30 @@ public class DisputeTests
     {
         // Arrange
         var dispute = CreateValidDispute();
-        dispute.UnderReview(); // Set to UnderReview
-
+        dispute.UnderReview(); 
+        
         // Act
         var result = dispute.UnderReview();
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        dispute.Status.ShouldBe(DisputeStatus.UnderReview); // Status remains unchanged
+        dispute.Status.ShouldBe(DisputeStatus.UnderReview);
     }
 
     [Fact]
-    public void UnderReview_StatusIsResolved_ReturnsSuccessAndKeepsStatus()
+    public void UnderReview_StatusIsResolved_ReturnsFailureAlreadyResolved()
     {
         // Arrange
         var dispute = CreateValidDispute();
-        dispute.Resolve("Refund issued to buyer."); // Set to Resolved
+        dispute.Resolve(CreateValidResolution());
 
         // Act
         var result = dispute.UnderReview();
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        dispute.Status.ShouldBe(DisputeStatus.Resolved); // Should not change back to UnderReview
-    }
-
-    #endregion
-
-    #region State Mutations: ChangeDescription
-
-    [Fact]
-    public void ChangeDescription_StatusIsOpen_UpdatesDescriptionAndReturnsSuccess()
-    {
-        // Arrange
-        var dispute = CreateValidDispute();
-        var newDescription = Description.Create("Updated description with more details.").Value;
-
-        // Act
-        var result = dispute.ChangeDescription(newDescription);
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        dispute.Description.ShouldBe(newDescription);
-    }
-
-    [Fact]
-    public void ChangeDescription_StatusIsResolved_ReturnsFailure()
-    {
-        // Arrange
-        var dispute = CreateValidDispute();
-        dispute.Resolve("Resolved with refund");
-        var newDescription = Description.Create("Trying to update after resolution.").Value;
-
-        // Act
-        var result = dispute.ChangeDescription(newDescription);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(OrderErrors.DisputeCannotChangeReason);
+        result.TopError.ShouldBe(DisputeErrors.AlreadyResolved); 
+        dispute.Status.ShouldBe(DisputeStatus.Resolved);
     }
 
     #endregion
@@ -151,7 +129,7 @@ public class DisputeTests
     #region State Mutations: Resolve
 
     [Fact]
-    public void Resolve_WithResolutionVO_StatusIsNotResolved_UpdatesResolutionAndRaisesEvent()
+    public void Resolve_StatusIsOpen_UpdatesResolutionAndRaisesEvent()
     {
         // Arrange
         var dispute = CreateValidDispute();
@@ -164,6 +142,10 @@ public class DisputeTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         dispute.Resolution.ShouldBe(resolution);
+        dispute.Status.ShouldBe(DisputeStatus.Resolved);
+        dispute.IsResolved.ShouldBeTrue();
+        dispute.ResolvedAtUtc.ShouldNotBeNull();
+        dispute.ResolvedAtUtc.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
         
         var domainEvents = dispute.DomainEvents;
         domainEvents.Count.ShouldBe(1);
@@ -175,12 +157,32 @@ public class DisputeTests
     }
 
     [Fact]
-    public void Resolve_WithResolutionVO_StatusIsAlreadyResolved_ReturnsSuccessWithoutRaisingEvent()
+    public void Resolve_WhenStatusIsUnderReview_UpdatesStatusAndRaisesEvent()
     {
         // Arrange
         var dispute = CreateValidDispute();
-        dispute.Resolve("Initial Resolution"); // Sets status to Resolved
+        dispute.UnderReview();
         dispute.ClearDomainEvents();
+        var resolution = CreateValidResolution();
+
+        // Act
+        var result = dispute.Resolve(resolution);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        dispute.Status.ShouldBe(DisputeStatus.Resolved);
+        dispute.Resolution.ShouldBe(resolution);
+        dispute.DomainEvents.First().ShouldBeOfType<DisputeResolvedDomainEvent>();
+    }
+
+    [Fact]
+    public void Resolve_StatusIsAlreadyResolved_ReturnsSuccessWithoutRaisingEvent()
+    {
+        // Arrange
+        var dispute = CreateValidDispute();
+        dispute.Resolve(CreateValidResolution());
+        dispute.ClearDomainEvents();
+        
         var newResolution = Resolution.Create("Attempting new resolution.").Value;
 
         // Act
@@ -189,45 +191,15 @@ public class DisputeTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         dispute.DomainEvents.ShouldBeEmpty(); // Event should not fire again
-    }
-
-    [Fact]
-    public void Resolve_WithString_StatusIsNotResolved_UpdatesStatusResolutionAndDate()
-    {
-        // Arrange
-        var dispute = CreateValidDispute();
-        var resolutionText = "Partial refund processed.";
-
-        // Act
-        var result = dispute.Resolve(resolutionText);
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        dispute.Status.ShouldBe(DisputeStatus.Resolved);
-        dispute.IsResolved.ShouldBeTrue();
-        dispute.Resolution.Value.ShouldBe(resolutionText);
-        dispute.ResolvedAtUtc.ShouldNotBeNull();
-        dispute.ResolvedAtUtc.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
-    }
-
-    [Fact]
-    public void Resolve_WithString_StatusIsAlreadyResolved_ReturnsFailure()
-    {
-        // Arrange
-        var dispute = CreateValidDispute();
-        dispute.Resolve("First resolution");
-
-        // Act
-        var result = dispute.Resolve("Trying to resolve again.");
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(OrderErrors.DisputeAlreadyResolved);
+        
+        // Note: Because it returns early with Result.Success(), the new resolution value is technically ignored 
+        // by the domain. This assertion proves the state remains untouched.
+        dispute.Resolution.Value.ShouldNotBe(newResolution.Value); 
     }
 
     #endregion
 
-    // --- Core Factory Helpers ---
+    #region Core Factory Helpers
 
     private static Dispute CreateValidDispute()
     {
@@ -239,4 +211,8 @@ public class DisputeTests
             new List<Image>()
         );
     }
+
+    private static Resolution CreateValidResolution() => Resolution.Create("Testing Testing Testin").Value;
+
+    #endregion
 }

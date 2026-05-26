@@ -15,6 +15,7 @@ public static class CategoryEndpoints
                                .WithTags("Category Management");
 
         // Registered Queries
+        GetTrendingWithAuctionCounts.MapEndpoint(categoryGroup);
         GetRoots.MapEndpoint(categoryGroup);       
         GetById.MapEndpoint(categoryGroup);
         GetTree.MapEndpoint(categoryGroup);
@@ -32,8 +33,5 @@ public static class CategoryEndpoints
         AddSubCategory.MapEndpoint(categoryGroup);
         MoveToParent.MapEndpoint(categoryGroup);
         MakeRoot.MapEndpoint(categoryGroup);
-        
-        // The new sub-category link
-        AddSubCategory.MapEndpoint(categoryGroup); 
     }
 }
