@@ -6,8 +6,10 @@ import {
   createAddress,
   updateAddress,
   removeAddress,
+  changePassword,
 } from "./profile.api";
 import type { UserProfile, Address } from "../types/profile.types";
+import type { ChangePasswordRequest } from "./profile.contracts";
 
 export const profileKeys = {
   all: ["profile"] as const,
@@ -88,5 +90,14 @@ export function useDeleteAddress() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: profileKeys.addresses() });
     },
+  });
+}
+
+/**
+ * Mutation to change user password.
+ */
+export function useChangePassword() {
+  return useMutation<void, Error, ChangePasswordRequest>({
+    mutationFn: changePassword,
   });
 }

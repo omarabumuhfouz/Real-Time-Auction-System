@@ -1,5 +1,6 @@
 export { ProfileSettingsPage } from "./components/ProfileSettingsPage";
-export { useGetProfile, useUpdateProfile, useGetAddresses, useCreateAddress } from "./api/profile.queries";
+export { ChangePasswordForm } from "./components/ChangePasswordForm";
+export { useGetProfile, useUpdateProfile, useGetAddresses, useCreateAddress, useChangePassword } from "./api";
 export type { UserProfile, Address, UpdateProfileInput } from "./types/profile.types";
 export { AddressDialog } from "./components/AddressDialog";
 export { AddressSelectStep } from "./components/AddressSelectStep";
