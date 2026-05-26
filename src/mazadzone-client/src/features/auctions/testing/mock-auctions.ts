@@ -38,9 +38,9 @@ const MOCK_BIDDERS = [
 ];
 
 const MOCK_SELLERS: Seller[] = [
-  { id: "seller-123", fullName: "Ahmad Al-Rashid", email: "ahmad@mazadzone.com", role: "seller", isVerified: true, avatarInitial: "A", reviews: 277, rating: 4.6 },
-  { id: "seller-456", fullName: "Fatima Mansour", email: "fatima@mazadzone.com", role: "seller", isVerified: true, avatarInitial: "F", reviews: 142, rating: 4.8 },
-  { id: "seller-789", fullName: "Yousef Hassan", email: "yousef@mazadzone.com", role: "seller", isVerified: false, avatarInitial: "Y", reviews: 89, rating: 4.2 },
+  { id: "019e65d2-a218-7698-ad77-288ba6c1382a", fullName: "Ahmad Al-Rashid", email: "ahmad@mazadzone.com", role: "seller", isVerified: true, avatarInitial: "A", reviews: 277, rating: 4.6 },
+  { id: "019e65d2-a218-7698-ad77-288ba6c1382b", fullName: "Fatima Mansour", email: "fatima@mazadzone.com", role: "seller", isVerified: true, avatarInitial: "F", reviews: 142, rating: 4.8 },
+  { id: "019e65d2-a218-7698-ad77-288ba6c1382c", fullName: "Yousef Hassan", email: "yousef@mazadzone.com", role: "seller", isVerified: false, avatarInitial: "Y", reviews: 89, rating: 4.2 },
 ];
 
 const TIME_AGO_LABELS = [
@@ -316,14 +316,21 @@ function generateBidHistory(
   const count = Math.min(bidCount, 15);
   const increment = startingPrice < 100 ? 5 : startingPrice < 1000 ? 50 : startingPrice < 10000 ? 100 : 500;
 
-  return Array.from({ length: count }, (_, i) => ({
-    id: `auction-${auctionIndex}-bid-${i}`,
-    bidderName:    MOCK_BIDDERS[(auctionIndex + i) % MOCK_BIDDERS.length].name,
-    bidderInitial: MOCK_BIDDERS[(auctionIndex + i) % MOCK_BIDDERS.length].initial,
-    amount: currentBid - i * increment,
-    timeAgo: TIME_AGO_LABELS[i] ?? `${i * 5} mins ago`,
-    isHighest: i === 0,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    const bidderIndex = (auctionIndex + i) % MOCK_BIDDERS.length;
+    // Generate a valid, deterministic bidder GUID based on index to keep links happy
+    const bidderGuid = `019e65d2-a218-7698-ad77-288ba6c1${String(bidderIndex).padStart(4, "0")}`;
+
+    return {
+      id: `auction-${auctionIndex}-bid-${i}`,
+      bidderName:    MOCK_BIDDERS[bidderIndex].name,
+      bidderInitial: MOCK_BIDDERS[bidderIndex].initial,
+      amount: currentBid - i * increment,
+      timeAgo: TIME_AGO_LABELS[i] ?? `${i * 5} mins ago`,
+      isHighest: i === 0,
+      bidderId: bidderGuid,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -432,6 +439,8 @@ export function createMockAuctions(count: number = 100): AuctionSummary[] {
       subcategory,
       condition,
       status,
+      description: `This exceptional ${generateTitle(category)} represents the pinnacle of craftsmanship. Featuring premium-grade materials, meticulously hand-finished details, and a design that seamlessly blends timeless elegance with modern sensibility. All original accessories and documentation are included.`,
+      conditionDescription: `The item is in ${condition.toLowerCase()} condition with minimal signs of wear. All functional components have been tested and verified to be working perfectly.`,
       pricing: {
         startingPrice: roundedStartingPrice,
         currentBid,
