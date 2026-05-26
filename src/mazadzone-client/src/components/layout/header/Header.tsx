@@ -20,16 +20,11 @@ export function Header() {
   const pathname = usePathname();
 
   // Auth state
-  const { user, logout } = useAuthStore();
-  let { isAuthenticated } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
+  const role = user?.role;
 
   // Listen for real-time notifications
   useRealtimeNotifications(user?.id);
-
-  // NOTE: Hardcoded for testing by user.
-  // In production, this should use user?.role and isAuthenticated from the store.
-  isAuthenticated = true;
-  const role = "seller";
 
 
   // States
@@ -53,11 +48,16 @@ export function Header() {
 
   const handleSellClick = () => {
     setIsMobileMenuOpen(false);
+    
     if (!isAuthenticated) {
       router.push(ROUTES.AUTH.LOGIN);
-    } else if (role === "seller") {
+      return;
+    }
+
+    if (role === "seller") {
       router.push(ROUTES.SELLER.CREATE_AUCTION);
     } else {
+      // If user is a bidder or any other role, navigate them to become a seller
       router.push(ROUTES.SELLER.BECOME);
     }
   };
@@ -67,7 +67,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-dark text-white shadow-md md:h-40 h-auto">
       {/* Top Row Container */}
-      <div className="mx-auto flex h-16 max-w-[1408px] items-center border-b border-white/10 relative md:mt-4 md:pb-4.5 px-4 md:px-0">
+      <div className="mx-auto flex h-16 max-w-[1408px] items-center justify-between border-b border-white/10 relative md:mt-4 md:pb-4.5 px-4 md:px-0">
 
         {/* Logo (Shared) */}
         <Link href={ROUTES.HOME} className="text-3xl font-bold tracking-tight flex items-center shrink-0">

@@ -5,10 +5,7 @@ export const creditCardSchema = z.object({
     .string()
     .min(12, "Card number is required")
     .regex(/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/, "Card number must be 16 digits (e.g. 4242 4242 4242 4242)"),
-  cardholderName: z
-    .string()
-    .min(10, "Cardholder name must be at least 10 characters")
-    .regex(/^[a-zA-Z\s]+$/, "Cardholder name can only contain letters and spaces"),
+
   expiryDate: z
     .string()
     .min(1, "Expiry date is required")

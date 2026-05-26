@@ -34,8 +34,8 @@ export function MyOrdersPage() {
 
   // Retrieve auth context dynamically
   const user = useAuthStore((state) => state.user);
-  const isAuthenticated = true; // Hardcoded for testing
-  const userId = user?.id || "mock-user-123";
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userId = user?.id || "";
 
   // Real authentication redirect
   useEffect(() => {

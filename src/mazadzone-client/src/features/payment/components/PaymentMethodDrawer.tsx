@@ -72,7 +72,7 @@ export function PaymentMethodDrawer({
           cardType: cardBrand,
           expiryDate: data.expiryDate,
           cvv: data.cvv,
-          cardholderName: data.cardholderName,
+          cardholderName: "",
         });
       } else if (mode === "payment" && onSaveCard) {
         onSaveCard({
@@ -80,7 +80,7 @@ export function PaymentMethodDrawer({
           cardType: cardBrand,
           lastFourDigits: lastFour,
           expiryDate: data.expiryDate,
-          cardholderName: data.cardholderName,
+          cardholderName: "",
           isDefault: true,
         });
       }
@@ -164,7 +164,6 @@ export function PaymentMethodDrawer({
               onSave={handleFormSave}
               onCancel={onClose}
               isSubmitting={isSubmitting}
-              defaultCardholderName={deliveryAddress?.fullName || ""}
               mode={mode}
               authorizationAmount={amount}
               submitButtonText={isPayoutMode ? "Save Payout Method" : "Save & Authorize Payment"}

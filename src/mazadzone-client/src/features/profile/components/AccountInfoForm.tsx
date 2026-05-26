@@ -37,7 +37,6 @@ export function AccountInfoForm({ profile }: AccountInfoFormProps) {
       fullName: profile.fullName,
       email: profile.email,
       phoneNumber: profile.phoneNumber ?? "",
-      dateOfBirth: profile.dateOfBirth ?? "",
     },
   });
 
@@ -47,7 +46,6 @@ export function AccountInfoForm({ profile }: AccountInfoFormProps) {
       fullName: profile.fullName,
       email: profile.email,
       phoneNumber: profile.phoneNumber ?? "",
-      dateOfBirth: profile.dateOfBirth ?? "",
     });
     setAvatarUrl(profile.avatarUrl ?? "");
     setAvatarInitial(profile.avatarInitial ?? "A");

@@ -922,6 +922,9 @@ namespace MazadZone.Infrastructure.Migrations
                                 .HasMaxLength(255)
                                 .HasColumnType("nvarchar(255)");
 
+                            b1.Property<bool>("IsMain")
+                                .HasColumnType("bit");
+
                             b1.Property<Guid>("ItemId")
                                 .HasColumnType("uniqueidentifier");
 
@@ -930,9 +933,6 @@ namespace MazadZone.Infrastructure.Migrations
                                 .HasMaxLength(2048)
                                 .HasColumnType("nvarchar(2048)")
                                 .HasColumnName("ImageUrl");
-
-                            b1.Property<bool>("isMain")
-                                .HasColumnType("bit");
 
                             b1.HasKey("Id");
 
@@ -991,13 +991,13 @@ namespace MazadZone.Infrastructure.Migrations
                             b1.Property<Guid>("DisputeId")
                                 .HasColumnType("uniqueidentifier");
 
+                            b1.Property<bool>("IsMain")
+                                .HasColumnType("bit");
+
                             b1.Property<string>("Path")
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)")
                                 .HasColumnName("ImageUrl");
-
-                            b1.Property<bool>("isMain")
-                                .HasColumnType("bit");
 
                             b1.HasKey("Id");
 

@@ -1,24 +1,15 @@
 import { api } from "@/lib/api/client";
 import type { CreateDisputeInput, Dispute } from "../types/disputes.types";
 
-const simulateDelay = (ms: number = 300) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
-const mockDisputes: Dispute[] = [];
-
 /**
- * Files a new dispute for a given order.
+ * Files a new dispute for a given order on the ASP.NET Core backend.
  */
 export async function fileDispute(input: CreateDisputeInput): Promise<Dispute> {
-  await simulateDelay(400);
+  await api.post(`/api/v1/orders/${input.orderId}/dispute`, {
+    reason: `${input.title}\n\n${input.description}`,
+  });
 
-  /*
-  // --- REAL API CALL (Uncomment when backend is ready) ---
-  const response = await api.post<Dispute>("/disputes", input);
-  return response.data;
-  */
-
-  const newDispute: Dispute = {
+  return {
     id: `disp-${Math.random().toString(36).substring(2, 11)}`,
     orderId: input.orderId,
     title: input.title,
@@ -27,7 +18,4 @@ export async function fileDispute(input: CreateDisputeInput): Promise<Dispute> {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-
-  mockDisputes.push(newDispute);
-  return newDispute;
 }

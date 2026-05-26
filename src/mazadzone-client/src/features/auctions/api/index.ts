@@ -12,20 +12,30 @@ export {
 } from "./auction.queries";
 
 // Mutations
-export { useCreateAuction, useUpdateAuction, useDeleteAuction } from "./auction.mutations";
-
-// Raw fetch functions (for non-hook usage or prefetching)
 export {
-  fetchActiveAuctions,
-  fetchAuctionById,
-  fetchAuctionsByCategory,
-  fetchClosingSoonAuctions,
-  fetchUpcomingAuctions,
-  fetchSellerAuctions,
-} from "./auctions-query.api";
+  useCreateAuction,
+  useUpdateAuction,
+  useDeleteAuction,
+  useActivateAuction,
+  useEndAuction,
+  useCancelAuction,
+} from "./auction.mutations";
 
+// Pure REST API methods
 export {
-  createAuctionApi,
-  updateAuctionApi,
-  deleteAuctionApi,
-} from "./auctions-mutation.api";
+  getAuctions,
+  getAuctionById,
+  getSimilarAuctions,
+  createAuction,
+  activateAuction,
+  endAuction,
+  cancelAuction,
+} from "./auction.api";
+
+// Pure Mappers
+export {
+  mapFiltersToQueryParams,
+  mapAuctionsListDtoToSummary,
+  mapAuctionDtoToSummary,
+  mapCreateAuctionInputToRequest,
+} from "./auction.mappers";
