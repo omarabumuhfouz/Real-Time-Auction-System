@@ -8,7 +8,12 @@ export const registerSchema = z
   .object({
     fullName: z.string().min(20, "Full Name must be at least 20 characters"),
     email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .refine((val) => /[A-Z]/.test(val), "Password must include at least one uppercase letter")
+      .refine((val) => /[a-z]/.test(val), "Password must include at least one lowercase letter")
+      .refine((val) => /[^a-zA-Z0-9]/.test(val), "Password must include at least one special character"),
     confirmPassword: z.string().min(8, "Please confirm your password"),
     phoneNumber: z.string().min(10, "Please enter a valid phone number"),
     address: z.string().min(5, "Please enter your full address"),

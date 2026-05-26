@@ -34,15 +34,15 @@ public async Task Handle_Should_ReturnNestedTree_WhenDataIsPresent()
         childId, 
         "Laptops", 
         "Laptops Description", 
-        parentId, // Added ParentId
-        new List<CategoryTreeResponse>());
+        parentId);
 
-    var electronicsNode = new CategoryTreeResponse(
-        parentId, 
-        "Electronics", 
-        "Electronics Description", 
-        null, // Root has no parent
-        new List<CategoryTreeResponse> { laptopNode });
+        var electronicsNode = new CategoryTreeResponse(
+            parentId,
+            "Electronics",
+            "Electronics Description",
+            null)
+            with
+        { Children = new List<CategoryTreeResponse> { laptopNode } };
 
     var tree = new List<CategoryTreeResponse> { electronicsNode };
 

@@ -95,6 +95,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasField("_hashedRefreshTokens")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        
+        builder.HasMany(u => u.PaymentMethods)
+            .WithOne()
+            .HasForeignKey(pm => pm.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(u => u.PaymentMethods)
+            .HasField("_paymentMethods")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Property<byte[]>("RowVersion")
+            .IsRowVersion();
     }
 }

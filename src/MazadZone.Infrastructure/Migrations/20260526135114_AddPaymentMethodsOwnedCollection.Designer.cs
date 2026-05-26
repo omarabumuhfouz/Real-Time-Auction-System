@@ -5,6 +5,7 @@ using MazadZone.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MazadZone.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260526135114_AddPaymentMethodsOwnedCollection")]
+    partial class AddPaymentMethodsOwnedCollection
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,26 +76,22 @@ namespace MazadZone.Infrastructure.Migrations
                             b1.Property<string>("Building")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Building");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("City");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("Landmark")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Landmark");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
                                 .HasMaxLength(150)
-                                .HasColumnType("nvarchar(150)")
-                                .HasColumnName("Street");
+                                .HasColumnType("nvarchar(150)");
                         });
 
                     b.ComplexProperty<Dictionary<string, object>>("StartBidAmount", "MazadZone.Domain.Auctions.Auction.StartBidAmount#Money", b1 =>
@@ -273,26 +272,22 @@ namespace MazadZone.Infrastructure.Migrations
                             b1.Property<string>("Building")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Building");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("City");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("Landmark")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Landmark");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
                                 .HasMaxLength(150)
-                                .HasColumnType("nvarchar(150)")
-                                .HasColumnName("Street");
+                                .HasColumnType("nvarchar(150)");
                         });
 
                     b.HasKey("Id");
@@ -446,6 +441,9 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("datetime2");
 
@@ -530,26 +528,22 @@ namespace MazadZone.Infrastructure.Migrations
                             b1.Property<string>("Building")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Building");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("City");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("Landmark")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Landmark");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
                                 .HasMaxLength(150)
-                                .HasColumnType("nvarchar(150)")
-                                .HasColumnName("Street");
+                                .HasColumnType("nvarchar(150)");
                         });
 
                     b.HasKey("Id");

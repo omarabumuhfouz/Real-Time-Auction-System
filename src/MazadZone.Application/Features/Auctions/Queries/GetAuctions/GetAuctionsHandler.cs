@@ -26,7 +26,9 @@ public class GetAuctionsHandler
             CurrentBidAmount = query.CurrentBidAmount,
             Status = query.Status,
             SortBy = query.SortBy,
-            SortDirection = query.SortDirection
+            SortDirection = query.SortDirection,
+            ItemStatus = query.ItemStatus,
+            Condition = query.Condition
         };
 
         var auctions = await _auctionQueries.SearchAuctionsAsync(queryParameters, ct);

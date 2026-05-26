@@ -21,10 +21,12 @@ public static class UserEndpoints
         Ban.MapEndpoint(userGroup);
         Suspend.MapEndpoint(userGroup);
         GetProfileSettings.MapEndpoint(userGroup);
+        CreateAdmin.MapEndpoint(userGroup);
+        AddPaymentMethod.MapEndpoint(userGroup);
+
 
         // Map Auth Actions
         ChangePassword.MapEndpoint(userGroup);
         ChangeEmail.MapEndpoint(userGroup);
-        CreateAdmin.MapEndpoint(userGroup);
     }
 }
