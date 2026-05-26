@@ -26,6 +26,8 @@ TestResults/
 *.trx
 
 # --- Log Files ---
-*.logsrc/MazadZone.Api/logs/
+src/MazadZone.Api/logs/*.json
+src/MazadZone.Api/logs/*.log
 
 backend-contract-issues.md
+src/MazadZone.Api/logs/log-*.json
