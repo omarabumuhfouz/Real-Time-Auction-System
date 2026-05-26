@@ -51,3 +51,23 @@ export function formatCountdown(totalSeconds: number): string {
   }
   return `${pad(minutes)}:${pad(seconds)}`;
 }
+
+/**
+ * Safely parses an API date string as UTC if it doesn't specify a timezone offset.
+ * Prevents local timezone distortion of server UTC timestamps.
+ */
+export function parseUtcDate(dateStr: string | Date): Date {
+  if (dateStr instanceof Date) return dateStr;
+  if (!dateStr) return new Date();
+  
+  // If the date string doesn't specify a timezone, append 'Z' to force UTC parsing
+  if (
+    typeof dateStr === "string" &&
+    !dateStr.includes("Z") &&
+    !dateStr.includes("+") &&
+    !/-\d{2}:\d{2}$/.test(dateStr)
+  ) {
+    return new Date(`${dateStr}Z`);
+  }
+  return new Date(dateStr);
+}
