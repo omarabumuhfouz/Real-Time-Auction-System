@@ -13,9 +13,8 @@ export const registerSchema = z
     phoneNumber: z.string().min(10, "Please enter a valid phone number"),
     address: z.string().min(5, "Please enter your full address"),
     nationalId: z.string().min(10, "Please enter a valid national ID"),
-    // Since we're handling files, we just check if it exists in the form state
-    // The actual File object is managed in the component state or via Controller
-    nationalCardFile: z.any().refine((val) => val != null, "National Card upload is required"),
+    // The national card image is optional
+    nationalCardFile: z.any().optional(),
     agreeToTerms: z.boolean().refine((val) => val === true, "You must agree to the Terms and Privacy Policy"),
   })
   .refine((data) => data.password === data.confirmPassword, {

@@ -12,7 +12,7 @@ public static class GetById
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/{id:guid}", HandleAsync)
-           .RequireAuthorization()
+        //    .RequireAuthorization()
            .WithSummary("Get a Dispute Type by ID")
            .WithDescription("Retrieves the detailed configuration of a specific dispute type by its unique identifier.")
            .Produces<DisputeTypeResponse>(StatusCodes.Status200OK)

@@ -1,6 +1,5 @@
 using MazadZone.Domain.Disputes;
-using MazadZone.Domain.Orders; // Adjust if you placed it in MazadZone.Domain.Support
-using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.Orders; 
 using MazadZone.Infrastructure.Common.Constants;
 using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
@@ -36,8 +35,6 @@ public class DisputeTypeConfiguration : IEntityTypeConfiguration<DisputeType>
         builder.Property(t => t.IsActive)
                .IsRequired();
 
-        builder.Property(t => t.IsDeleted)
-               .IsRequired();
 
         builder.Property(t => t.DeletedOnUtc)
                .IsRequired(false);
@@ -54,10 +51,8 @@ public class DisputeTypeConfiguration : IEntityTypeConfiguration<DisputeType>
               .IsRequired()
               .OnDelete(DeleteBehavior.Cascade);
 
-              
-
         // 5. Global Query Filter for Soft Delete
         // This ensures queries like _context.DisputeTypes.ToList() will automatically exclude deleted items.
-        builder.HasQueryFilter(t => !t.IsDeleted);
+       //  builder.HasQueryFilter(t => !t.IsActive);
     }
 }

@@ -1,9 +1,10 @@
 using MazadZone.Domain.Disputes;
+using MazadZone.Features.DisputeTypes.Queries.GetAll;
 
 namespace MazadZone.Features.DisputeTypes.Queries.GetById;
 
 
-internal sealed class GetDisputeTypeByIdQueryHandler : IQueryHandler<GetDisputeTypeByIdQuery, DisputeTypeResponse>
+internal sealed class GetDisputeTypeByIdQueryHandler : IQueryHandler<GetDisputeTypeByIdQuery, DisputeTypeDto>
 {
     private readonly IDisputeTypeQueries _repository;
     private readonly ILogger<GetDisputeTypeByIdQueryHandler> _logger;
@@ -14,7 +15,7 @@ internal sealed class GetDisputeTypeByIdQueryHandler : IQueryHandler<GetDisputeT
         _logger = logger;
     }
 
-    public async Task<Result<DisputeTypeResponse>> Handle(GetDisputeTypeByIdQuery request, CancellationToken ct)
+    public async Task<Result<DisputeTypeDto>> Handle(GetDisputeTypeByIdQuery request, CancellationToken ct)
     {
         var disputeType = await _repository.GetByIdAsync(request.DisputeTypeId, ct);
         if (disputeType is null)

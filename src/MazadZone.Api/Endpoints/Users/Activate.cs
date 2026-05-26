@@ -1,5 +1,4 @@
 using MazadZone.Application.Features.Users.Commands.Activate;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Users;
 

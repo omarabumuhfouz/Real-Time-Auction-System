@@ -4,7 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
   type AxiosRequestConfig,
 } from "axios";
-import type { ApiError, ApiResponse } from "@/types/api.types";
+import type { ApiError, ApiResponse, HttpValidationProblemDetails } from "@/types/api.types";
 import { env } from "@/config/env";
 
 // --- Create Axios Instance --------------------------------------
@@ -32,7 +32,13 @@ apiClient.interceptors.request.use(
 
     const token = useAuthStore.getState().accessToken;
 
-    if (token && config.headers) {
+    // Do not include authorization header for register or login endpoints to prevent preflight CORS issues
+    const isExcluded =
+      config.url &&
+      (config.url.endsWith("/api/v1/bidders/register") ||
+        config.url.endsWith("/api/v1/auth/login"));
+
+    if (token && config.headers && !isExcluded) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -46,14 +52,16 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string; errors?: Record<string, string[]> }>) => {
+  (error: AxiosError<HttpValidationProblemDetails>) => {
+    const data = error.response?.data;
     const apiError: ApiError = {
       message:
-        error.response?.data?.message ??
+        data?.detail ??
+        data?.title ??
         error.message ??
         "An unexpected error occurred",
       statusCode: error.response?.status ?? 500,
-      errors: error.response?.data?.errors,
+      errors: data?.errors,
       ...(process.env.NODE_ENV === "development" && {
         originalError: error,
       }),
@@ -71,20 +79,45 @@ apiClient.interceptors.response.use(
 // --- Typed Helper Methods ---------------------------------------
 
 export const api = {
-  get: <T>(url: string, config?: AxiosRequestConfig) =>
-    apiClient.get<ApiResponse<T>>(url, config).then((r) => r.data),
+  get: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
+    apiClient.get<T>(url, config).then((r) => ({
+      data: r.data,
+      success: true,
+      message: "",
+      timestamp: new Date().toISOString(),
+    })),
 
-  post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
-    apiClient.post<ApiResponse<T>>(url, data, config).then((r) => r.data),
+  post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
+    apiClient.post<T>(url, data, config).then((r) => ({
+      data: r.data,
+      success: true,
+      message: "",
+      timestamp: new Date().toISOString(),
+    })),
 
-  put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
-    apiClient.put<ApiResponse<T>>(url, data, config).then((r) => r.data),
+  put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
+    apiClient.put<T>(url, data, config).then((r) => ({
+      data: r.data,
+      success: true,
+      message: "",
+      timestamp: new Date().toISOString(),
+    })),
 
-  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
-    apiClient.patch<ApiResponse<T>>(url, data, config).then((r) => r.data),
+  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
+    apiClient.patch<T>(url, data, config).then((r) => ({
+      data: r.data,
+      success: true,
+      message: "",
+      timestamp: new Date().toISOString(),
+    })),
 
-  delete: <T>(url: string, config?: AxiosRequestConfig) =>
-    apiClient.delete<ApiResponse<T>>(url, config).then((r) => r.data),
+  delete: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
+    apiClient.delete<T>(url, config).then((r) => ({
+      data: r.data,
+      success: true,
+      message: "",
+      timestamp: new Date().toISOString(),
+    })),
 };
 
 export { apiClient };

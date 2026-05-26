@@ -10,7 +10,6 @@ public static class DisputeErrors
         "Dispute.NotFound",
         "The dispute was not found."
     );
-
 }
 
 public static class DisputeErrorCodes

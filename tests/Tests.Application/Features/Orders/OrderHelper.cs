@@ -173,7 +173,7 @@ public static Order CreateOrderWithFeedback()
     }
 
     public static ResolveDisputeCommand CreateResolveDisputeCommand()
-        => new ResolveDisputeCommand(OrderId.New(), "Resolve Reason Testing.");
+        => new ResolveDisputeCommand(DisputeId.New(), "Resolve Reason Testing.");
 
 
     public static ShipOrderCommand CreateShipOrderCommand()

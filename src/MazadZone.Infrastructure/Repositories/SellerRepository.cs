@@ -27,6 +27,12 @@ public class SellerRepository : GenericRepository<Seller, UserId>, ISellerReposi
 
     public Task<Seller?> GetByOrderIdAsync(OrderId orderId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var query = from order in _context.Orders
+                    where order.Id == orderId
+                    join auction in _context.Auctions on order.AuctionId equals auction.Id
+                    join seller in _context.Sellers on auction.SellerId equals seller.Id
+                    select seller;
+
+        return query.FirstOrDefaultAsync(ct);
     }
 }

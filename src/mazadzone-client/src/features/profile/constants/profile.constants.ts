@@ -29,14 +29,7 @@ export const getAccountInfoFields = (
     name: "phoneNumber",
     disabled: isPending,
   },
-  {
-    id: "profileDob",
-    label: "Date of Birth",
-    placeholder: profile.dateOfBirth || "YYYY-MM-DD",
-    type: "date",
-    name: "dateOfBirth",
-    disabled: isPending,
-  },
+
   {
     id: "profileNationalId",
     label: "National ID",

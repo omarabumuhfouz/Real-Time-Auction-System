@@ -45,7 +45,7 @@ export function CreateAuctionPage() {
   const { isAuthorized, isLoading: isAuthLoading } = useRequireRole(["seller"], {
     loginMessage: "Please log in to create a new auction listing.",
     unauthorizedMessage: "You must activate your seller privileges to list new auctions.",
-    bypassTesting: true, // Keep bypass testing for local development/testing
+    bypassTesting: false, // Keep bypass testing for local development/testing
   });
 
   // Image preview state tracking

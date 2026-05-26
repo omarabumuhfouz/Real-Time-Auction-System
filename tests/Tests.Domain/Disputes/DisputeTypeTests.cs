@@ -1,9 +1,8 @@
-using MazadZone.Domain.Orders; // Adjust namespace if actually MazadZone.Domain.Support
-using MazadZone.Domain.Primitives;
+using MazadZone.Domain.Orders; // Adjust namespace if it is MazadZone.Domain.Support
 using MazadZone.Domain.Shared.ValueObjects;
 using Shouldly;
 
-namespace Tests.Domain.Orders; // Adjust namespace as needed
+namespace Tests.Domain.Orders;
 
 public class DisputeTypeTests
 {
@@ -27,8 +26,7 @@ public class DisputeTypeTests
         disputeType.Description.Value.ShouldBe(descriptionText);
         
         // Check default states
-        disputeType.IsActive.ShouldBeTrue();
-        disputeType.IsDeleted.ShouldBeFalse();
+        disputeType.IsActive.ShouldBeTrue(); // Replaced IsDeleted check
         disputeType.DeletedOnUtc.ShouldBeNull();
     }
 
@@ -46,7 +44,6 @@ public class DisputeTypeTests
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        // Assuming Name.Create fails on empty/null strings and returns a specific error
         result.TopError.ShouldNotBeNull(); 
     }
 
@@ -64,7 +61,6 @@ public class DisputeTypeTests
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        // Assuming Description.Create fails on empty/null strings and returns a specific error
         result.TopError.ShouldNotBeNull(); 
     }
 
@@ -93,7 +89,7 @@ public class DisputeTypeTests
     #region State Mutations: Delete & Restore (Soft Deletable)
 
     [Fact]
-    public void Delete_WhenNotDeleted_SetsIsDeletedFlagAndDate()
+    public void Delete_WhenActive_SetsIsActiveToFalseAndUpdatesDate()
     {
         // Arrange
         var disputeType = CreateValidDisputeType();
@@ -103,7 +99,7 @@ public class DisputeTypeTests
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        disputeType.IsDeleted.ShouldBeTrue();
+        disputeType.IsActive.ShouldBeFalse(); // Represents "Deleted"
         disputeType.DeletedOnUtc.ShouldNotBeNull();
         disputeType.DeletedOnUtc.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
     }
@@ -124,12 +120,12 @@ public class DisputeTypeTests
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        disputeType.IsDeleted.ShouldBeTrue();
+        disputeType.IsActive.ShouldBeFalse();
         disputeType.DeletedOnUtc.ShouldBe(originalDeletedDate); // Date should not overwrite
     }
 
     [Fact]
-    public void Restore_WhenDeleted_ResetsIsDeletedFlagAndDate()
+    public void Restore_WhenDeleted_ResetsIsActiveFlagAndDate()
     {
         // Arrange
         var disputeType = CreateValidDisputeType();
@@ -140,7 +136,22 @@ public class DisputeTypeTests
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        disputeType.IsDeleted.ShouldBeFalse();
+        disputeType.IsActive.ShouldBeTrue(); // Replaced IsDeleted.ShouldBeFalse()
+        disputeType.DeletedOnUtc.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Restore_WhenAlreadyActive_ReturnsSuccess()
+    {
+        // Arrange
+        var disputeType = CreateValidDisputeType(); // IsActive is true by default
+
+        // Act
+        var result = disputeType.Restore();
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        disputeType.IsActive.ShouldBeTrue();
         disputeType.DeletedOnUtc.ShouldBeNull();
     }
 
