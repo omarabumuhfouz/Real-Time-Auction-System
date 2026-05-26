@@ -1,9 +1,7 @@
-using MazadZone.Domain.Auctions;
-
 namespace MazadZone.Domain.Bidders.Events;
 
 public record BidderProfileCompletedDomainEvent(
-    BidderId BidderId) : IDomainEvent
+    UserId BidderId) : IDomainEvent
 {
     public Guid Id => Guid.NewGuid();
 

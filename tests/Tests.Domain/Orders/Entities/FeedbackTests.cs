@@ -19,7 +19,7 @@ public class FeedbackTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Create_CommentIsEmptyOrWhitespace_ReturnsFeedbackCommentEmptyError(string invalidComment)
+    public void Create_CommentIsEmptyOrWhitespace_ReturnsFeedbackCommentEmptyError(string? invalidComment)
     {
         // Act
         var result = Feedback.Create(GenerateOrderId(), 5, invalidComment);
@@ -78,7 +78,7 @@ public class FeedbackTests
         feedback.OrderId.ShouldBe(orderId);
         feedback.Rating.Value.ShouldBe(ratingValue);
         feedback.Comment.Value.ShouldBe(commentText);
-        feedback.Reply.ShouldBeNull();
+        feedback.Reply.ShouldBeEquivalentTo(Comment.Empty);
         feedback.RepliedAtUtc.ShouldBeNull();
         
         // Ensure CreatedAtUtc was set properly
@@ -92,7 +92,7 @@ public class FeedbackTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void AddReply_ReplyIsEmptyOrWhitespace_ReturnsEmptyReplyError(string invalidReply)
+    public void AddReply_ReplyIsEmptyOrWhitespace_ReturnsEmptyReplyError(string? invalidReply)
     {
         // Arrange
         var feedback = CreateValidFeedback();

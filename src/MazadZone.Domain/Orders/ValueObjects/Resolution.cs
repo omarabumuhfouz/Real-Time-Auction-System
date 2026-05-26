@@ -1,14 +1,19 @@
+using MazadZone.Domain.Disputes;
+
 namespace MazadZone.Domain.Orders;
 
 public sealed record Resolution
 {
-
+    public Resolution(){}
     public string Value { get; init; }
 
     private Resolution(string value)
     {
         Value = value;
     }
+
+    public static Resolution Empty => new Resolution(string.Empty);
+
 
     /// <summary>
     /// Factory method to enforce domain invariants before creating a Resolution.
@@ -26,6 +31,7 @@ public sealed record Resolution
 
         return new Resolution(sanitizedText);
     }
+public static Resolution FromDatabase(string value) => new Resolution(value ?? string.Empty);
 
     // Optional: Implicit conversion to string makes it easier to use with standard APIs
     public static implicit operator string(Resolution resolution) => resolution.Value;

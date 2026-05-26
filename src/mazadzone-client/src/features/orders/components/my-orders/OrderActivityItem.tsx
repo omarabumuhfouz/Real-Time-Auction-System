@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { OrderActivity } from "../../types/orders.types";
 import { formatCurrency } from "@/utils/currency.utils";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,9 @@ import {
   ActivityItemMeta,
   ActivityItemActions,
 } from "@/components/activity-list";
+import { DisputeDialog } from "@/features/disputes";
+import { CompletePaymentModal } from "../checkout/CompletePaymentModal";
+import { SubmitSellerReviewDialog } from "./SubmitSellerReviewDialog";
 
 interface OrderActivityItemProps {
   activity: OrderActivity;
@@ -29,8 +33,13 @@ interface OrderActivityItemProps {
  * @param activity - The detailed OrderActivity object containing auction, shipping, and order metadata.
  */
 export function OrderActivityItem({ activity }: OrderActivityItemProps) {
+  const [isDisputeOpen, setIsDisputeOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+
   const detailHref = ROUTES.ORDERS.DETAIL(activity.id);
   const isPending = activity.status === "Pending";
+  const isDelivered = activity.status === "Delivered";
 
   return (
     <ActivityListItem className="py-6">
@@ -57,8 +66,24 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
                   Date: <span className="font-medium text-gray-700">{format(new Date(activity.date), "MMM dd, yyyy")}</span>
                 </span>
               </div>
-              <div>
-                Order #: <span className="font-medium text-gray-700">{activity.orderNumber}</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <span>
+                  Order #: <span className="font-medium text-gray-700">{activity.orderNumber}</span>
+                </span>
+                {activity.sellerId && activity.sellerName && (
+                  <>
+                    <span className="text-gray-300 font-light">|</span>
+                    <span>
+                      Seller:{" "}
+                      <Link
+                        href={`/users/${activity.sellerId}`}
+                        className="font-bold text-gray-700 hover:text-primary transition-colors cursor-pointer"
+                      >
+                        {activity.sellerName}
+                      </Link>
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           }
@@ -71,21 +96,79 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
       </div>
 
       {/* Column 3: Action Buttons (25% Width) */}
-      <ActivityItemActions className="mt-4 md:mt-0 w-full md:w-[25%] shrink-0 flex justify-start md:justify-end md:pr-6">
-        <Button
-          asChild
-          variant={isPending ? "default" : "secondary"}
-          className={cn(
-            "font-semibold rounded-xl text-lg w-full md:w-48 h-14 cursor-pointer transition-colors",
-            isPending
-              ? "bg-primary text-white hover:bg-primary/90"
-              : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-none"
-          )}
-        >
-          <Link href={detailHref}>
-            {isPending ? "Complete Payment" : "View Details"}
-          </Link>
-        </Button>
+      <ActivityItemActions className="mt-4 md:mt-0 w-full md:w-[25%] shrink-0 flex flex-col gap-2 justify-center items-stretch md:items-end md:pr-6">
+        {isPending ? (
+          <Button
+            type="button"
+            onClick={() => setIsPaymentModalOpen(true)}
+            variant="default"
+            className="font-semibold rounded-xl text-base w-full md:w-[170px] h-11 cursor-pointer transition-colors bg-primary text-white hover:bg-primary/90 flex items-center justify-center"
+          >
+            Complete Payment
+          </Button>
+        ) : (
+          <div className="flex flex-col gap-2 w-full md:w-[170px]">
+            {isDelivered && activity.sellerId && (
+              <Button
+                type="button"
+                onClick={() => setIsReviewOpen(true)}
+                variant="default"
+                className="font-semibold rounded-xl text-sm w-full h-10 cursor-pointer transition-colors bg-primary text-primary-foreground hover:bg-primary/95 flex items-center justify-center shadow-xs"
+              >
+                Submit Review
+              </Button>
+            )}
+
+            <Button
+              asChild
+              variant="secondary"
+              className="font-semibold rounded-xl text-sm w-full h-10 cursor-pointer transition-colors bg-gray-100 text-gray-800 hover:bg-gray-200 border-none flex items-center justify-center"
+            >
+              <Link href={detailHref}>
+                View Details
+              </Link>
+            </Button>
+
+            <Button
+              type="button"
+              onClick={() => setIsDisputeOpen(true)}
+              variant="secondary"
+              className="font-semibold rounded-xl text-sm w-full h-10 cursor-pointer bg-warning text-warning-foreground hover:bg-warning/80 border-none transition-colors flex items-center justify-center"
+            >
+              Open Dispute
+            </Button>
+          </div>
+        )}
+
+        <DisputeDialog
+          isOpen={isDisputeOpen}
+          onClose={() => setIsDisputeOpen(false)}
+          orderId={activity.id}
+          orderNumber={activity.orderNumber}
+          itemName={activity.auction.title}
+        />
+
+        <CompletePaymentModal
+          orderId={activity.id}
+          orderNumber={activity.orderNumber}
+          finalBid={activity.finalBid}
+          title={activity.auction.title}
+          imageUrl={activity.auction.imageUrl}
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+        />
+
+        {isDelivered && activity.sellerId && (
+          <SubmitSellerReviewDialog
+            isOpen={isReviewOpen}
+            onClose={() => setIsReviewOpen(false)}
+            orderId={activity.id}
+            orderNumber={activity.orderNumber}
+            sellerId={activity.sellerId}
+            sellerName={activity.sellerName || "Seller"}
+            itemName={activity.auction.title}
+          />
+        )}
       </ActivityItemActions>
     </ActivityListItem>
   );

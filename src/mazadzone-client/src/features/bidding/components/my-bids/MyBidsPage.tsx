@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useCallback } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { BidActivityItem } from "./BidActivityItem";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/stores/auth.store";
@@ -14,7 +15,7 @@ import { BidRowsSkeleton } from "./BidRowsSkeleton";
 import { EmptyBidsState } from "./EmptyBidsState";
 import { ErrorBidsState } from "./ErrorBidsState";
 
-const FILTERS = ["All", "Leading", "Outbid", "Ended"] as const;
+const FILTERS = ["All", "Leading", "Outbid", "Won", "Lost"] as const;
 type FilterType = typeof FILTERS[number];
 
 /**
@@ -26,8 +27,7 @@ type FilterType = typeof FILTERS[number];
  */
 export function MyBidsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
+  const { searchParams, setFilters } = useUrlFilters<{ filter: string, sortBy: string, page: number, pageSize: number }>();
 
   // Parse URL query parameters directly
   const activeFilter = (searchParams.get("filter") || "All") as FilterType;
@@ -37,8 +37,8 @@ export function MyBidsPage() {
 
   // Retrieve auth context dynamically
   const user = useAuthStore((state) => state.user);
-  const isAuthenticated = true; // Hardcoded for testing
-  const userId = user?.id || "mock-user-123";
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userId = user?.id || "";
 
   // Client-side authentication redirect
   useEffect(() => {
@@ -54,26 +54,6 @@ export function MyBidsPage() {
     page,
     pageSize,
   }), [activeFilter, sortBy, page]);
-
-  // Update query parameters in the URL
-  const updateQueryParams = useCallback((newParams: Record<string, string | number | undefined>) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        params.set(key, String(value));
-      } else {
-        params.delete(key);
-      }
-    });
-
-    // Reset to page 1 when filter or sort changes
-    if (newParams.page === undefined) {
-      params.set("page", "1");
-    }
-
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router]);
 
   // Retrieve bidding activities via unified query API, enabled only for authenticated users
   const { data: response, isLoading, isError, refetch } = useGetMyBids(userId, queryParams);
@@ -99,9 +79,9 @@ export function MyBidsPage() {
       {/* Filters and Sort */}
       <ActivityFilters
         activeFilter={activeFilter}
-        setActiveFilter={(filter) => updateQueryParams({ filter })}
+        setActiveFilter={(filter) => setFilters({ filter })}
         sortBy={sortBy}
-        setSortBy={(sort) => updateQueryParams({ sortBy: sort })}
+        setSortBy={(sort) => setFilters({ sortBy: sort })}
         filters={FILTERS}
         sortPlaceholder="Sort by"
       />
@@ -127,7 +107,7 @@ export function MyBidsPage() {
           <ActivityPagination
             currentPage={page}
             totalPages={totalPages}
-            onPageChange={(targetPage) => updateQueryParams({ page: targetPage })}
+            onPageChange={(targetPage) => setFilters({ page: targetPage })}
             hasPreviousPage={hasPreviousPage}
             hasNextPage={hasNextPage}
           />

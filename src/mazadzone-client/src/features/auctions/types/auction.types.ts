@@ -136,6 +136,7 @@ export interface AuctionSummary {
   images: string[];
   /** Pre-loaded bid history for this auction. Empty array if no bids yet. */
   bidHistory: BidHistoryEntry[];
+  seller?: Seller;
 }
 
 export interface BidHistoryEntry {
@@ -159,6 +160,7 @@ export interface Seller extends AuthUser {
 
 export interface AuctionCardProps {
   auction: AuctionSummary;
+  isFavorite?: boolean;
   onFavoriteClick: (auctionId: string) => void;
   priority?: boolean;
   className?: string;

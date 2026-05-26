@@ -1,4 +1,5 @@
 namespace MazadZone.Domain.Auctions;
+
 public static class AuctionErrorCodes
 {
     public const string AlreadyEnded = "Auction.AlreadyEnded";
@@ -25,6 +26,12 @@ public static class AuctionErrorCodes
 
     public const string PaymentAuthorizationFailed = "Auction.PaymentAuthorizationFailed";
 
+    public const string ConcurrencyConflict = "Auction.ConcurrencyConflict";
+    public const string DatabaseError = "Auction.DatabaseError";
+    public const string PlaceBidFailed = "Auction.PlaceBidFailed";
+    public const string NotActive = "Auction.NotActive";
+
+    public const string NotFoundSimmeler = "Auction.NotFoundSimmeler";
 }
 
 public static class AuctionErrors
@@ -96,8 +103,19 @@ public static class AuctionErrors
     );
 
     public static Error PlaceBidFailed =>
-        Error.Conflict(AuctionErrorCodes.BidTooLow, "Place bid failed."); 
-    
+        Error.Conflict(AuctionErrorCodes.BidTooLow, "Place bid failed.");
+
     public static Error PaymentAuthorizationFailed =>
-        Error.Conflict(AuctionErrorCodes.PaymentAuthorizationFailed, "Payment authorization for the bid deposit failed."); 
+        Error.Conflict(AuctionErrorCodes.PaymentAuthorizationFailed, "Payment authorization for the bid deposit failed.");
+
+    public static Error ConcurrencyConflict =>
+        Error.Conflict(AuctionErrorCodes.ConcurrencyConflict, "Concurrency conflict: You were outbid during processing.");
+
+    public static Error DatabaseError =>
+        Error.Conflict(AuctionErrorCodes.DatabaseError, "Database error");
+    public static Error NotActive =>
+        Error.Conflict(AuctionErrorCodes.NotActive, "Auction is not active");
+
+    public static Error NotFoundSimmeler =>
+        Error.NotFound(AuctionErrorCodes.NotFoundSimmeler, "No similar auctions found.");
 }

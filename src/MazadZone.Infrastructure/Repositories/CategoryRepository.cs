@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public sealed class CategoryRepository : GenericRepository<Category>, ICategoryRepository
+public sealed class CategoryRepository : GenericRepository<Category, CategoryId>, ICategoryRepository
 {
     private readonly AppDbContext _context;
 
@@ -37,5 +37,10 @@ public sealed class CategoryRepository : GenericRepository<Category>, ICategoryR
                 // (so it doesn't conflict with itself)
                 (excludeId == null || c.Id != excludeId), 
                 ct);
+    }
+
+    public Task<bool> IsNameUniqueAsync(string name, CategoryId? parentId, CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 }

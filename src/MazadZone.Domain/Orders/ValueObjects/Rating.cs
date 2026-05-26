@@ -2,6 +2,7 @@ namespace MazadZone.Domain.Orders;
 
 public sealed record Rating
 {
+    public Rating(){}
     public int Value { get; }
 
     public static Result<Rating> Create(int value)
@@ -16,4 +17,7 @@ public sealed record Rating
     {
         Value = value;
     }
+
+    public static Rating FromDatabase(int value) => new Rating(value);
+
 }

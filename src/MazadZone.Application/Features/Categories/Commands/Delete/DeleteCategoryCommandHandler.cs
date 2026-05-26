@@ -21,13 +21,15 @@ public sealed class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategor
     public async Task<Result<Unit>> Handle(DeleteCategoryCommand request, CancellationToken ct)
     {
         // Must use a repository method that includes children for recursive soft delete
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value, ct);
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId, ct);
 
         if (category is null)
         {
             GlobalLogs.LogCategoryNotFound(_logger, request.CategoryId);
             return CategoryErrors.NotFound;
         }
+
+        // Check if Category or children have and Active Auctions (Note)
 
         var result = category.Delete();
         if (result.IsFailure)

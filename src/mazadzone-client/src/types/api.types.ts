@@ -40,6 +40,20 @@ export interface PaginatedResult<T> {
 
 // --- Errors ------------------------------------------------------
 
+/** Standard ASP.NET Core ProblemDetails (RFC 7807) */
+export interface ProblemDetails {
+  type?: string | null;
+  title?: string | null;
+  status?: number | null;
+  detail?: string | null;
+  instance?: string | null;
+}
+
+/** ASP.NET Core HttpValidationProblemDetails (RFC 7807) */
+export interface HttpValidationProblemDetails extends ProblemDetails {
+  errors?: Record<string, string[]>;
+}
+
 /** Normalized error shape produced by the API client interceptor */
 export interface ApiError {
   message: string;

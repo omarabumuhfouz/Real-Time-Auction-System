@@ -6,6 +6,6 @@ public class GetSellerStatsValidator : AbstractValidator<GetSellerStatsQuery>
 {
     public GetSellerStatsValidator()
     {
-        RuleFor(x => x.SellerId).MustBeValidSellerId();
+        RuleFor(x => x.SellerId).MustBeValidUserId();
     }
 }

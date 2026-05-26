@@ -2,6 +2,7 @@ using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.Users.ValueObjects;
 using Shouldly;
 
 namespace Tests.Domain.Orders;
@@ -13,11 +14,10 @@ public class OrderTests
         var address = new Address("123 Test St", "Amman", "11118", "Jordan");
         return Order.Create(
             AuctionId.New(),
-            BidderId.New(),
+            UserId.New(),
             BidId.New(),
             address,
-            150.00m, 
-            "txn_123").Value;
+            150.00m).Value;
     }
 
 
@@ -28,7 +28,7 @@ public class OrderTests
         var address = new Address("123 Test St", "Amman", "11118", "Jordan");
 
         // Act
-        var result = Order.Create(AuctionId.New(), BidderId.New(), BidId.New(), address, -10m, "txn");
+        var result = Order.Create(AuctionId.New(), UserId.New(), BidId.New(), address, -10m);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -203,7 +203,7 @@ public class OrderTests
         var result = order.AddFeedback(5, "Perfect");
 
         result.IsSuccess.ShouldBeTrue();
-        order.FeedbackId.ShouldNotBeNull();
+        order.Feedback.ShouldNotBeNull();
         order.DomainEvents.OfType<FeedbackLeftDomainEvent>().ShouldHaveSingleItem();
     }
 
@@ -238,99 +238,4 @@ public class OrderTests
         order.DomainEvents.OfType<FeedbackRepliedDomainEvent>().ShouldHaveSingleItem();
     }
 
-    // --- 4. DISPUTES ---
-
-    [Fact]
-    public void OpenDispute_OrderIsPendingOrConfirmed_ReturnsCannotDisputeError()
-    {
-        var order = CreateValidPendingOrder(); // Pending
-
-        var result = order.OpenDispute("Item damaged");
-
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(OrderErrors.CannotDispute);
     }
-
-    [Fact]
-    public void OpenDispute_DisputeAlreadyExists_ReturnsDisputeAlreadyExistsError()
-    {
-        var order = CreateValidPendingOrder();
-        order.Confirm(); order.Ship(); // Valid state for dispute
-        
-        order.OpenDispute("First dispute");
-
-        var result = order.OpenDispute("Second dispute");
-
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(OrderErrors.DisputeAlreadyExists);
-    }
-
-    [Fact]
-    public void OpenDispute_ValidParameters_OpensDispute()
-    {
-        var order = CreateValidPendingOrder();
-        order.Confirm(); order.Ship(); // Shipped status allows disputes
-
-        var result = order.OpenDispute("Never arrived");
-
-        result.IsSuccess.ShouldBeTrue();
-        order.DisputeId.ShouldNotBeNull();
-        order.DomainEvents.OfType<DisputeOpenedDomainEvent>().ShouldHaveSingleItem();
-    }
-
-    [Fact]
-    public void ResolveDispute_NoDisputeExists_ReturnsNoDisputeError()
-    {
-        var order = CreateValidPendingOrder();
-
-        var result = order.ResolveDispute("Refund issued");
-
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(OrderErrors.NoDispute);
-    }
-
-    [Fact]
-    public void ResolveDispute_ValidParameters_ResolvesDispute()
-    {
-        // Arrange
-        var order = CreateValidPendingOrder();
-        order.Confirm();
-        order.Ship();
-        order.OpenDispute("Item broken Tests"); // Open it first
-
-        // Act
-        var result = order.ResolveDispute("Refunded");
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        order.DomainEvents.OfType<DisputeResolvedDomainEvent>().ShouldHaveSingleItem();
-        // Assuming Dispute entity exposes an IsResolved property
-        // order.Dispute.IsResolved.ShouldBeTrue(); 
-    }
-
-[Fact]
-    public void ResolveDispute_DisputeResolutionFails_ReturnsValidationError()
-    {
-        // Arrange
-        var order = CreateValidPendingOrder();
-        order.Confirm(); 
-        order.Ship();
-        order.OpenDispute("Item was damaged in transit");
-        
-        // Resolve it the first time (Success)
-        order.ResolveDispute("Refund issued to buyer");
-
-        // Act: Attempt to resolve an already-resolved dispute
-        var result = order.ResolveDispute("Trying to resolve again");
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        
-        // Note: The specific error will come from your Dispute entity.
-        // It might be DisputeErrors.AlreadyResolved, but we assert it is not null to prove the failure bubbled up.
-        result.TopError.ShouldNotBeNull(); 
-        
-        // Prove we didn't raise a duplicate resolution event
-        order.DomainEvents.OfType<DisputeResolvedDomainEvent>().Count().ShouldBe(1);
-    }
-}

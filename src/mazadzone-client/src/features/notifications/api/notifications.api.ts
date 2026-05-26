@@ -1,16 +1,7 @@
 import { api } from "@/lib/api/client";
-import { NotificationResponse } from "../types/notification.types";
-import {
-  getMockNotifications,
-  updateMockNotificationReadStatus,
-  updateAllMockNotificationsReadStatus,
-} from "../testing/mock-notifications";
-
-// Simulated network delay (remove/adjust as needed)
-const MOCK_DELAY_MS = 300;
-
-const simulateDelay = (): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
+import type { NotificationResponse } from "../types/notification.types";
+import type { NotificationsListDto } from "./notifications.contracts";
+import { mapNotificationDtoToViewModel } from "./notifications.mappers";
 
 export const notificationsApi = {
   getNotifications: async (
@@ -18,67 +9,40 @@ export const notificationsApi = {
     page: number,
     pageSize: number
   ): Promise<NotificationResponse> => {
-    /**
-     * --- REAL API CALL (Uncomment when backend is ready) ---
-     * const response = await api.get<NotificationResponse>("/notifications", {
-     *   params: { userId, pageNumber: page, pageSize },
-     * });
-     * return response.data;
-     */
+    const response = await api.get<NotificationsListDto>("/api/notifications", {
+      params: { UserId: userId, PageNumber: page, PageSize: pageSize },
+    });
 
-    // --- MOCK IMPLEMENTATION ---
-    await simulateDelay();
-
-    const allNotifications = getMockNotifications();
-    const totalCount = allNotifications.length;
-    const totalPages = Math.ceil(totalCount / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const items = allNotifications.slice(startIndex, startIndex + pageSize);
+    const pagedList = response.data.notifications;
+    const items = (pagedList.items || []).map(mapNotificationDtoToViewModel);
 
     return {
       items,
-      totalCount,
-      pageSize,
-      pageNumber: page,
-      totalPages,
+      totalCount: pagedList.totalCount,
+      pageSize: pagedList.pageSize,
+      pageNumber: pagedList.pageNumber,
+      totalPages: pagedList.totalPages || 1,
     };
   },
 
   markAsRead: async (id: string): Promise<void> => {
-    /**
-     * --- REAL API CALL (Uncomment when backend is ready) ---
-     * await api.patch(`/notifications/${id}/read`);
-     */
-
-    // --- MOCK IMPLEMENTATION ---
-    await simulateDelay();
-    updateMockNotificationReadStatus(id, true);
+    await api.post(`/api/notifications/${id}/mark-as-read`);
   },
 
-  markAllAsRead: async (): Promise<void> => {
-    /**
-     * --- REAL API CALL (Uncomment when backend is ready) ---
-     * await api.post("/notifications/read-all");
-     */
-
-    // --- MOCK IMPLEMENTATION ---
-    await simulateDelay();
-    updateAllMockNotificationsReadStatus();
+  markAllAsRead: async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    await Promise.all(
+      ids.map((id) => api.post(`/api/notifications/${id}/mark-as-read`))
+    );
   },
 
   getUnreadCount: async (userId: string): Promise<number> => {
-    /**
-     * --- REAL API CALL (Uncomment when backend is ready) ---
-     * const response = await api.get<{ count: number }>("/notifications/unread-count", {
-     *   params: { userId },
-     * });
-     * return response.data.count;
-     */
+    // Retrieve the first page of notifications and compute count locally
+    const response = await api.get<NotificationsListDto>("/api/notifications", {
+      params: { UserId: userId, PageNumber: 1, PageSize: 100 },
+    });
 
-    // --- MOCK IMPLEMENTATION ---
-    await simulateDelay();
-    const unreadCount = getMockNotifications().filter((n) => !n.isRead).length;
-    return unreadCount;
+    const items = response.data.notifications?.items || [];
+    return items.filter((n) => !n.isRead).length;
   },
 };
-

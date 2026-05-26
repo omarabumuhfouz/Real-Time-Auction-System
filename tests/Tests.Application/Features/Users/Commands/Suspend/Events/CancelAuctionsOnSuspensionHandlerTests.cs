@@ -1,6 +1,8 @@
 using MazadZone.Application.Features.Users.Commands.Suspend.Events;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.ValueObjects;
 using Tests.Application.Features.Auctions;
 
@@ -39,8 +41,8 @@ public class CancelAuctionsOnSuspensionHandlerTests : UserBaseTest<CancelAuction
         var suspendUntil = DateTime.UtcNow.AddDays(14);
         var domainEvent = UserHelper.CreateSuspensionEvent(userId, suspendUntil);
 
-        var bidderOne = BidderId.New();
-        var bidderTwo = BidderId.New();
+        var bidderOne = UserId.New();
+        var bidderTwo = UserId.New();
 
         var mockActiveAuctions = AuctionHelper.CreateMockActiveAuctions(bidderOne, bidderTwo);
 

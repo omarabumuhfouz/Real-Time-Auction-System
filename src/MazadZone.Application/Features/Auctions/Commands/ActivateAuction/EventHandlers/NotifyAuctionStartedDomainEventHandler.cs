@@ -1,6 +1,10 @@
 
+using MazadZone.Application.Features.Auctions.DTOs;
+using MazadZone.Application.Features.Auctions.Enums;
 using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Services;
+using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Events;
 using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Repositories;
@@ -13,31 +17,44 @@ namespace MazadZone.Application.Features.Auctions.Commands.ActivateAuction.Event
 /// </summary>
 public class NotifyAuctionStartedDomainEventHandler 
 (
+    ILogger<NotifyAuctionStartedDomainEventHandler> _logger,
     IAuctionRepository _auctionRepository,
     IItemRepository _itemRepository,
     ISender _sender,
-    IRealTimeNotificationService _realTimeNotificationService
+    IAuctionStreamService _auctionStreamService
 ): INotificationHandler<AuctionStartedDomainEvent>
 {
     public async Task Handle(AuctionStartedDomainEvent notification, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Handling AuctionStartedDomainEvent for Auction ID: {AuctionId}", notification.AuctionId);
+
         var auction = await _auctionRepository.GetByIdAsync(notification.AuctionId, cancellationToken);
         if (auction is null)
         {
+            _logger.LogWarning("Auction with ID {AuctionId} not found for start event.", notification.AuctionId);
             return;
         }
 
-        var item = await _itemRepository.GetItemByIdAsync(auction.ItemId.Value, cancellationToken);
+        // Broadcast the auction started event to clients
+        await _auctionStreamService.BroadcastAuctionUpdateAsync(BroadcastAuctionUpdateTypes.StatusChanged, new AuctionStatusUpdateDto{
+            AuctionId = notification.AuctionId.Value,
+            Status = AuctionStatus.Active.ToString(),
+        }, cancellationToken);
+        _logger.LogInformation("Broadcasted auction started update for Auction ID: {AuctionId}", notification.AuctionId);
+        
+
+        var item = await _itemRepository.GetItemByIdAsync(auction.Item.Id.Value, cancellationToken);
         
         if (item is null)
         {
+            _logger.LogWarning("Item with ID {ItemId} not found for auction ID {AuctionId}.", auction.Item.Id.Value, notification.AuctionId);
             return;
         }
         
         var itemTitle = item?.Title ?? "???";
 
-
         
+
         var subject = $"Your auction '{itemTitle}' has started!";
         var body = $"Dear seller,\n\nYour auction '{itemTitle}' has just started at {auction.StartTime.ToLocalTime():f}. " +
                    $"It will end on {auction.EndTime.ToLocalTime():f}.\n\nBest of luck!\nMazadZone Team";
@@ -45,15 +62,13 @@ public class NotifyAuctionStartedDomainEventHandler
         var notificationId = await _sender.Send(
         new CreateNotificationCommand(
             UserId.Load(auction.SellerId.Value),
+            NotificationMethods.ReceiveNotification,
             subject,
             body),
         cancellationToken);
 
-        await _realTimeNotificationService
-            .SendNotificationAsync(
-                auction.SellerId.Value,
-                notificationId.Value);
-   
+        _logger.LogInformation("Finished handling AuctionStartedDomainEvent for Auction ID: {AuctionId}", notification.AuctionId);
     }
+
 }
 

@@ -13,16 +13,15 @@ public static class OrderEndpoints
 
         var orderGroup = app.MapGroup("api/v{version:apiVersion}/orders")
                            .WithApiVersionSet(versionSet)
-                           .MapToApiVersion(1, 0);
+                           .MapToApiVersion(1, 0)
+                           .WithTags("Order Management");
 
         Create.MapEndpoint(orderGroup);
         Confirm.MapEndpoint(orderGroup);
         Ship.MapEndpoint(orderGroup);
         Deliver.MapEndpoint(orderGroup);
         Cancel.MapEndpoint(orderGroup);
-        OpenDispute.MapEndpoint(orderGroup);
-        ResolveDispute.MapEndpoint(orderGroup);
-        AddFeedback.MapEndpoint(orderGroup);
+                AddFeedback.MapEndpoint(orderGroup);
         ReplyToFeedback.MapEndpoint(orderGroup);
 
         GetDetails.MapEndpoint(orderGroup);

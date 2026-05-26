@@ -21,7 +21,7 @@ public sealed class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategor
 
     public async Task<Result<Unit>> Handle(UpdateCategoryCommand request, CancellationToken ct)
     {
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value, ct);
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId, ct);
 
         if (category is null)
         {
@@ -34,6 +34,8 @@ public sealed class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategor
 
         var descriptionResult = Description.Create(request.Description);
         if (descriptionResult.IsFailure) return descriptionResult.TopError;
+
+        // Check Name is Unique
 
 
         category.Update(nameResult.Value, descriptionResult.Value);

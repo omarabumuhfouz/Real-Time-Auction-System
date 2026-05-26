@@ -1,6 +1,5 @@
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 
-public sealed record GetPublicSellerProfileQuery(SellerId SellerId) : IQuery<PublicSellerProfileResponse>;
+public sealed record GetPublicSellerProfileQuery(UserId SellerId) : IQuery<PublicSellerProfileResponse>;

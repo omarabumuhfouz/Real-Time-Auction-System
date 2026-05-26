@@ -10,9 +10,11 @@ export { AuctionsPage } from "./components/auctions-page";
 export { AuctionDetailPage } from "./components/auction-detail";
 export { AuctionCard, AuctionCardSkeleton, CountdownTimer } from "./components/auction-card";
 export { AuctionFilterBar } from "./components/auction-filter-bar";
-export { ClosingSoonSection, HomeHero } from "./components/Home-Sections";
+export { ClosingSoonSection, HomeHero, BrowseCategoriesSection, UpcomingAuctionsSection } from "./components/Home-Sections";
 export { CreateAuctionPage } from "./components/create-auction/CreateAuctionPage";
 export { EditAuctionPage } from "./components/edit-auction/EditAuctionPage";
+export { SellerDashboardPage } from "./components/seller-dashboard/SellerDashboardPage";
+export { AuctionPagination } from "./components/auction-pagination";
 
 // TanStack Query hooks
 export {
@@ -22,17 +24,22 @@ export {
   useGetBidHistory,
   useGetAuctionsByCategory,
   useGetClosingSoonAuctions,
+  useGetUpcomingAuctions,
+  useGetSellerAuctions,
 } from "./api";
 
 // Mutations
-export { useCreateAuction, useUpdateAuction } from "./api";
+export { useCreateAuction, useUpdateAuction, useDeleteAuction } from "./api";
 
-// Async fetch functions (for prefetching or non-hook usage)
+// Pure REST API methods (for prefetching or non-hook usage)
 export {
-  fetchActiveAuctions,
-  fetchAuctionById,
-  fetchAuctionsByCategory,
-  fetchClosingSoonAuctions,
+  getAuctions,
+  getAuctionById,
+  getSimilarAuctions,
+  createAuction,
+  activateAuction,
+  endAuction,
+  cancelAuction,
 } from "./api";
 
 // Types

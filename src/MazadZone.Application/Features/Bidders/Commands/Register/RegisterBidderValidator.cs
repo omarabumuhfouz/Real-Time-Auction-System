@@ -6,19 +6,17 @@ public class RegisterBidderValidator : AbstractValidator<RegisterBidderCommand>
 {
     public RegisterBidderValidator()
     {
-        RuleFor(x => x.Email).ValidateEmail();
+        RuleFor(x => x.Email).MustBeValidEmail();
 
-        RuleFor(x => x.Password).ValidatePassword();
+        RuleFor(x => x.Password).MustBeValidPassword();
 
-        RuleFor(x => x.PhoneNumber).ValidatePhoneNumber();
+        RuleFor(x => x.PhoneNumber).MustBeValiePhoneNumber();
 
-        RuleFor(x => x.FirstName).ValidateFirstName();
-        RuleFor(x => x.LastName).ValidateLastName();
-        RuleFor(x => x.SecondName).ValidateSecondName();
-        RuleFor(x => x.ThirdName).ValidateThirdName();
+        RuleFor(x => x.FirstName).MustBeValidName("First Name");
+        RuleFor(x => x.LastName).MustBeValidName("Last Name");
+        RuleFor(x => x.SecondName).MustBeValidName("Second Name");
+        RuleFor(x => x.ThirdName).MustBeValidName("Third Name");
 
-        // --- Nested Validation ---
-        // This tells FluentValidation to use the AddressDtoValidator logic for the Address property
         RuleFor(x => x.Address)
             .NotNull()
             .SetValidator(new AddressDtoValidator());

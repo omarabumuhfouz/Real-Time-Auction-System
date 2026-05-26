@@ -7,21 +7,20 @@ public static class GetRoots
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/roots", GetRootCategoriesAsync)
-           .WithTags("Category Queries")
-           .WithSummary("Retrieves all top-level (root) categories")
+        app.MapGet("/roots", HandleAsync)
+           .AllowAnonymous() // Typically, main categories are visible to public guests
+           .WithSummary("Retrieve all root categories")
+           .WithDescription("Fetches all top-level categories (categories that do not have a parent). This endpoint is optimized for populating main navigation menus and homepage directory lists.")
            .Produces<IReadOnlyList<CategoryResponse>>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status500InternalServerError);
+           .ProducesProblem(StatusCodes.Status400BadRequest)
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> GetRootCategoriesAsync(
+    private static async Task<IResult> HandleAsync(
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        var query = new GetRootCategoriesQuery();
-
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new GetRootCategoriesQuery(), ct);
 
         return result.Match(
             onValue: categories => Results.Ok(categories),

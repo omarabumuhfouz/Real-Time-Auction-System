@@ -17,13 +17,14 @@ import {
   AuctionStatus,
   AuctionSubcategory,
 } from "../types/auction.types";
-import type { AuctionSummary, BidHistoryEntry } from "../types/auction.types";
+import type { AuctionSummary, BidHistoryEntry, Seller } from "../types/auction.types";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const FAKER_SEED = 123;
+const MOCK_AUCTIONS_CACHE_TTL_MS = 15_000;
 
 const MOCK_BIDDERS = [
   { name: "Ahmad K.", initial: "A" },
@@ -36,6 +37,12 @@ const MOCK_BIDDERS = [
   { name: "Dina H.",  initial: "D" },
 ];
 
+const MOCK_SELLERS: Seller[] = [
+  { id: "seller-123", fullName: "Ahmad Al-Rashid", email: "ahmad@mazadzone.com", role: "seller", isVerified: true, avatarInitial: "A", reviews: 277, rating: 4.6 },
+  { id: "seller-456", fullName: "Fatima Mansour", email: "fatima@mazadzone.com", role: "seller", isVerified: true, avatarInitial: "F", reviews: 142, rating: 4.8 },
+  { id: "seller-789", fullName: "Yousef Hassan", email: "yousef@mazadzone.com", role: "seller", isVerified: false, avatarInitial: "Y", reviews: 89, rating: 4.2 },
+];
+
 const TIME_AGO_LABELS = [
   "3 mins ago",  "9 mins ago",  "23 mins ago", "1 hour ago",  "2 hours ago",
   "3 hours ago", "5 hours ago", "8 hours ago", "12 hours ago","1 day ago",
@@ -45,7 +52,6 @@ const TIME_AGO_LABELS = [
 
 const AUCTION_CATEGORY_VALUES = Object.values(AuctionCategory);
 const AUCTION_CONDITION_VALUES = Object.values(AuctionCondition);
-const AUCTION_SUBCATEGORY_VALUES = Object.values(AuctionSubcategory);
 
 // Mapping categories to their valid subcategories for realistic mock data
 const CATEGORY_TO_SUBCATEGORIES: Record<string, AuctionSubcategory[]> = {
@@ -144,7 +150,7 @@ const CATEGORY_PHOTO_IDS: Record<string, string[]> = {
     "1560518883-ce09059eeffa", // LEGO bricks
     "1606761568499-6d2451b23c66", // fishing rod
     "1535131749447-e89b60c7cf72", // piano keys
-    "1550000000-b7dc7399e239", // golf clubs
+    "1593113598332-cd59a93b7dcb", // golf clubs
     "1566519463851-b7815cb6deff", // drone hobby
     "1592890288564-76628a30a657", // skateboard
     "1571019613454-1cb2f99b2d8b", // tennis racket
@@ -440,6 +446,7 @@ export function createMockAuctions(count: number = 100): AuctionSummary[] {
       isOwner: i === 0,
       images,
       bidHistory,
+      seller: MOCK_SELLERS[i % MOCK_SELLERS.length],
     });
   }
 
@@ -450,9 +457,22 @@ export function createMockAuctions(count: number = 100): AuctionSummary[] {
 // Pre-generated Instance
 // ---------------------------------------------------------------------------
 
-/** Deterministic set of 100 mock auctions, generated dynamically per request to keep dates relative to "now". */
+let cachedAuctionsSnapshot: AuctionSummary[] | null = null;
+let cachedAuctionsSnapshotAt = 0;
+
+/** Deterministic set of mock auctions with a short TTL to keep dates reasonably fresh. */
 export function getMockAuctions(): AuctionSummary[] {
-  return createMockAuctions();
+  const now = Date.now();
+
+  if (
+    cachedAuctionsSnapshot === null ||
+    now - cachedAuctionsSnapshotAt >= MOCK_AUCTIONS_CACHE_TTL_MS
+  ) {
+    cachedAuctionsSnapshot = createMockAuctions();
+    cachedAuctionsSnapshotAt = now;
+  }
+
+  return cachedAuctionsSnapshot;
 }
 
 // ---------------------------------------------------------------------------

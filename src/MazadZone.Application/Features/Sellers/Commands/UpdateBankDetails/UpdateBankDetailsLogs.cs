@@ -1,5 +1,7 @@
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Application.Features.Sellers.Commands.UpdateBankDetails;
 
@@ -9,11 +11,11 @@ internal static partial class UpdateBankDetailsLogs
         EventId = MazadLogEvents.Sellers.BankUpdateDomainViolation,
         Level = LogLevel.Warning,
         Message = "Domain rule violation for Seller {SellerId} during bank update: {ErrorCode}")]
-    public static partial void LogDomainRuleViolation(ILogger logger, SellerId sellerId, string errorCode);
+    public static partial void LogDomainRuleViolation(ILogger logger, UserId sellerId, string errorCode);
 
     [LoggerMessage(
         EventId = MazadLogEvents.Sellers.BankUpdateSuccess,
         Level = LogLevel.Information,
         Message = "Bank details successfully updated for Seller {SellerId}. Verification reset.")]
-    public static partial void LogSuccess(ILogger logger, SellerId sellerId);
+    public static partial void LogSuccess(ILogger logger, UserId sellerId);
 }

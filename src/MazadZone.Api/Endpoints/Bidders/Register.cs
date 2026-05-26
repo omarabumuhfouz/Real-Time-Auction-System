@@ -17,15 +17,18 @@ public static class Register
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/register", RegisterBidderAsync)
-           .WithSummary("Registers a new bidder")
-           .WithDescription("Creates a bidder profile with personal details and address.")
-           .Produces(StatusCodes.Status201Created)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status409Conflict);
+        app.MapPost("/register", HandleAsync)
+            .AllowAnonymous()
+            .WithSummary("Register a new bidder")
+            .WithDescription("Creates a new bidder account using personal details, national ID, and address. Returns the created bidder profile and a location header pointing to the new resource.")
+            .Accepts<RegisterBidderRequest>("application/json")
+            .Produces<RegisterBidderDto>(StatusCodes.Status200OK)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> RegisterBidderAsync(
+    private static async Task<IResult> HandleAsync(
         [FromBody] RegisterBidderRequest request,
         [FromServices] ISender sender,
         CancellationToken ct)
@@ -44,7 +47,7 @@ public static class Register
         var result = await sender.Send(command, ct);
 
         return result.Match(
-            onValue: bidderDto => Results.Created($"/api/v1/bidders/{bidderDto.ProfileInfo.Id.Value}", bidderDto),
+            onValue: bidderDto => Results.Ok(bidderDto),
             onError: errors => errors.ToProblem());
     }
 }

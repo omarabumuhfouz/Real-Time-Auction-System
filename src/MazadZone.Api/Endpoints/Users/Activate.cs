@@ -1,5 +1,4 @@
 using MazadZone.Application.Features.Users.Commands.Activate;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Users;
 
@@ -7,19 +6,26 @@ public static class Activate
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/{id:guid}/activate", ActivateAsync)
-           .RequireAuthorization("AdminOnly")
+        app.MapPut("/{id:guid}/activate", HandleAsync)
+        //    .RequireAuthorization("AdminOnly")
+           .WithSummary("Activate a user account")
+           .WithDescription("Reactivates a previously suspended or inactive user account, restoring their access to the platform. Returns a 409 Conflict if the user is already active.")
            .Produces(StatusCodes.Status204NoContent)
-           .ProducesProblem(StatusCodes.Status404NotFound)
-           .WithSummary("Activate a user account");
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // Malformed GUID
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
+           .ProducesProblem(StatusCodes.Status403Forbidden) // Token is valid, but the user is not an Admin
+           .ProducesProblem(StatusCodes.Status404NotFound) // User does not exist
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> ActivateAsync(
-        Guid id,
-        ISender sender,
+    private static async Task<IResult> HandleAsync(
+        [FromRoute]UserId id,
+        [FromServices]ISender sender,
         CancellationToken ct)
     {
-        var result = await sender.Send(new ActivateUserCommand(UserId.Load(id)), ct);
-        return result.Match(_ => Results.NoContent(), e => e.ToProblem());
+        var result = await sender.Send(new ActivateUserCommand(id), ct);
+        return result.Match(
+            _ => Results.NoContent(),
+            e => e.ToProblem());
     }
 }

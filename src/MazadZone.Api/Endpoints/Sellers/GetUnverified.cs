@@ -6,16 +6,23 @@ public static class GetUnverified
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("unverified", GetUnverifiedSellersAsync)
-           .WithSummary("Retrieves all unverified sellers")
-           .Produces<IReadOnlyList<UnverifiedSellerSummaryResponse>>(StatusCodes.Status200OK);
+        app.MapGet("/unverified", HandleAsync)
+        //    .RequireAuthorization("AdminPolicy")
+           .WithSummary("Retrieve all unverified sellers")
+           .WithDescription("Fetches a list of all seller profiles that are currently pending verification. This endpoint is typically consumed by administrative back-office dashboards to review and approve new sellers.")
+           .Produces<IReadOnlyList<UnverifiedSellerSummaryResponse>>(StatusCodes.Status200OK)
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // If RequireAuthorization is used
+           .ProducesProblem(StatusCodes.Status403Forbidden) // If role-based policies are used
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> GetUnverifiedSellersAsync(
+    private static async Task<IResult> HandleAsync(
         [FromServices] ISender sender,
         CancellationToken ct)
     {
         var result = await sender.Send(new GetUnverifiedSellersQuery(), ct);
-        return result.Match(sellers => Results.Ok(sellers), e => e.ToProblem());
+        return result.Match(
+            sellers => Results.Ok(sellers),
+            e => e.ToProblem());
     }
 }

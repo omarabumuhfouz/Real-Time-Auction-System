@@ -26,7 +26,7 @@ export function ClosingSoonSection() {
   if (isError) return null;
 
   return (
-    <section className="w-full py-12">
+    <section className="w-full py-2 mt-10">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-foreground">
           Closing Soon
@@ -42,18 +42,16 @@ export function ClosingSoonSection() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <AuctionCardSkeleton key={i} />
-            ))
+            <AuctionCardSkeleton key={i} />
+          ))
           : auctions?.map((auction) => (
-              <AuctionCard
-                key={auction.id}
-                auction={{
-                  ...auction,
-                  isFavorite: favorites.has(auction.id),
-                }}
-                onFavoriteClick={handleFavoriteClick}
-              />
-            ))}
+            <AuctionCard
+              key={auction.id}
+              auction={auction}
+              isFavorite={favorites.has(auction.id)}
+              onFavoriteClick={handleFavoriteClick}
+            />
+          ))}
       </div>
     </section>
   );

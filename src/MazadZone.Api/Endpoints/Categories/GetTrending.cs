@@ -9,23 +9,22 @@ public static class GetTrending
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/trending", GetTrendingAsync)
-           .WithTags("Category Queries")
-           .WithSummary("Retrieves categories with the highest activity")
+        app.MapGet("/trending", HandleAsync)
+           .AllowAnonymous()
+           .WithSummary("Retrieve trending categories")
+           .WithDescription("Fetches a list of the most active or popular categories based on current auction activity. Use the 'limit' query parameter to control how many results are returned (defaults to 10).")
            .Produces<IReadOnlyList<TrendingCategoryResponse>>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status500InternalServerError);
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // If 'limit' is an invalid type
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> GetTrendingAsync(
-        GetTrendingRequest request,
+    private static async Task<IResult> HandleAsync(
+        [FromBody]GetTrendingRequest request,
         [FromServices] ISender sender,
         CancellationToken ct)
 
     {
-        var query = new GetTrendingCategoriesQuery(request.Limit);
-
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new GetTrendingCategoriesQuery(request.Limit), ct);
 
         return result.Match(
             onValue: trending => Results.Ok(trending),

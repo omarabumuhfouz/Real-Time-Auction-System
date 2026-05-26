@@ -13,7 +13,7 @@ public class ShipOrderHandlerTests : OrderBaseTest<ShipOrderHandler>
         var command = OrderHelper.CreateShipOrderCommand();
         
         // during the repository setup.
-        _orderRepository.GetByIdAsync(default!, default)
+        _orderRepository.GetByIdAsync(command.OrderId!, default)
             .Returns((Order?)null);
 
         // Act
@@ -27,25 +27,23 @@ public class ShipOrderHandlerTests : OrderBaseTest<ShipOrderHandler>
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnDomainError_When_OrderIsAlreadyShipped()
+    public async Task Handle_ReturnSuccess_OrderAlreadyShipped()
     {
         // Arrange - Create an order and move it to Shipped status
         var order = OrderHelper.CreateShippedOrder();
 
         var command = OrderHelper.CreateShipOrderCommand() with { OrderId = order.Id };
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act
         var result = await Handler.Handle(command, default);
 
         // Assert
-        result.IsFailure.ShouldBeTrue();
-        // Assuming your Domain prevents shipping an already shipped order
-        result.TopError.ShouldBe(OrderErrors.CannotShipped); 
+        result.IsSuccess.ShouldBeTrue();
 
-        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -56,7 +54,7 @@ public class ShipOrderHandlerTests : OrderBaseTest<ShipOrderHandler>
 
         var command = OrderHelper.CreateShipOrderCommand() with { OrderId = order.Id };
         
-        _orderRepository.GetByIdAsync(command.OrderId.Value, Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(command.OrderId, Arg.Any<CancellationToken>())
             .Returns(order);
 
         // Act

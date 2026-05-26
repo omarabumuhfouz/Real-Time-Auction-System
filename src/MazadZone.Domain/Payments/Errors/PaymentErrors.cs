@@ -16,7 +16,11 @@ public static class PaymentErrorsCodes
     public const string RemainingAmountCaptureFailed = "Payment.RemainingBalanceCaptureFailed";
     public const string DpositedAmountCaptureFailed = "Payment.DepositedAmountCaptureFailed";
     public const string HoldAmountAlreadyCaptured = "Payment.HoldAmountAlreadyCaptured";
-    public const string PaymentUnAuthorizationFailed = "Payment.PaymentUnAuthorizationFailed";    
+    public const string PaymentUnAuthorizationFailed = "Payment.PaymentUnAuthorizationFailed";
+
+    public const string MissingAuthorizationHold = "Payment.MissingAuthorizationHold";
+   
+    public const string CriticalPaymentMismatch = "Payment.CriticalPaymentMismatch";
 }
 
 public static class PaymentErrors
@@ -65,5 +69,16 @@ public static class PaymentErrors
     public static Error PaymentUnAuthorizationFailed = Error.Conflict(
         PaymentErrorsCodes.PaymentUnAuthorizationFailed,
         "Failed to unauthorize the outbid payments.");
+    
+    public static Error MissingAuthorizationHold = Error.Conflict(
+        PaymentErrorsCodes.MissingAuthorizationHold,
+        "Missing authorization hold for the payment.");
 
+    public static Error CriticalPaymentMismatch = Error.Conflict(
+        PaymentErrorsCodes.CriticalPaymentMismatch,
+        "Critical payment mismatch occurred.");
+    
 }
+
+
+

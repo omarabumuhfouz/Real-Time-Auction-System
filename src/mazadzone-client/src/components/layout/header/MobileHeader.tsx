@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORIES } from "./header.constants";
-import { NotificationPopover, useGetUnreadCount } from "@/features/notifications";
+import { NotificationPopover, useGetUnreadCount, useNotificationStore } from "@/features/notifications";
 import { useAuthStore } from "@/stores/auth.store";
 
 export interface MobileHeaderProps {
@@ -35,15 +35,33 @@ export const MobileHeader = ({
   logout,
   pathname,
 }: MobileHeaderProps) => {
-  const user = useAuthStore((state) => state.user);
-  const { data: unreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
+  const userId = useAuthStore((state) => state.user?.id);
+  const { data: serverUnreadCount = 0 } = useGetUnreadCount(userId || "", {
+    enabled: isAuthenticated,
+  });
+  const hasLocalNotifications = useNotificationStore(
+    (state) => state.notifications.length > 0,
+  );
+  const localUnreadCount = useNotificationStore((state) =>
+    state.notifications.reduce(
+      (count, notification) => count + (notification.isRead ? 0 : 1),
+      0,
+    ),
+  );
+
+  const unreadCount = hasLocalNotifications ? localUnreadCount : serverUnreadCount;
 
   return (
     <>
       {/* Mobile Search Toggle */}
       <div className="md:hidden flex items-center gap-2 ml-auto mr-4">
-        {isAuthenticated && mounted && (
-          <NotificationPopover unreadCount={unreadCount} className="mr-2" />
+        {isAuthenticated && (
+          <div
+            className={cn(!mounted && "invisible pointer-events-none select-none")}
+            aria-hidden={!mounted}
+          >
+            <NotificationPopover unreadCount={unreadCount} className="mr-2" />
+          </div>
         )}
         <button
           onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -85,10 +103,14 @@ export const MobileHeader = ({
       </button>
 
       {/* Mobile Menu Dropdown */}
-      {mounted && isMobileMenuOpen && (
+      {isMobileMenuOpen && (
         <div 
           id="mobile-menu"
-          className="md:hidden absolute top-16 left-0 w-full bg-dark border-b border-white/10 shadow-2xl animate-in slide-in-from-top-4 duration-300 z-40"
+          className={cn(
+            "md:hidden absolute top-16 left-0 w-full bg-dark border-b border-white/10 shadow-2xl animate-in slide-in-from-top-4 duration-300 z-40",
+            !mounted && "invisible pointer-events-none select-none",
+          )}
+          aria-hidden={!mounted}
         >
           <div className="px-4 py-6 space-y-8">
             {/* User Actions Section */}

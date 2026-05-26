@@ -10,7 +10,7 @@ public class MakeRootCategoryHandlerTests : CategoryBaseTest<MakeRootCategoryCom
     {
         // Arrange
         var categoryId = CategoryId.New();
-        _categoryRepository.GetByIdAsync(categoryId.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(categoryId, Arg.Any<CancellationToken>())
             .Returns((Category?)null);
 
         var command = new MakeRootCategoryCommand(categoryId);
@@ -33,7 +33,7 @@ public class MakeRootCategoryHandlerTests : CategoryBaseTest<MakeRootCategoryCom
         // Sanity check: Ensure it actually has a parent before we start
         category.ParentCategoryId.ShouldNotBeNull();
 
-        _categoryRepository.GetByIdAsync(category.Id.Value, Arg.Any<CancellationToken>())
+        _categoryRepository.GetByIdAsync(category.Id, Arg.Any<CancellationToken>())
             .Returns(category);
 
         var command = new MakeRootCategoryCommand(category.Id);

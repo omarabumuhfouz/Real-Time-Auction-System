@@ -2,7 +2,7 @@ using MazadZone.Domain.Repositories;
 
 namespace MazadZone.Application.Features.Orders.Commands.ReplyToFeedback;
 
-public class ReplyToFeedbackCommandHandler : IRequestHandler<ReplyToFeedbackCommand, Result>
+public class ReplyToFeedbackCommandHandler : ICommandHandler<ReplyToFeedbackCommand, Unit>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -18,12 +18,12 @@ public class ReplyToFeedbackCommandHandler : IRequestHandler<ReplyToFeedbackComm
         _logger = logger;
     }
 
-    public async Task<Result> Handle(ReplyToFeedbackCommand command, CancellationToken ct)
+    public async Task<Result<Unit>> Handle(ReplyToFeedbackCommand command, CancellationToken ct)
     {
         ReplyToFeedbackLogs.LogReplyAttempt(_logger, command.OrderId);
 
         // 1. Fetch domain aggregate root
-        var order = await _orderRepository.GetByIdAsync(command.OrderId.Value, ct);
+        var order = await _orderRepository.GetWithFeedback(command.OrderId, ct);
         if (order is null)
         {
             GlobalLogs.LogOrderNotFound(_logger, command.OrderId);
@@ -35,13 +35,13 @@ public class ReplyToFeedbackCommandHandler : IRequestHandler<ReplyToFeedbackComm
         if (result.IsFailure)
         {
             ReplyToFeedbackLogs.LogReplyFailure(_logger, command.OrderId, result.TopError.Message);
-            return result;
+            return result.TopError;
         }
 
         // 3. Persist transaction changes & dispatch domain events
         await _unitOfWork.SaveChangesAsync(ct);
         
         ReplyToFeedbackLogs.LogReplySuccess(_logger, command.OrderId);
-        return Result.Success();
+        return Unit.Value;
     }
 }

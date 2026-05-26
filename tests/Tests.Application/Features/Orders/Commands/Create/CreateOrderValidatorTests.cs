@@ -1,6 +1,7 @@
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Features.Orders.Commands.Create;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 
 namespace Tests.Application.Features.Orders.Commands.Create;
 
@@ -30,7 +31,7 @@ public class CreateOrderValidatorTests
     public void Validate_BidderIdIsEmpty_FailsValidation()
     {
         // Arrange
-        var command = OrderHelper.CreateOrderCommand() with { BidderId = BidderId.Empty };
+        var command = OrderHelper.CreateOrderCommand() with { BidderId = UserId.Empty };
 
         // Act
         var result = _validator.TestValidate(command);
@@ -67,18 +68,6 @@ public class CreateOrderValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.Amount);
     }
 
-    [Fact]
-    public void Validate_TransactionIdIsEmpty_FailsValidation()
-    {
-        // Arrange
-        var command = OrderHelper.CreateOrderCommand() with { DepositCaptureTransactionId = string.Empty };
-
-        // Act
-        var result = _validator.TestValidate(command);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DepositCaptureTransactionId);
-    }
 
     [Fact]
     public void Validate_AddressIsInvalid_FailsValidation()

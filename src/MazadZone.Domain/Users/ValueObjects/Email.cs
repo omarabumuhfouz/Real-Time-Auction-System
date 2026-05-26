@@ -5,6 +5,7 @@ using AuthService.Domain.Constants;
 
 public sealed record Email
 {
+    public Email(){}
     private static readonly Regex EmailRegex = new(
         @"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$", 
         RegexOptions.Compiled);
@@ -25,5 +26,23 @@ public sealed record Email
     }
 
     public static implicit operator string(Email email) => email.Value;
+
+    public static Email FromDatabase(string value) => new Email(value ?? string.Empty);
+
     public override string ToString() => Value;
+
+// 1. Override the record's equality check to be case-insensitive
+    public bool Equals(Email? other)
+    {
+        if (other is null) return false;
+        
+        return string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // 2. ALWAYS override GetHashCode when you override Equals
+    // This ensures Dictionaries and HashSets work correctly!
+    public override int GetHashCode()
+    {
+        return StringComparer.OrdinalIgnoreCase.GetHashCode(Value);
+    }
 }

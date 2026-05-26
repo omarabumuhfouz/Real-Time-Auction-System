@@ -14,7 +14,7 @@
 node_modules/
 jspm_packages/
 packages/
-
+contracts/
 # --- OS Generated Files ---
 .DS_Store
 Thumbs.db
@@ -26,4 +26,6 @@ TestResults/
 *.trx
 
 # --- Log Files ---
-*.log
+*.logsrc/MazadZone.Api/logs/
+
+backend-contract-issues.md

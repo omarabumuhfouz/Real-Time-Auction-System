@@ -3,24 +3,26 @@
 import { useMounted } from "@/hooks/use-mounted";
 import { useEffect, useState } from "react";
 import { differenceInSeconds } from "date-fns";
+import { parseUtcDate } from "@/utils/date.utils";
 
 /**
  * Hook that provides a real-time countdown to an auction's end date.
  */
-export function useAuctionCountdown(endDate: Date) {
-
+export function useAuctionCountdown(endDate: Date | string) {
   const isMounted = useMounted();
+  const endTimestamp = endDate ? parseUtcDate(endDate).getTime() : 0;
+
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
-    calculateRemaining(endDate),
+    calculateRemaining(endTimestamp),
   );
 
-  /**
-   * Updates every second and returns remaining seconds + expiry state.
-  */
   useEffect(() => {
-    if (!isMounted) return;
+    setRemainingSeconds(calculateRemaining(endTimestamp));
+
+    if (!isMounted || endTimestamp <= 0) return;
+
     const interval = setInterval(() => {
-      const remaining = calculateRemaining(endDate);
+      const remaining = calculateRemaining(endTimestamp);
       setRemainingSeconds(remaining);
 
       if (remaining <= 0) {
@@ -29,7 +31,7 @@ export function useAuctionCountdown(endDate: Date) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [endDate, isMounted]);
+  }, [endTimestamp, isMounted]);
 
   return {
     remainingSeconds: Math.max(0, remainingSeconds),
@@ -38,6 +40,7 @@ export function useAuctionCountdown(endDate: Date) {
   };
 }
 
-function calculateRemaining(endDate: Date): number {
-  return differenceInSeconds(endDate, new Date());
+function calculateRemaining(endTimestamp: number): number {
+  if (endTimestamp <= 0) return 0;
+  return differenceInSeconds(new Date(endTimestamp), new Date());
 }

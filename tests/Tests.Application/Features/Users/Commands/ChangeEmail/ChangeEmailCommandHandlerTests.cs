@@ -23,7 +23,7 @@ public class ChangeEmailCommandHandlerTests : UserBaseTest<ChangeEmailCommandHan
         
         // Ensure it failed before hitting the database
         await _userRepository.DidNotReceiveWithAnyArgs().IsEmailInUseAsync(default!, default);
-        await _userRepository.DidNotReceiveWithAnyArgs().GetByIdAsync(default, default);
+        await _userRepository.DidNotReceiveWithAnyArgs().GetByIdAsync(command.UserId, default);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class ChangeEmailCommandHandlerTests : UserBaseTest<ChangeEmailCommandHan
         result.TopError.ShouldBe(EmailErrors.AlreadyInUse);
 
         // Ensure we aborted before trying to load the user or save changes
-        await _userRepository.DidNotReceiveWithAnyArgs().GetByIdAsync(default, default);
+        await _userRepository.DidNotReceiveWithAnyArgs().GetByIdAsync(command.UserId, default);
         await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
     }
 
@@ -61,7 +61,7 @@ public class ChangeEmailCommandHandlerTests : UserBaseTest<ChangeEmailCommandHan
         _userRepository.IsEmailInUseAsync(Arg.Any<Email>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
         // Act
@@ -88,7 +88,7 @@ public class ChangeEmailCommandHandlerTests : UserBaseTest<ChangeEmailCommandHan
         _userRepository.IsEmailInUseAsync(Arg.Any<Email>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
-        _userRepository.GetByIdAsync(command.UserId.Value, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         // Act

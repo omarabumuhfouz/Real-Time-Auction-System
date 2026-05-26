@@ -1,6 +1,3 @@
-using MazadZone.Domain.Primitives;
-using MazadZone.Domain.Users.ValueObjects;
-
 namespace MazadZone.Domain.Notifications;
 
 public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISoftDeletable
@@ -14,7 +11,7 @@ public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISo
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedOnUtc { get; private set; }
 
-    private Notification(NotificationId id, UserId userId, string title, string message)
+    private Notification(NotificationId id, UserId userId, string title, string message) : base(id)
     {
         Title = title;
         Message = message;
@@ -36,7 +33,7 @@ public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISo
 
     public static Notification Create(UserId userId, string title, string message)
     {
-        var notification = new Notification(new NotificationId(Guid.NewGuid()), userId, title, message);
+        var notification = new Notification(NotificationId.New(), userId, title, message);
         return notification;
     }
 

@@ -1,5 +1,10 @@
-using MazadZone.Domain.Auctions;
+using MazadZone.Application.Features.Sellers.Commands.BecomeSeller;
+using MazadZone.Application.Features.Sellers.Commands.UpdateBankDetails;
+using MazadZone.Application.Features.Sellers.Commands.Verify;
+using MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
+using MazadZone.Application.Features.Sellers.Queries.GetUnverifiedSellers;
 using MazadZone.Domain.Sellers;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace Tests.Application.Features.Sellers;
 
@@ -11,9 +16,73 @@ public static class SellerHelper
     public static Seller CreateValidSeller()
     {
         return Seller.BecomeSeller(
-            BidderId.New(), 
-            "Test Bank Account", 
+            UserId.New(),
+            "Test Bank Account",
             "Test National Id"
-        ).Value; 
+        ).Value;
     }
+
+    public static BecomeSellerCommand CreateBecomeSellerCommand()
+    {
+        return new BecomeSellerCommand(UserId.New(), "JO99ASEB000000123456789");
+    }
+
+    public static UpdateBankDetailsCommand CreateUpdateBankDetailsCommand()
+    {
+        return new UpdateBankDetailsCommand(UserId.New(), "JO99ASEB000000123456789");
+
+    }
+
+    public static VerifySellerCommand CreateVerifyCommand()
+    {
+        return new VerifySellerCommand(UserId.New());
+    }
+
+    public static GetPublicSellerProfileQuery CreateGetPublicSellerProfileQuery() =>
+          new GetPublicSellerProfileQuery(UserId.New());
+
+    /// <summary>
+    /// Centralizes the creation of a PublicSellerProfileResponse with sensible baseline mock data.
+    /// </summary>
+    public static PublicSellerProfileResponse CreatePublicSellerProfileResponse()
+    {
+        return new PublicSellerProfileResponse(
+            Id: Guid.NewGuid(),
+            FullName: "John Doe",
+            Email: "john.doe@example.com",
+            PhoneNumber: "+1234567890",
+            IsVerified: true,
+            MemberSince: DateTime.UtcNow.AddMonths(-6),
+            LastLogin: DateTime.UtcNow.AddDays(-1),
+            Rating: 4.9m,
+            ReviewsCount: 120,
+            ListedAuctionsCount: 15,
+            TotalBidsPlaced: 50,
+            AuctionParticipatedCount: 10,
+            AuctionsWonCount: 5,
+            CompletedPurchasesCount: 5,
+            Feedbacks: [] // Or new List<FeedbackDto>() for C# 11 and below
+        );
+    }
+
+    /// <summary>
+    /// Centralizes the creation of a mock list containing baseline UnverifiedSellerSummaryResponse records.
+    /// </summary>
+    public static List<UnverifiedSellerSummaryResponse> CreateUnverifiedSellerSummaries() =>
+    [
+        new(
+        Id: Guid.NewGuid(),
+        FullName: "Ahmad Hassan",
+        Email: "ahmad.hassan@example.com",
+        PhoneNumber: "+962790000001",
+        JoinedOn: DateTime.UtcNow.AddDays(-2)
+    ),
+    new(
+        Id: Guid.NewGuid(),
+        FullName: "Sara Ali",
+        Email: "sara.ali@example.com",
+        PhoneNumber: "+962790000002",
+        JoinedOn: DateTime.UtcNow.AddHours(-5)
+    )
+    ];
 }

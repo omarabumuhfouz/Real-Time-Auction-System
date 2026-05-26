@@ -1,7 +1,9 @@
 using MazadZone.Application.Features.Orders.Commands.Ship;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace Tests.Application.Features.Orders.Commands.Ship;
 
@@ -11,7 +13,7 @@ public class NotifyBidderOnOrderShippedDomainEventHandlerTests
     [Fact]
     public async Task Handle_OrderShipped_SendsNotificationToBidder()
     {
-        var domainEvent = new OrderShippedDomainEvent(OrderId.New(), BidderId.New());
+        var domainEvent = new OrderShippedDomainEvent(OrderId.New(), UserId.New());
 
         // 2. Act - Pass 'default' for CancellationToken (never use Arg.Any here!)
         await Handler.Handle(domainEvent, default);

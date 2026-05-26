@@ -1,5 +1,5 @@
-using AuthService.Application.Interfaces;
 using MazadZone.Application.Features.Users.Commands.ChangePassword;
+using MazadZone.Application.Services;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users.Errors;
 using MazadZone.Domain.Users.ValueObjects;
@@ -29,7 +29,7 @@ public class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComman
 
     public async Task<Result<Unit>> Handle(ChangePasswordCommand request, CancellationToken ct)
     {
-        var user = await _userRepo.GetByIdAsync(request.UserId.Value, ct);
+        var user = await _userRepo.GetByIdAsync(request.UserId, ct);
 
         if (user is null)
         {

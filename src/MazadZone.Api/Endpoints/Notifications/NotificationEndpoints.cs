@@ -151,7 +151,7 @@ public static class NotificationEndpoints
 
         try
         {
-            var notificationId = new NotificationId(id);
+            var notificationId =  NotificationId.From(id);
 
             // Create a query to fetch the notification by ID
             // Note: GetNotificationByIdQuery needs to be created in the application layer
@@ -189,7 +189,7 @@ public static class NotificationEndpoints
 
         try
         {
-            var notificationId = new NotificationId(id);
+            var notificationId =  NotificationId.From(id);
             var command = new MarkAsReadCommand(notificationId);
 
             var result = await sender.Send(command, cancellationToken);
@@ -224,7 +224,7 @@ public static class NotificationEndpoints
 
         try
         {
-            var notificationId = new NotificationId(id);
+            var notificationId =  NotificationId.From(id);
             var command = new DeleteNotificationCommand(notificationId);
 
             var result = await sender.Send(command, cancellationToken);

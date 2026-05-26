@@ -3,6 +3,7 @@
 import { type ReactNode } from "react";
 import { ThemeProvider } from "./theme-provider";
 import { QueryProvider } from "./query-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 /**
  * Composes all application providers into a single wrapper.
@@ -22,6 +23,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       enableSystem={false}
     >
       <QueryProvider>{children}</QueryProvider>
+      <Toaster position="top-center" richColors closeButton />
     </ThemeProvider>
   );
 }

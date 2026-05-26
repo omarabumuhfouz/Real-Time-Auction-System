@@ -1,0 +1,215 @@
+namespace  MazadZone.Infrastructure.Repositories.Queries;
+
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Dapper;
+using MazadZone.Application.Common.Interfaces;
+using MazadZone.Application.Features.Disputes.Queries;
+using MazadZone.Domain.Orders;
+using Polly;
+
+public class DisputeQueries : ResilientRepository, IDisputeQueries
+{
+    public DisputeQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy)
+        : base(sqlFactory, resiliencePolicy) { }
+
+    public async Task<DisputeDetailsDto?> GetDetailsByIdAsync(DisputeId disputeId, CancellationToken ct)
+    {
+        // 1. We use ALIASES (AS) so every column has a unique, predictable name
+        var mainSql = @"
+        SELECT
+            d.Id, 
+            CASE d.Status
+                WHEN 1 THEN 'Open'
+                WHEN 2 THEN 'UnderReview'
+                WHEN 3 THEN 'Resolved'
+                ELSE 'Unknown'
+            END AS Status, 
+
+            dt.Name AS DisputeType, 
+            d.Title, 
+            d.Description,
+            
+            -- Auction Info Aliases
+            a.Id AS AuctionId, 
+            i.Title AS AuctionTitle, 
+            a.EndTime, 
+            o.TotalAmount AS FinalPrice,
+            (SELECT TOP 1 ImageUrl From ItemImages WHERE ItemId = i.Id AND IsMain = 1) AS MainImageUrl,
+            
+            -- Bidder Info Aliases
+            bidder.Id AS BidderId, 
+            bidder.FirstName + ' ' + bidder.LastName AS BidderName, 
+            bidder.Email AS BidderEmail,
+
+            -- Seller Info Aliases
+            seller.Id AS SellerId, 
+            seller.FirstName + ' ' + seller.LastName AS SellerName, 
+            seller.Email AS SellerEmail
+
+        FROM Disputes d 
+        LEFT JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
+        LEFT JOIN Orders o ON d.OrderId = o.Id
+        LEFT JOIN Auctions a ON o.AuctionId = a.Id
+        LEFT JOIN Items i ON a.Id = i.AuctionId
+        LEFT JOIN Users bidder ON o.BidderId = bidder.Id
+        LEFT JOIN Users seller ON a.SellerId = seller.Id
+        WHERE d.Id = @DisputeId
+    ";
+
+        var imagesSql = @"
+        SELECT ImageUrl AS Path, AltText 
+        FROM DisputeImages
+        WHERE DisputeId = @DisputeId;
+    ";
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            // STEP 1: Query the main row as a 'dynamic' object
+            var row = await connection.QueryFirstOrDefaultAsync<dynamic>(mainSql, new { DisputeId = disputeId.Value });
+
+            if (row is null) return null;
+
+            // STEP 2: Query the attachments directly into your DTO
+            var attachments = await connection.QueryAsync<DisputeAttachmentDto>(imagesSql, new { DisputeId = disputeId.Value });
+
+            // STEP 3: Manually map the dynamic row directly into your strict records
+            // STEP 3: Manually map the dynamic row directly into your strict records
+return new DisputeDetailsDto(
+    Id: (Guid?)row.Id ?? Guid.Empty,
+    Status: row.Status is null ? "Unknown" : ((object)row.Status).ToString()!,
+    DisputeType: (string?)row.DisputeType ?? "Unknown",
+    Title: (string?)row.Title ?? string.Empty,
+    Description: (string?)row.Description ?? string.Empty,
+
+    AuctionDetails: new AuctionDisputeInfo
+    {
+        Id = (Guid?)row.AuctionId ?? Guid.Empty,
+        Title = (string?)row.AuctionTitle ?? string.Empty,
+        FinalPrice = (decimal?)row.FinalPrice ?? 0m,
+        EndTime = (DateTime?)row.EndTime ?? DateTime.MinValue,
+        MainImageUrl = (string?)row.MainImageUrl ?? string.Empty
+    },
+
+    Parties: new List<DisputeParties>
+    {
+        new DisputeParties
+        {
+            Bidder = new DisputeUserDto
+            {
+                Id = (Guid?)row.BidderId ?? Guid.Empty,
+                Name = (string?)row.BidderName ?? "Unknown Bidder",
+                Email = (string?)row.BidderEmail ?? string.Empty
+            },
+            Seller = new DisputeUserDto
+            {
+                Id = (Guid?)row.SellerId ?? Guid.Empty,
+                Name = (string?)row.SellerName ?? "Unknown Seller",
+                Email = (string?)row.SellerEmail ?? string.Empty
+            }
+        }
+    },
+
+    Attachments: attachments?.ToList() ?? new List<DisputeAttachmentDto>()
+);
+        });
+    }
+
+    public async Task<IReadOnlyList<DisputeListItemDto>> GetFilteredDisputesAsync(DisputeFilterParams filters, CancellationToken ct)
+    {
+        // 1. Base Query with "WHERE 1=1" to make appending AND clauses easy
+        var sqlBuilder = new StringBuilder(@"
+        SELECT 
+            d.Id,
+            bidder.FirstName + ' ' + bidder.LastName AS BidderName,
+            seller.FirstName + ' ' + seller.LastName AS SellerName,
+            dt.Name AS Category,
+
+            CASE d.Status
+                WHEN 1 THEN 'Open'
+                WHEN 2 THEN 'UnderReview'
+                WHEN 3 THEN 'Resolved'
+                ELSE 'Unknown'
+            END AS Status,
+
+            d.CreatedAtUtc AS SubmittedDate
+        FROM Disputes d
+        JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
+        JOIN Orders o ON d.OrderId = o.Id
+        JOIN Auctions a ON o.AuctionId = a.Id
+        JOIN Users bidder ON o.BidderId = bidder.Id
+        JOIN Users seller ON a.SellerId = seller.Id
+        WHERE 1=1 ");
+
+        var parameters = new DynamicParameters();
+
+        // 2. Conditionally append filters
+        if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
+        {
+            // Searches across Bidder Name, Seller Name, and Category
+            sqlBuilder.Append(@" AND (
+            bidder.FirstName LIKE @Search OR 
+            bidder.LastName LIKE @Search OR 
+            seller.FirstName LIKE @Search OR 
+            seller.LastName LIKE @Search OR
+            dt.Name LIKE @Search)");
+
+            parameters.Add("Search", $"%{filters.SearchTerm}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters.Status))
+{
+    // Check if the string matches an actual defined name in the enum (case-insensitively)
+    bool isDefinedName = Enum.GetNames<DisputeStatus>()
+        .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
+
+    if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
+    {
+        sqlBuilder.Append(" AND d.Status = @Status ");
+        parameters.Add("Status", (int)statusEnum);
+    }
+}
+
+        if (filters.CategoryId.HasValue)
+        {
+            sqlBuilder.Append(" AND d.DisputeTypeId = @CategoryId ");
+            parameters.Add("CategoryId", filters.CategoryId.Value);
+        }
+
+        if (filters.FromDate.HasValue)
+        {
+            sqlBuilder.Append(" AND d.CreatedAtUtc >= @FromDate ");
+            parameters.Add("FromDate", filters.FromDate.Value);
+        }
+
+        if (filters.ToDate.HasValue)
+        {
+            sqlBuilder.Append(" AND d.CreatedAtUtc <= @ToDate ");
+            parameters.Add("ToDate", filters.ToDate.Value);
+        }
+
+        // 3. Apply Safe Sorting
+        // WARNING: Never inject filters.SortColumn directly to avoid SQL Injection. Map it safely.
+        var sortString = filters.SortColumn?.ToLower() switch
+        {
+            "category" => "dt.Name",
+            "status" => "d.Status",
+            "biddername" => "BidderName",
+            "sellername" => "SellerName",
+            _ => "d.CreatedAtUtc" // Default sort
+        };
+
+        var direction = filters.IsDescending ? "DESC" : "ASC";
+        sqlBuilder.Append($" ORDER BY {sortString} {direction}");
+
+        // 4. Execute
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var result = await connection.QueryAsync<DisputeListItemDto>(sqlBuilder.ToString(), parameters);
+            return result.ToList().AsReadOnly();
+        });
+
+    }
+}

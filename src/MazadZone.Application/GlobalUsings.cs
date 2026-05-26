@@ -8,4 +8,5 @@ global using MazadZone.Domain.Orders;
 
 global using Microsoft.Extensions.Logging;
 
+global using MazadZone.Domain.Users.ValueObjects;
 global using MazadZone.Domain.Shared.ValueObjects;

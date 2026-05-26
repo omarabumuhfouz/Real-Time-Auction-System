@@ -1,13 +1,13 @@
 using System;
 using MazadZone.Domain.Payments.ValueObjects;
+using MazadZone.Domain.Shared.Interfaces;
 using MzadZone.Domain.Payments;
 
 namespace MazadZone.Domain.Repositories;
 
-public interface IPaymentRepository
+public interface IPaymentRepository : IGenericRepository<Payment, PaymentId>, IScopedService
 {
-    Task AddAsync(Payment payment, CancellationToken cancellationToken);
     Task<Payment?> GetByIdAsync(PaymentId paymentId, CancellationToken cancellationToken);
-    void Update(Payment payment);
-    void Delete(Payment payment);
+    Task<Payment?> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken);
+
 }

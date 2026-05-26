@@ -1,3 +1,4 @@
+using MazadZone.Domain.Disputes;
 using MazadZone.Domain.Orders;
 using Shouldly;
 
@@ -12,7 +13,7 @@ public class ResolutionTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("   ")]
-    public void Create_TextIsNullOrWhitespace_ReturnsEmptyError(string invalidText)
+    public void Create_TextIsNullOrWhitespace_ReturnsEmptyError(string? invalidText)
     {
         // Act
         var result = Resolution.Create(invalidText);

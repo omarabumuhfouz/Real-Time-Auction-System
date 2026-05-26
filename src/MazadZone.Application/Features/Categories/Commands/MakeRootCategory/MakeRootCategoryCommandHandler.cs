@@ -20,7 +20,7 @@ public sealed class MakeRootCategoryCommandHandler : ICommandHandler<MakeRootCat
 
     public async Task<Result<Unit>> Handle(MakeRootCategoryCommand request, CancellationToken ct)
     {
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value, ct);
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId, ct);
 
         if (category is null)
         {

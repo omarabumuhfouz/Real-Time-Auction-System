@@ -1,6 +1,7 @@
 namespace MazadZone.Domain.Orders;
 
 using MazadZone.Domain.Primitives;
+using MazadZone.Domain.Users.ValueObjects;
 
 public sealed class Feedback : Entity<FeedbackId>
 {
@@ -19,7 +20,7 @@ public sealed class Feedback : Entity<FeedbackId>
     public OrderId OrderId { get; private init; }
     public Rating Rating { get; private init; }
     public Comment Comment { get; private init; }
-    public Comment? Reply { get; private set; } // Nullable because it happens later
+    public Comment Reply { get; private set; } = Comment.Empty;
     
     public DateTime CreatedAtUtc { get; private init; }
     public DateTime? RepliedAtUtc { get; private set; }
@@ -47,7 +48,7 @@ public sealed class Feedback : Entity<FeedbackId>
     {
         if (string.IsNullOrWhiteSpace(replyText)) return FeedbackErrors.EmptyReply;
 
-        if (Reply is not null) return FeedbackErrors.AlreadyReplied;
+        if (Reply != Comment.Empty) return FeedbackErrors.AlreadyReplied;
 
         var replayResult = Comment.Create(replyText);
         if (replayResult.IsFailure) return replayResult.TopError;

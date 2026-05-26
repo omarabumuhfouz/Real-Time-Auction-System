@@ -1,3 +1,4 @@
+using MazadZone.Domain.Auctions.Enums;
 
 namespace MazadZone.Domain.Auctions;
 
@@ -10,7 +11,7 @@ public sealed class Bid : Entity<BidId>
     private Bid(
         BidId id,
         AuctionId auctionId,
-        BidderId bidderId,
+        UserId bidderId,
         Money amount,
         Money depositAmount,
         string gatewayAuthHoldId
@@ -26,9 +27,9 @@ public sealed class Bid : Entity<BidId>
     }
 
     // --- Properties ---
+    
+    public UserId BidderId { get; private init; }
     public AuctionId AuctionId { get; private init; }
-    public Auction Auction { get; private init; }
-    public BidderId BidderId { get; private init; }
     public Money Amount { get; private init; }
     public Money DepositAmount { get; private init; }
     public BidStatus Status { get; private set; }
@@ -38,13 +39,13 @@ public sealed class Bid : Entity<BidId>
     // --- Factory Method ---
     // INTERNAL: Only the Auction can create a bid.
     internal static Bid Create(
-        AuctionId auctionId, 
-        BidderId bidderId, 
+        AuctionId auctionId,
+        UserId bidderId, 
         Money amount, 
         Money depositAmount,
         string? gatewayAuthHoldId)
     {
-        return new Bid(BidId.New(), auctionId, bidderId, amount, depositAmount , gatewayAuthHoldId);
+        return new Bid(BidId.New(),auctionId ,bidderId, amount, depositAmount , gatewayAuthHoldId);
     }
 
     // --- Operations ---

@@ -1,20 +1,24 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
+using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
-using MazadZone.Domain.Users.ValueObjects;
+using MazadZone.Domain.Shared.Interfaces;
 using MzadZone.Domain.Payments;
 
 namespace MazadZone.Application.Services;
-public interface IAuctionQueries
+public interface IAuctionQueries : IScopedService
 {
     Task<AuctionDto?> GetAuctionByIdAsync(Guid auctionId, CancellationToken ct);
     Task<PagedList<AuctionsListDto>> SearchAuctionsAsync(AuctionQueryParameters queryParameters, CancellationToken ct);
     Task<IReadOnlyList<AuctionBiddersDto>> GetActiveAuctionsWithBiddersBySellerIdAsync(UserId sellerId, CancellationToken ct);
     Task<IReadOnlyList<AffectedAuctionDto>> GetAuctionsByBidderIdAsync(UserId bidderId, CancellationToken ct);
+    Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(UserId bidderId, MyBidsQueryParameters queryParameters, CancellationToken ct);
     Task<Money> GetWinningBidAmountByOrderIdAsync(Guid orderId, CancellationToken ct);
     Task<Money> GetRemainingBalanceAsync(Payment payment, CancellationToken ct);
+    Task<IReadOnlyList<AuctionsListDto>?> GetSimilarAuctionsAsync(Guid auctionId, int Limit, CancellationToken ct);
+
 }
 
 // public async Task<IEnumerable<AuctionBiddersDto>> GetBiddersForActiveAuctionsAsync(UserId sellerId, CancellationToken ct)

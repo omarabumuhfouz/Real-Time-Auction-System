@@ -8,24 +8,22 @@ public static class GetBreadcrumbs
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id}/breadcrumbs", GetBreadcrumbsAsync)
-           .WithTags("Category Queries")
-           .WithSummary("Retrieves the hierarchical path (breadcrumbs) for a category")
+        app.MapGet("/{id:guid}/breadcrumbs", HandleAsync)
+           .AllowAnonymous() // Assuming category navigation is publicly visible
+           .WithSummary("Retrieve category breadcrumbs")
+           .WithDescription("Retrieves the ordered hierarchical path from the root ancestor down to the specified category. This is optimized for rendering UI navigation trails.")
            .Produces<IReadOnlyList<BreadcrumbResponse>>(StatusCodes.Status200OK)
-           .Produces(StatusCodes.Status400BadRequest)
-           .Produces(StatusCodes.Status404NotFound)
-           .Produces(StatusCodes.Status500InternalServerError);
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+           .ProducesProblem(StatusCodes.Status404NotFound)
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> GetBreadcrumbsAsync(
+    private static async Task<IResult> HandleAsync(
         [FromRoute] CategoryId id,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        // Using CategoryId directly; custom binding is assumed to be in place
-        var query = new GetCategoryBreadcrumbsQuery(id);
-
-        var result = await sender.Send(query, ct);
+        var result = await sender.Send(new GetCategoryBreadcrumbsQuery(id), ct);
 
         return result.Match(
             onValue: breadcrumbs => Results.Ok(breadcrumbs),

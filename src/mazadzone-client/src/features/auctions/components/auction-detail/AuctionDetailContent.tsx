@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuctionImageGallery } from "./image-gallery";
@@ -8,9 +9,12 @@ import { SellerInfo } from "./SellerInfo";
 import { BidHistory } from "./BidHistory";
 import { ItemDetailsTab } from "./ItemDetailsTab";
 import { SimilarItems } from "./SimilarItems";
-import { useAuthStore } from "@/stores/auth.store";
 import { ROUTES } from "@/config/routes.config";
 import type { AuctionSummary, Seller } from "../../types/auction.types";
+
+const PlaceBidModal = dynamic(
+  () => import("@/features/bidding").then((module) => module.PlaceBidModal),
+);
 
 interface AuctionDetailContentProps {
   auction: AuctionSummary;
@@ -24,15 +28,15 @@ export function AuctionDetailContent({
   auction,
 }: AuctionDetailContentProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(auction.isFavorite);
+  const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Mock Data & Derivatives
   // ---------------------------------------------------------------------------
   
-  // In a real app, these would come from the API or be passed as props
-  const seller: Seller = {
+  // Prefer the seller data from the API response, fallback to mock details if unavailable
+  const seller: Seller = auction.seller || {
     id: "seller-123",
     fullName: "Ahmad Al-Rashid",
     email: "ahmad@mazadzone.com",
@@ -52,17 +56,18 @@ export function AuctionDetailContent({
   // ---------------------------------------------------------------------------
 
   const handlePlaceBid = () => {
-    if (!isAuthenticated) {
-      router.push(ROUTES.AUTH.REGISTER);
-      return;
-    }
+    // Temporarily disabled check for testing the Place Bid Modal as a guest
+    // if (!isAuthenticated) {
+    //   router.push(ROUTES.AUTH.REGISTER);
+    //   return;
+    // }
 
     if (auction.isOwner) {
       router.push(`${ROUTES.AUCTIONS.DETAIL(auction.id)}/edit`);
       return;
     }
 
-    // TODO: Open bid modal
+    setIsBidModalOpen(true);
   };
 
   const handleShare = async () => {
@@ -122,6 +127,19 @@ export function AuctionDetailContent({
         auctionId={auction.id}
         category={auction.category}
         subcategory={auction.subcategory}
+      />
+
+      <PlaceBidModal
+        auctionId={auction.id}
+        auctionTitle={auction.title}
+        currentBid={auction.pricing.currentBid ?? auction.pricing.startingPrice}
+        minIncrement={
+          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 100 ? 5 :
+          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 1000 ? 50 :
+          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 10000 ? 100 : 250
+        }
+        isOpen={isBidModalOpen}
+        onClose={() => setIsBidModalOpen(false)}
       />
     </>
   );

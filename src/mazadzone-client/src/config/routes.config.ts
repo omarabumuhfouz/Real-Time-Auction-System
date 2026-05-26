@@ -13,7 +13,6 @@ export const ROUTES = {
   AUTH: {
     LOGIN: "/login",
     REGISTER: "/register",
-    FORGOT_PASSWORD: "/forgot-password",
   },
 
   // --- Auctions ------------------------------------------
@@ -41,12 +40,14 @@ export const ROUTES = {
     CREATE_AUCTION: "/seller/auctions/create",
     EDIT_AUCTION: (id: string) => `/seller/auctions/${id}/edit` as const,
     BECOME: "/seller/become",
+    PROFILE: (id: string) => `/users/${id}` as const,
   },
 
   // --- Profile -------------------------------------------
   PROFILE: {
     VIEW: "/profile",
     EDIT: "/profile/edit",
+    PUBLIC: (id: string) => `/users/${id}` as const,
   },
 
   // --- Admin ---------------------------------------------
@@ -55,5 +56,6 @@ export const ROUTES = {
     USERS: "/admin/users",
     AUCTIONS: "/admin/auctions",
     DISPUTES: "/admin/disputes",
+    CATEGORIES: "/admin/categories",
   },
 } as const;

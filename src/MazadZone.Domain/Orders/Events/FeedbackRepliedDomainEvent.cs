@@ -1,8 +1,9 @@
-using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Domain.Orders.Events;
 
-public sealed record FeedbackRepliedDomainEvent(OrderId OrderId,  BidderId BidderId) : IDomainEvent
+public sealed record FeedbackRepliedDomainEvent(OrderId OrderId,  UserId BidderId) : IDomainEvent
 {
     public Guid Id => Guid.NewGuid();
     public DateTime OccurredOnUtc => DateTime.UtcNow;

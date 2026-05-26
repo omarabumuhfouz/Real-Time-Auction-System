@@ -5,7 +5,7 @@ using MazadZone.Domain.Sellers;
 
 namespace MazadZone.Application.Features.Sellers.Commands.BecomeSeller;
 
-internal sealed class BecomeSellerCommandHandler : ICommandHandler<BecomeSellerCommand, Unit>
+public sealed class BecomeSellerCommandHandler : ICommandHandler<BecomeSellerCommand, Unit>
 {
     private readonly ISellerRepository _sellerRepository;
     private readonly IBidderRepository _bidderRepository;
@@ -31,22 +31,21 @@ internal sealed class BecomeSellerCommandHandler : ICommandHandler<BecomeSellerC
 
     public async Task<Result<Unit>> Handle(BecomeSellerCommand request, CancellationToken ct)
     {
-        var user = await _userRepository.GetByIdAsync(request.UserId.Value, ct);  
+        var user = await _userRepository.GetByIdAsync(request.UserId, ct);  
         if(user is null)
         {
             GlobalLogs.LogUserNotFound(_logger,request.UserId);
             return BidderErrors.NotFound; ;
         }
 
-        var bidderId = BidderId.Load(request.UserId.Value);
-        var nationalId = await _bidderRepository.GetNationalIdByBidderIdAsync(bidderId, ct);
+        var nationalId = await _bidderRepository.GetNationalIdByBidderIdAsync(request.UserId, ct);
         if(nationalId is null)
         {
-            GlobalLogs.LogBidderNotFound(_logger, bidderId);
+            GlobalLogs.LogBidderNotFound(_logger, request.UserId);
             return BidderErrors.NotFound;
         }
 
-        var result = Seller.BecomeSeller(bidderId, nationalId, request.BankAccountNumber);
+        var result = Seller.BecomeSeller(request.UserId, bankAccountNumber: request.BankAccountNumber, nationalId: nationalId);
 
         if (result.IsFailure)
         {

@@ -5,6 +5,24 @@
  * analytics, and seller-specific operations.
  */
 
+// Components
 export { BecomeSellerPage } from "./components/BecomeSellerPage";
-export { useBecomeSeller } from "./api/seller.mutations";
-export type { BecomeSellerInput, BecomeSellerResponse } from "./api/seller.mutations";
+export { SellerReviewsTab } from "./components/SellerReviewsTab";
+export { SellerAuctionsTab } from "./components/SellerAuctionsTab";
+
+// Hooks & API
+export {
+  useBecomeSeller,
+  useSubmitSellerReview,
+  useGetSellerProfile,
+  useGetSellerReviews,
+  useGetSellerProfileAuctions,
+  useCreateReviewReply,
+} from "./api";
+
+// Types
+export type { BecomeSellerInput, BecomeSellerResponse, SubmitSellerReviewInput } from "./api";
+export type { SellerProfile, SellerReview, ReviewReply } from "./types/seller.types";
+
+// Testing
+export { resetMockReviews } from "./testing/mock-seller";

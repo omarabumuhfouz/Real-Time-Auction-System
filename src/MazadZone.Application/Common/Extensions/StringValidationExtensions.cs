@@ -45,15 +45,15 @@ public static class StringValidationExtensions
             .WithMessage("Password must contain at least one special character.");
     }
 
-public static IRuleBuilderOptions<T, string> MustBeValidName<T>(this IRuleBuilder<T, string> ruleBuilder)
+public static IRuleBuilderOptions<T, string> MustBeValidName<T>(this IRuleBuilder<T, string> ruleBuilder, string nameOfProperty = "Name")
     {
         return ruleBuilder
             .NotEmpty()
-            .WithMessage("Name is required.")
+            .WithMessage($"{nameOfProperty} is required.")
             .MinimumLength(SharedConstainst.MinNameLength) // Or use SharedConstainst.MinNameLength
-            .WithMessage($"Name must be at least {SharedConstainst.MinNameLength} characters long.")
+            .WithMessage($"{nameOfProperty} must be at least {SharedConstainst.MinNameLength} characters long.")
             .MaximumLength(SharedConstainst.MaxNameLength) // Or use SharedConstainst.MaxNameLength
-            .WithMessage($"Name cannot exceed {SharedConstainst.MaxNameLength} characters.");
+            .WithMessage($"{nameOfProperty} cannot exceed {SharedConstainst.MaxNameLength} characters.");
     }
 
     public static IRuleBuilderOptions<T, string> MustBeValidDescription<T>(this IRuleBuilder<T, string> ruleBuilder)
@@ -64,6 +64,16 @@ public static IRuleBuilderOptions<T, string> MustBeValidName<T>(this IRuleBuilde
             .MaximumLength(SharedConstainst.MaxDescriptionLength) // Or use SharedConstainst.MaxDescriptionLength
             .WithMessage("Description cannot exceed 500 characters.");
     }
+    public static IRuleBuilderOptions<T, string> MustBeValidTitle<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty()
+            .WithMessage("Title is required.")
+            .MaximumLength(SharedConstainst.MaxTitleLength) // Or use SharedConstainst.MaxDescriptionLength
+            .WithMessage($"Description cannot exceed {SharedConstainst.MaxTitleLength} characters.");
+    }
+
+
 
     public static IRuleBuilderOptions<T, string> MustBeValidResolution<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
@@ -74,5 +84,12 @@ public static IRuleBuilderOptions<T, string> MustBeValidName<T>(this IRuleBuilde
             .WithMessage($"The resolution details must be at least {DisputeConsts.MinResolutionLength} characters long.")
             .MaximumLength(DisputeConsts.MaxResolutionLength)
             .WithMessage($"The resolution cannot exceed {DisputeConsts.MaxResolutionLength} characters.");
+    }
+
+    public static IRuleBuilderOptions<T, string> MustBeValiePhoneNumber<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage("Phone number is required.")
+            .Length(UserConstants.PhoneNumberLength).WithMessage($"Phone number must be exactly {UserConstants.PhoneNumberLength} digits.");
     }
 }

@@ -1,14 +1,16 @@
 using MazadZone.Application.Features.Bidders.DTOs;
+using MazadZone.Application.Features.Disputes.Commands.OpenDispute;
 using MazadZone.Application.Features.Orders.Commands.AddFeedback;
 using MazadZone.Application.Features.Orders.Commands.Confirm;
 using MazadZone.Application.Features.Orders.Commands.Create;
 using MazadZone.Application.Features.Orders.Commands.DeliverOrder;
-using MazadZone.Application.Features.Orders.Commands.OpenDispute;
 using MazadZone.Application.Features.Orders.Commands.ResolveDispute;
 using MazadZone.Application.Features.Orders.Commands.ShipOrder;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Application.Features.Orders.Queries.GetOrderByWinningBid;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Disputes;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Shared.ValueObjects;
@@ -21,17 +23,16 @@ public static class OrderHelper
     /// Centralizes the creation of a pending order for testing purposes, 
     /// fulfilling all required Domain constraints.
     /// </summary>
-    public static Order CreatePendingOrder(decimal? amount = null)
+    public static Order CreatePendingOrder()
     {
         var address = new Address("123 Test St", "Amman", "11118", "Jordan");
 
         return Order.Create(
             AuctionId.New(),
-            BidderId.New(),
+            UserId.New(),
             BidId.New(),
             address,
-            amount ?? 150.00m,
-            "txn_deposit_123"
+             150.00m
         ).Value;
     }
 
@@ -130,11 +131,10 @@ public static Order CreateOrderWithFeedback()
 
         return new CreateOrderCommand(
             AuctionId.New(),
-            BidderId.New(),
+            UserId.New(),
             BidId.New(),
             address, // Assuming your command accepts the Address Value Object here
-            150.00m,
-            "txn_deposit_123"
+            150.00m
         );
     }
 
@@ -146,30 +146,34 @@ public static Order CreateOrderWithFeedback()
         return new OrderDeliveredDomainEvent(
             OrderId.New(),
             AuctionId.New(),
-            BidderId.New()
+            UserId.New()
         );
     }
 
     public static DisputeOpenedDomainEvent CreateDisputeOpenedEvent()
     {
-        return new DisputeOpenedDomainEvent(OrderId.New(), DisputeId.New());
+        return new DisputeOpenedDomainEvent(DisputeId.New(), OrderId.New());
     }
 
     public static OpenDisputeCommand CreateOpenDisputeCommand()
-        => new OpenDisputeCommand(OrderId.New(), "Testing Reason");
+        => new OpenDisputeCommand(
+            OrderId: OrderId.New(),
+            DisputeTypeId: DisputeTypeId.New(),
+            Title: "Damaged Item on Arrival",
+            Description: "The item received was significantly damaged during transit and does not match the seller's description."
+        );
 
 
     public static DisputeResolvedDomainEvent CreateDisputeResolvedEvent()
     {
         return new DisputeResolvedDomainEvent(
-                    OrderId.New(),
-                    AuctionId.New(),
                     DisputeId.New(),
+                    OrderId.New(),
                     "Resolution Testing.");
     }
 
     public static ResolveDisputeCommand CreateResolveDisputeCommand()
-        => new ResolveDisputeCommand(OrderId.New(), "Resolve Reason Testing.");
+        => new ResolveDisputeCommand(DisputeId.New(), "Resolve Reason Testing.");
 
 
     public static ShipOrderCommand CreateShipOrderCommand()
@@ -211,6 +215,7 @@ public static Order CreateOrderWithFeedback()
             Currency: "JOD",
             BidderId: Guid.NewGuid(),
             WinningBidId: Guid.NewGuid(), // Generates a random baseline Guid
+            AuctionId: Guid.NewGuid(),
             HasActiveDispute: false,
             IsDisputable: true,
             CanLeaveFeedback: false

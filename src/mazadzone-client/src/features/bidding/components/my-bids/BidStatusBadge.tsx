@@ -7,18 +7,20 @@ interface BidStatusBadgeProps {
 }
 
 export function BidStatusBadge({ status, className }: BidStatusBadgeProps) {
-  const isEnded = status === "Ended";
   const isLeading = status === "Leading";
   const isOutbid = status === "Outbid";
+  const isWon = status === "Won";
+  const isLost = status === "Lost" || status === "Ended";
 
   return (
     <Badge
       variant="outline"
       className={cn(
         "rounded-full font-medium border-none w-24 h-8 text-lg flex items-center justify-center shrink-0",
-        isEnded && "bg-muted text-muted-foreground",
         isLeading && "bg-success text-success-foreground",
+        isWon && "bg-success text-success-foreground",
         isOutbid && "bg-warning text-warning-foreground",
+        isLost && "bg-muted text-muted-foreground",
         className
       )}
     >

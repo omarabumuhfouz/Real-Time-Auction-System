@@ -5,6 +5,7 @@ namespace MazadZone.Domain.Shared.ValueObjects;
 
 public sealed record Description
 {
+    public Description(){}
     public string Value { get; init; }
 
     private Description(string value) => Value = value;
@@ -17,6 +18,9 @@ public sealed record Description
 
         return Result.Success(new Description(value.Trim()));
     }
+
+    public static Description FromDatabase(string value) => new Description(value ?? string.Empty);
+
 
     public static implicit operator string(Description description) => description.Value;
     

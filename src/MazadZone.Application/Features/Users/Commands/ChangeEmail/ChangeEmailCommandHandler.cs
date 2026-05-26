@@ -34,7 +34,7 @@ public class ChangeEmailCommandHandler : ICommandHandler<ChangeEmailCommand, Uni
             return EmailErrors.AlreadyInUse;
         }
 
-        var user = await _userRepository.GetByIdAsync(command.UserId.Value, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(command.UserId, cancellationToken);
 
         if (user is null)
         {

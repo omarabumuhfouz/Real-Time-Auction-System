@@ -1,25 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { InputWithIcon } from "@/components/ui/input-with-icon";
 import { PasswordInput } from "@/components/ui/password-input";
 import { loginSchema, type LoginFormValues } from "../validations/login.schema";
 import { ROUTES } from "@/config/routes.config";
+import { useLoginMutation } from "../api";
+import { useAuthStore } from "@/stores/auth.store";
 
 /**
  * LoginForm
  * The main login form component for authenticating a user.
  */
 export function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const loginStore = useAuthStore((state) => state.login);
+  const loginMutation = useLoginMutation();
 
   const {
     register,
@@ -31,21 +35,29 @@ export function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: false,
     },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
     try {
-      console.log("Form data ready for submission:", data);
-      // TODO: Hook up API mutation here
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay
+      await loginMutation.mutateAsync(data);
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
+  };
+
+  const handleTestAdminLogin = () => {
+    loginStore(
+      {
+        id: "mock-admin-id",
+        email: "admin@mazadzone.com",
+        fullName: "Admin",
+        role: "admin",
+      },
+      "mock-access-token",
+      "mock-refresh-token"
+    );
+    router.push(ROUTES.ADMIN.DASHBOARD);
   };
 
   return (
@@ -93,43 +105,15 @@ export function LoginForm() {
         </div>
       </div>
 
-      {/* Options: Remember me & Forget Password */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center space-x-2">
-          <Controller
-            name="rememberMe"
-            control={control}
-            render={({ field }) => (
-              <Checkbox
-                id="rememberMe"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                className="rounded-sm bg-dark-foreground"
-              />
-            )}
-          />
-          <label
-            htmlFor="rememberMe"
-            className="text-sm text-muted-foreground font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Remember me
-          </label>
-        </div>
-        <Link
-          href={ROUTES.AUTH.FORGOT_PASSWORD ?? "#"}
-          className="text-sm text-primary hover:underline font-medium"
-        >
-          Forget password?
-        </Link>
-      </div>
+
 
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isLoading}
+        disabled={loginMutation.isPending}
         className="w-full rounded-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-[15px] font-semibold mt-4 transition-colors"
       >
-        {isLoading ? "Signing in..." : "Sign in"}
+        {loginMutation.isPending ? "Signing in..." : "Sign in"}
       </Button>
 
       {/* Sign Up Link */}
@@ -140,6 +124,22 @@ export function LoginForm() {
             Sign up
           </Link>
         </p>
+      </div>
+
+      {/* Dev helper button */}
+      <div className="mt-8 pt-6 border-t border-dashed border-border text-center">
+        <p className="text-xs text-muted-foreground mb-3 font-mono">
+          Developer Sandbox Shortcuts
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleTestAdminLogin}
+          className="w-full flex items-center justify-center gap-2 h-10 border-primary/30 text-primary hover:bg-accent hover:text-primary transition-colors"
+        >
+          <Shield className="h-4 w-4" />
+          Log In as Test Admin
+        </Button>
       </div>
     </form>
   );

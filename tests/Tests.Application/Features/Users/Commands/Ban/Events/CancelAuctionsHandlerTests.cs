@@ -1,6 +1,7 @@
 using MazadZone.Application.Features.Users.Commands.Ban.Events;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Users.Events;
 using MazadZone.Domain.Users.ValueObjects;
 using Tests.Application.Features.Auctions;
@@ -39,8 +40,8 @@ public class CancelAuctionsHandlerTests : UserBaseTest<CancelAuctionsHandler>
         var reason = "Fraudulent items detected.";
         var domainEvent = new UserBannedDomainEvent(userId, reason, "seller@test.com");
 
-        var bidderOne = BidderId.New();
-        var bidderTwo = BidderId.New();
+        var bidderOne = UserId.New();
+        var bidderTwo = UserId.New();
 
         var mockActiveAuctions = AuctionHelper.CreateMockActiveAuctions(bidderOne, bidderTwo);
 

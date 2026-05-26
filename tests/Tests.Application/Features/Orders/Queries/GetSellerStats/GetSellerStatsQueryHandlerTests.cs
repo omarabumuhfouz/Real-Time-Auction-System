@@ -1,6 +1,7 @@
 using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Application.Features.Orders.Queries.GetSellerStats;
 using MazadZone.Domain.Auctions;
+using MazadZone.Domain.Sellers;
 
 namespace Tests.Application.Features.Orders.Queries.GetSellerStats;
 
@@ -10,7 +11,7 @@ public class GetSellerStatsQueryHandlerTests : OrderBaseTest<GetSellerStatsQuery
     public async Task Handle_SellerExists_ReturnsSellerStats()
     {
         // 1. Arrange
-        var query = new GetSellerStatsQuery(SellerId.New());
+        var query = new GetSellerStatsQuery(UserId.New());
 
         var expectedDto = OrderHelper.CreateSellerOrderStatsDto();
 
@@ -32,7 +33,7 @@ public class GetSellerStatsQueryHandlerTests : OrderBaseTest<GetSellerStatsQuery
     public async Task Handle_QueryServiceReturnsNull_ReturnsEmptyStats()
     {
         // 1. Arrange
-        var query = new GetSellerStatsQuery(SellerId.New());
+        var query = new GetSellerStatsQuery(UserId.New());
 
         _orderQueries.GetSellerStatsAsync(query.SellerId, Arg.Any<CancellationToken>())
             .Returns((SellerOrderStatsDto?)null!);

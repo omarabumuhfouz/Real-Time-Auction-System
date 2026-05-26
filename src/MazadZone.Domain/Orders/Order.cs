@@ -17,25 +17,23 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     private Order(
         OrderId id,
         AuctionId auctionId,
-        BidderId bidderId,
+        UserId bidderId,
         BidId winningBidId,
         Address receiptAddressId,
-        Money totalAmount,
-        string depositCaptureTransactionId) : base(id)
+        Money totalAmount) : base(id)
     {
         BidderId = bidderId;
         AuctionId = auctionId;
         WinningBidId = winningBidId;
         ReceiptAddress = receiptAddressId;
         TotalAmount = totalAmount;
-        DepositCaptureTransactionId = depositCaptureTransactionId;
         Status = OrderStatus.Pending;
     }
 
     // --- Properties ---
 
     /// <summary>Gets the unique identifier of the bidder who placed the winning bid.</summary>
-    public BidderId BidderId { get; private init; }
+    public UserId BidderId { get; private init; }
 
     /// <summary>Gets the unique identifier of the winning bid associated with this order.</summary>
     public BidId WinningBidId { get; private init; }
@@ -50,20 +48,10 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <summary>Gets the total monetary amount of the order.</summary>
     public Money TotalAmount { get; private set; }
 
-    /// <summary>Gets the transaction ID for the captured security deposit.</summary>
-    public string DepositCaptureTransactionId { get; private set; }
-
-    /// <summary>Gets the transaction ID for the remaining balance payment, if applicable.</summary>
-    public string? RemainingBalanceTransactionId { get; private set; }
-
-    /// <summary>Gets the unique identifier of the dispute if one has been opened.</summary>
-    public DisputeId? DisputeId { get; private set; }
 
     /// <summary>Gets the dispute entity associated with this order.</summary>
-    public Dispute? Dispute { get; private set; }
+    public DisputeId? DisputeId { get; private set; }
 
-    /// <summary>Gets the unique identifier of the feedback left for this order.</summary>
-    public FeedbackId? FeedbackId { get; private set; }
 
     /// <summary>Gets the feedback entity associated with this order.</summary>
     public Feedback? Feedback { get; private set; }
@@ -74,9 +62,9 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
 
     public bool IsDisputable => DisputeId is null && (Status == OrderStatus.Delivered || Status == OrderStatus.Shipped);
 
-    public bool CanLeaveFeedback => FeedbackId is null && Status == OrderStatus.Delivered;
+    public bool CanLeaveFeedback => Feedback is null && Status == OrderStatus.Delivered;
 
-    public bool HasActiveDispute => DisputeId is not null && Dispute?.IsResolved == false;
+    public bool HasActiveDispute => DisputeId is not null;
 
     
     // --- Static Factory Method ---
@@ -92,11 +80,11 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A newly initialized <see cref="Order"/>.</returns>
     public static Result<Order> Create(
         AuctionId auctionId,
-        BidderId bidderId,
+        UserId bidderId,
         BidId winningBidId,
         Address receiptAddress,
-        decimal totalAmount,
-        string depositCaptureTransactionId)
+        decimal totalAmount
+    )
     {
         var totalAmountResult = Money.Create(totalAmount, Currency.Jod);
         if (totalAmountResult.IsFailure) return OrderErrors.TotalAmountTooLow;
@@ -107,8 +95,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
             bidderId,
             winningBidId,
             receiptAddress,
-            totalAmountResult.Value,
-            depositCaptureTransactionId);
+            totalAmountResult.Value);
 
         order.RaiseDomainEvent(new OrderCreatedDomainEvent(order.Id, order.BidderId));
 
@@ -121,8 +108,12 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order is not in a Confirmed state.</returns>
     public Result Ship()
     {
+        if (Status == OrderStatus.Shipped) return Result.Success();
+
         if (Status != OrderStatus.Confirmed) return OrderErrors.CannotShipped;
+
         Status = OrderStatus.Shipped;
+
         RaiseDomainEvent(new OrderShippedDomainEvent(Id, BidderId));
         return Result.Success();
     }
@@ -131,6 +122,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order is not currently Pending.</returns>
     public Result Confirm()
     {
+        if (Status == OrderStatus.Confirmed) return Result.Success();
+
         if (Status != OrderStatus.Pending) return OrderErrors.CannotConfirm;
         Status = OrderStatus.Confirmed;
         RaiseDomainEvent(new OrderConfirmedDomainEvent(Id, AuctionId));
@@ -141,6 +134,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order was not previously Shipped.</returns>
     public Result Deliver()
     {
+        if (Status == OrderStatus.Delivered) return Result.Success();
+
         if (Status != OrderStatus.Shipped) return OrderErrors.CannotDeliver;
         Status = OrderStatus.Delivered;
         RaiseDomainEvent(new OrderDeliveredDomainEvent(Id, AuctionId, BidderId));
@@ -151,6 +146,8 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A success result or a failure if the order has already moved past the Pending state.</returns>
     public Result Cancel()
     {
+        if (Status == OrderStatus.Canceled) return Result.Success();
+
         if (Status != OrderStatus.Pending) return OrderErrors.CannotCancel;
         
         Status = OrderStatus.Canceled;
@@ -168,49 +165,18 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity
     /// <returns>A result indicating success or the specific validation error.</returns>
     public Result AddFeedback(int ratingValue, string comment)
     {
-        if (FeedbackId is not null) return OrderErrors.FeedbackAlreadyExists;
+        if (Feedback is not null) return OrderErrors.FeedbackAlreadyExists;
         if (Status != OrderStatus.Delivered) return OrderErrors.FeedbackRequiresDelivered;
 
         var feedbackResult = Feedback.Create(this.Id, ratingValue, comment);
         if (feedbackResult.IsFailure) return feedbackResult.TopError;
 
         Feedback = feedbackResult.Value;
-        FeedbackId = feedbackResult.Value.Id;
         RaiseDomainEvent(new FeedbackLeftDomainEvent(Id, AuctionId, ratingValue, comment));
         return Result.Success();
     }
 
-    /// <summary>
-    /// Opens a dispute for the order. Disputes are allowed only after the order is confirmed/shipped.
-    /// </summary>
-    /// <param name="reasonText">The explanation for opening the dispute.</param>
-    /// <returns>A result representing the outcome of the operation.</returns>
-    public Result OpenDispute(string reasonText)
-    {
-        if (DisputeId is not null) return OrderErrors.DisputeAlreadyExists;
-        if (Status == OrderStatus.Pending || Status == OrderStatus.Confirmed) return OrderErrors.CannotDispute;
-
-        var disputeResult = Dispute.Create(this.Id, reasonText);
-        if (disputeResult.IsFailure) return disputeResult.TopError;
-
-        Dispute = disputeResult.Value;
-        DisputeId = disputeResult.Value.Id;
-        RaiseDomainEvent(new DisputeOpenedDomainEvent(Id, disputeResult.Value.Id));
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Resolves an existing dispute by delegating the logic to the <see cref="Dispute"/> entity.
-    /// </summary>
-    public Result ResolveDispute(string resolutionText)
-    {
-        if (Dispute is null) return OrderErrors.NoDispute;
-
-        var resolutionResult = Dispute.Resolve(resolutionText);
-        if (resolutionResult.IsFailure) return resolutionResult.TopError;
-        RaiseDomainEvent(new DisputeResolvedDomainEvent(Id, AuctionId, Dispute.Id, resolutionText));
-        return Result.Success();
-    }
+    
 
     /// <summary>
     /// Allows a seller to reply to the feedback left on this order.

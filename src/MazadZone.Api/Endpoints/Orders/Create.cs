@@ -1,38 +1,39 @@
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Domain.Auctions;
-using AutoMapper;
 using MazadZone.Application.Features.Orders.Commands.Create;
-using MazadZone.Domain.Shared.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Orders;
 
 public record CreateOrderRequest(
     AuctionId AuctionId,
-    BidderId BidderId,
+    UserId BidderId,
     BidId WinningBidId,
     AddressDto ReceiptAddress,
-    decimal Amount,
-    string DepositCaptureTransactionId)
+    decimal Amount)
 {
     public CreateOrderCommand ToCommand() => new(
         AuctionId,
         BidderId,
         WinningBidId,
         ReceiptAddress,
-        Amount,
-        DepositCaptureTransactionId);
+        Amount);
 }
 
 public static class Create
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", HandleAsync)
-           .WithTags("Order Commands")
-           .WithSummary("Creates a new Order")
-           .WithDescription("Initiates a post-auction order transaction.")
-           .Produces<Guid>(StatusCodes.Status201Created)
-           .Produces(StatusCodes.Status400BadRequest);
+        app.MapPut("/", HandleAsync)
+           // .RequireAuthorization() // Highly recommended: Creating an order must be tied to an authenticated user
+           .WithSummary("Create a new order")
+           .WithDescription("Initiates a post-auction order transaction for the winning bidder. Requires the auction ID, the winning bid ID, and the shipping address. Returns a 409 Conflict if an order has already been created for this auction or if the provided bid was not the actual winner.")
+           .Accepts<CreateOrderRequest>("application/json")
+           .Produces(StatusCodes.Status201Created)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For missing body or invalid address details
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
+           .ProducesProblem(StatusCodes.Status403Forbidden) // If policies restrict order creation
+           .ProducesProblem(StatusCodes.Status404NotFound) // Auction, Bidder, or Bid does not exist
+           .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(

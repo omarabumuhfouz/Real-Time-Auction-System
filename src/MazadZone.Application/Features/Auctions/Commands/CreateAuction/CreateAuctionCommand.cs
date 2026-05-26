@@ -1,17 +1,21 @@
+using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Auctions.ValueObjects;
-using MazadZone.Domain.Sellers;
-using MazadZone.Domain.Shared.ValueObjects;
-using MazadZone.Domain.ValueObjects;
+using MazadZone.Domain.Auctions.Enums;
+using MazadZone.Domain.Categories;
 
 namespace MazadZone.Application.Features.Auctions.Commands.CreateAuction;
 
 public sealed record CreateAuctionCommand(
-    ItemId ItemId,
-    SellerId SellerId,
+    UserId SellerId,
+    ItemStatus Status,
+    string Condition,
     Address ShippingAddress,
-    decimal StartBid,
+    decimal StartBidAmount,
     decimal MinBidAmount,
-    Currency Currency,
     DateTime StartTime,
-    DateTime EndTime) : ICommand<AuctionId>;
+    DateTime EndTime,
+    string Title,
+    string Description,
+    List<ImageModelDto> Images,
+    CategoryId CatigoryId
+    ) : ICommand<AuctionId>;

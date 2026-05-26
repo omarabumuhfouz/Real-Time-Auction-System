@@ -3,7 +3,7 @@ using MazadZone.Domain.Sellers;
 
 namespace MazadZone.Application.Features.Sellers.Commands.UpdateBankDetails;
 
-internal sealed class UpdateBankDetailsCommandHandler : ICommandHandler<UpdateBankDetailsCommand, Unit>
+public sealed class UpdateBankDetailsCommandHandler : ICommandHandler<UpdateBankDetailsCommand, Unit>
 {
     private readonly ISellerRepository _sellerRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -21,7 +21,7 @@ internal sealed class UpdateBankDetailsCommandHandler : ICommandHandler<UpdateBa
 
     public async Task<Result<Unit>> Handle(UpdateBankDetailsCommand request, CancellationToken cancellationToken)
     {
-        var seller = await _sellerRepository.GetByIdAsync(request.SellerId.Value, cancellationToken);
+        var seller = await _sellerRepository.GetByIdAsync(request.SellerId, cancellationToken);
 
         if (seller is null)
         {

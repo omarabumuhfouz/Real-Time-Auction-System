@@ -5,7 +5,12 @@
  * admin resolution interface, and dispute API hooks.
  */
 
-// Placeholder exports — uncomment as implementations are added:
-// export { DisputeForm } from "./components/dispute-form";
-// export { DisputeDetail } from "./components/dispute-detail";
-// export { useFileDispute, useGetDisputes } from "./api";
+export { DisputeDialog } from "./components/DisputeDialog";
+export { useFileDispute } from "./api";
+export * from "./types/disputes.types";
+export * from "./validations/disputes.schemas";
+
+// Admin
+export { AdminDisputesPage } from "./components/AdminDisputesPage";
+export * from "./types/admin-disputes.types";
+export { useGetAdminDisputes } from "./api/use-get-admin-disputes";

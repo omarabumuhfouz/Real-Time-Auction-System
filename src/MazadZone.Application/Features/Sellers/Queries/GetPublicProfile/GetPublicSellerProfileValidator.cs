@@ -6,6 +6,6 @@ public sealed class GetPublicSellerProfileValidator : AbstractValidator<GetPubli
 {
     public GetPublicSellerProfileValidator()
     {
-        RuleFor(x => x.SellerId).MustBeValidSellerId();
+        RuleFor(x => x.SellerId).MustBeValidUserId();
     }
 }
