@@ -1,0 +1,78 @@
+/**
+ * Pure HTTP REST functions for the Auctions feature.
+ * Connects directly to the ASP.NET Core endpoints.
+ */
+
+import { api } from "@/lib/api/client";
+import type {
+  AuctionDto,
+  AuctionsListDto,
+  CreateAuctionRequest,
+  GetAuctionsQueryParams,
+  PagedListOfAuctionsListDto,
+} from "./auction.contracts";
+
+/**
+ * Search and filter auctions from the backend.
+ */
+export async function getAuctions(
+  params?: GetAuctionsQueryParams,
+): Promise<PagedListOfAuctionsListDto> {
+  const response = await api.get<PagedListOfAuctionsListDto>("/api/v1/auctions", {
+    params,
+  });
+  return response.data;
+}
+
+/**
+ * Get detailed information about a single auction by ID.
+ */
+export async function getAuctionById(id: string): Promise<AuctionDto> {
+  const response = await api.get<AuctionDto>(`/api/v1/auctions/${id}`);
+  return response.data;
+}
+
+/**
+ * Get a list of similar auctions for a specific auction ID.
+ */
+export async function getSimilarAuctions(
+  id: string,
+  limit?: number,
+): Promise<AuctionsListDto[]> {
+  const response = await api.get<AuctionsListDto[]>(
+    `/api/v1/auctions/${id}/similar`,
+    {
+      params: limit ? { limit } : undefined,
+    },
+  );
+  return response.data;
+}
+
+/**
+ * Create a new auction listing.
+ */
+export async function createAuction(request: CreateAuctionRequest): Promise<string> {
+  const response = await api.post<string>("/api/v1/auctions", request);
+  return response.data;
+}
+
+/**
+ * Activate an upcoming/pending auction.
+ */
+export async function activateAuction(id: string): Promise<void> {
+  await api.post<void>(`/api/v1/auctions/${id}/activate`);
+}
+
+/**
+ * Manually end an active auction.
+ */
+export async function endAuction(id: string): Promise<void> {
+  await api.post<void>(`/api/v1/auctions/${id}/end`);
+}
+
+/**
+ * Cancel an auction listing with a reason.
+ */
+export async function cancelAuction(id: string, reason: string): Promise<void> {
+  await api.post<void>(`/api/v1/auctions/${id}/cancel`, { reason });
+}

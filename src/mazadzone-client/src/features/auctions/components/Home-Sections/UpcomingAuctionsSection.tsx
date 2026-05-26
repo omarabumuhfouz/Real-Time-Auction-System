@@ -47,10 +47,8 @@ export function UpcomingAuctionsSection() {
           : auctions?.map((auction) => (
               <AuctionCard
                 key={auction.id}
-                auction={{
-                  ...auction,
-                  isFavorite: favorites.has(auction.id),
-                }}
+                auction={auction}
+                isFavorite={favorites.has(auction.id)}
                 onFavoriteClick={handleFavoriteClick}
               />
             ))}

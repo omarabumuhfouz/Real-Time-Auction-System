@@ -15,13 +15,13 @@ public sealed class Payment : AggregateRoot<PaymentId>
     private Payment() { }
 
     private Payment(
-        PaymentId id, OrderId orderId, UserId userId, Money? capturedHoldedAmount, Money? capturedRemainingAmount = null) 
+        PaymentId id, OrderId orderId, UserId userId, Money? capturedHoldedAmount, Money? capturedRemainingAmount = null)
         : base(id)
     {
         OrderId = orderId;
         UserId = userId;
-        CapturedHoldedAmount = capturedHoldedAmount;
-        CapturedRemainingAmount = capturedRemainingAmount;
+        CapturedHoldedAmount = capturedHoldedAmount ?? Money.Zero();
+        CapturedRemainingAmount = capturedRemainingAmount ?? Money.Zero();
         Status = PaymentStatus.Pending;
         CreatedAtUtc = DateTime.UtcNow;
     }
@@ -29,7 +29,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
     public OrderId OrderId { get; private init; }
     public UserId UserId { get; private init; }
     public Money CapturedHoldedAmount { get; private set; } = Money.Zero();
-    public Money CapturedRemainingAmount {get; private set; } = Money.Zero();
+    public Money CapturedRemainingAmount { get; private set; } = Money.Zero();
     public PaymentStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private init; }
     public DateTime? CompletedAtUtc { get; private set; }
@@ -39,7 +39,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
     public Money TotalCapturedAmount => (CapturedHoldedAmount ?? Money.Zero()) + (CapturedRemainingAmount ?? Money.Zero());
 
 
-    
+
     // Encapsulate the collection
     public IReadOnlyCollection<Transaction> Transactions => _transactions.AsReadOnly();
 
@@ -48,10 +48,10 @@ public sealed class Payment : AggregateRoot<PaymentId>
         if (amount <= Money.Zero())
             return Result.Failure<Payment>(PaymentErrors.AmountMustBeGreaterThanZero);
 
-        var paymentId = PaymentId.New();       
-        
+        var paymentId = PaymentId.New();
+
         var payment = new Payment(paymentId, orderId, userId, amount);
-        
+
         payment.RaiseDomainEvent(new PaymentCreatedDomainEvent(paymentId, orderId));
         return Result.Success(payment);
     }
@@ -63,8 +63,8 @@ public sealed class Payment : AggregateRoot<PaymentId>
 
         if (CapturedRemainingAmount is not null)
             return Result.Failure<Payment>(PaymentErrors.RemainingAmountCaptureFailed);
-        
-        
+
+
         this.CapturedRemainingAmount = amount;
 
         RaiseDomainEvent(new PaymentAmountUpdatedDomainEvent(this.Id, this.OrderId));
@@ -74,7 +74,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
     // Records the intent to execute a transaction
     public Result RecordTransactionAttempt(string gatewayIntentId, TransactionType transactionType)
     {
-        if (Status == PaymentStatus.Completed 
+        if (Status == PaymentStatus.Completed
             || Status == PaymentStatus.Refunded)
         {
             return Result.Failure(PaymentErrors.AlreadyProcessed(Status));
@@ -87,7 +87,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
             return Result.Failure(PaymentErrors.DuplicateTransaction);
         }
 
-        var transactionResult =  Transaction.Create(this.Id, gatewayIntentId, transactionType);
+        var transactionResult = Transaction.Create(this.Id, gatewayIntentId, transactionType);
         if (transactionResult.IsFailure) return transactionResult.TopError;
 
         _transactions.Add(transactionResult.Value);
@@ -98,8 +98,8 @@ public sealed class Payment : AggregateRoot<PaymentId>
     // Resolves a specific transaction and recalculates the overall payment status
     public Result ResolveTransactionSuccess(string gatewayIntentId)
     {
-        var transaction = _transactions.SingleOrDefault(t => t.GatewayIntentId == gatewayIntentId);
-        
+        var transaction = _transactions.SingleOrDefault(t => t.GatewayIntentId == gatewayIntentId && t.Status == TransactionStatus.Pending);
+
         if (transaction == null)
             return Result.Failure(PaymentErrors.TransactionNotFound);
 
@@ -111,8 +111,8 @@ public sealed class Payment : AggregateRoot<PaymentId>
 
     public Result ResolveTransactionFailure(string gatewayIntentId, string reason)
     {
-        var transaction = _transactions.SingleOrDefault(t => t.GatewayIntentId == gatewayIntentId);
-        
+        var transaction = _transactions.SingleOrDefault(t => t.GatewayIntentId == gatewayIntentId && t.Status == TransactionStatus.Pending);
+
         if (transaction == null)
             return Result.Failure(PaymentErrors.TransactionNotFound);
 
@@ -131,14 +131,14 @@ public sealed class Payment : AggregateRoot<PaymentId>
         bool hasSuccessfulRemaningAmountCapture = _transactions.Any(t => t.Type == TransactionType.RemainingAmountCapture && t.Status == TransactionStatus.Success);
         bool hasSuccessfulCapture = _transactions.Any(t => t.Type == TransactionType.DepositCaptured && t.Status == TransactionStatus.Success);
         bool hasSuccessfulAuth = _transactions.Any(t => t.Type == TransactionType.AuthorizationHold && t.Status == TransactionStatus.Success);
-        
+
         if (hasSuccessfulRemaningAmountCapture && Status != PaymentStatus.Completed && hasSuccessfulCapture)
         {
             Status = PaymentStatus.Completed;
             CompletedAtUtc = DateTime.UtcNow;
             RaiseDomainEvent(new PaymentCompletedDomainEvent(this.Id, this.OrderId));
         }
-        
+
         else if (hasSuccessfulCapture && Status != PaymentStatus.Completed && Status != PaymentStatus.AuthorizedAmountCaptured)
         {
             Status = PaymentStatus.AuthorizedAmountCaptured;
@@ -151,11 +151,11 @@ public sealed class Payment : AggregateRoot<PaymentId>
             Status = PaymentStatus.Authorized;
             RaiseDomainEvent(new PaymentAuthorizedDomainEvent(this.Id, this.OrderId));
         }
-        
+
         else if (_transactions.All(t => t.Status == TransactionStatus.Failed))
         {
-             Status = PaymentStatus.Failed;
-             RaiseDomainEvent(new PaymentFailedDomainEvent(this.Id, this.OrderId));
+            Status = PaymentStatus.Failed;
+            RaiseDomainEvent(new PaymentFailedDomainEvent(this.Id, this.OrderId));
         }
     }
 }

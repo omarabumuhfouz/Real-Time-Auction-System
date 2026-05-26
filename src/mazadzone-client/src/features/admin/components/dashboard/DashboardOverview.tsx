@@ -1,17 +1,38 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import React, { useState } from "react";
 import { MetricCard } from "./MetricCard";
-import { ActivityChart } from "./ActivityChart";
-import { OpenDisputesBreakdown } from "./OpenDisputesBreakdown";
 import { UserTrust } from "./UserTrust";
-import { UserGrowthChart } from "./UserGrowthChart";
 import { CategoryHealth } from "./CategoryHealth";
 import { PaymentProviderStatus } from "./PaymentProviderStatus";
 import { useGetAuctionActivityTrend, useGetUserGrowthTrend } from "../../api/queries";
 import { formatCurrency } from "@/utils/currency.utils";
 import { METRIC_CARD_DEFINITIONS } from "../../constants/dashboard.constants";
+import {
+  ActivityChartSkeleton,
+  OpenDisputesBreakdownSkeleton,
+  UserGrowthChartSkeleton,
+} from "./skeletons";
 import type { AdminDashboardOverviewData } from "../../types/admin.types";
+
+const ActivityChart = dynamic(
+  () => import("./ActivityChart").then((module) => module.ActivityChart),
+  { loading: () => <ActivityChartSkeleton /> },
+);
+
+const OpenDisputesBreakdown = dynamic(
+  () =>
+    import("./OpenDisputesBreakdown").then(
+      (module) => module.OpenDisputesBreakdown,
+    ),
+  { loading: () => <OpenDisputesBreakdownSkeleton /> },
+);
+
+const UserGrowthChart = dynamic(
+  () => import("./UserGrowthChart").then((module) => module.UserGrowthChart),
+  { loading: () => <UserGrowthChartSkeleton /> },
+);
 
 interface DashboardOverviewProps {
   stats: AdminDashboardOverviewData;

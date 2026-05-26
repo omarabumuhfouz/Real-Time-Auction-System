@@ -11,7 +11,7 @@ public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISo
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedOnUtc { get; private set; }
 
-    private Notification(NotificationId id, UserId userId, string title, string message)
+    private Notification(NotificationId id, UserId userId, string title, string message) : base(id)
     {
         Title = title;
         Message = message;

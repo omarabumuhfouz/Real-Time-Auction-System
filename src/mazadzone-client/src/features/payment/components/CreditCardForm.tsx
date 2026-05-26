@@ -19,7 +19,6 @@ export interface CreditCardFormProps {
   onSave: (data: CreditCardFormValues) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
-  defaultCardholderName?: string;
   mode?: PaymentMode;
   authorizationAmount?: number;
   submitButtonText?: string;
@@ -30,7 +29,6 @@ export function CreditCardForm({
   onSave,
   onCancel,
   isSubmitting,
-  defaultCardholderName = "Omar Ahmad",
   mode = "payout",
   authorizationAmount = 0,
   submitButtonText,
@@ -48,7 +46,6 @@ export function CreditCardForm({
       cardNumber: "",
       expiryDate: "",
       cvv: "",
-      cardholderName: defaultCardholderName,
     },
   });
 
@@ -231,28 +228,7 @@ export function CreditCardForm({
         </div>
       </div>
 
-      {/* Cardholder Name */}
-      <div className="space-y-1.5">
-        <Label htmlFor="cardholderName" className="text-sm font-semibold text-foreground">
-          Cardholder name
-        </Label>
-        <Controller
-          name="cardholderName"
-          control={control}
-          render={({ field }) => (
-            <Input
-              id="cardholderName"
-              type="text"
-              placeholder="Omar Ahmad"
-              className="h-12 rounded-xl text-base px-4 border border-input focus-visible:ring-2 focus-visible:ring-primary w-full bg-input-background font-semibold"
-              {...field}
-            />
-          )}
-        />
-        {errors.cardholderName && (
-          <p className="text-xs text-red-500 font-semibold">{errors.cardholderName.message}</p>
-        )}
-      </div>
+
 
       {/* Important Banner */}
       {mode === "payment" ? (

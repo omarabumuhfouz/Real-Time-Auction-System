@@ -1,4 +1,5 @@
 using MazadZone.Application.Common.Paging;
+using MazadZone.Domain.Categories;
 
 namespace MazadZone.Application.Features.Auctions.Queries;
 
@@ -7,14 +8,17 @@ public sealed record GetAuctionsQuery(
     int PageSize = 12, // default page size, can be adjusted as needed
 
     string? SearchTerm = null, // search by item title or description
-    Guid? CategoryId = null, // filter by category
-    Guid? SubCategoryId = null, // filter by subcategory
+    CategoryId? CategoryId = null, // filter by category
+    CategoryId? SubCategoryId = null, // filter by subcategory
 
     CurrentBidAmountRange? CurrentBidAmount = null, // filter auctions with Current bid amount greater than or equal to this value
-    string Status = "active", // filter by auction status: "active", "upcoming", "Ended", "all", 
-    
+    string Status = "active", // filter by auction status: "active", "Pending", "Ended", "all", 
+
     string SortBy = "CreationDate", // "CreationDate","StartTime", "EndTime", "StartAmount" , "CurrentBidAmount"
-    string SortDirection = "desc" // "asc" or "desc" 
+    string SortDirection = "desc", // "asc" or "desc" 
+
+    string? ItemStatus = null, // filter by item status: "New", "Good" .... 
+    string? Condition = null // filter by condition 
 ) : ICachedQuery<PagedList<AuctionsListDto>>
 {
     public string CacheKey =>

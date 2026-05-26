@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import {
   Popover,
   PopoverContent,
@@ -7,8 +8,18 @@ import {
 } from "@/components/ui/popover";
 import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { NotificationList } from "./NotificationList";
 import { cn } from "@/lib/utils";
+
+const NotificationList = dynamic(
+  () => import("./NotificationList").then((module) => module.NotificationList),
+  {
+    loading: () => (
+      <div className="w-full max-w-[400px] rounded-2xl border border-border bg-card p-6 shadow-xl">
+        <p className="text-sm text-muted-foreground">Loading notifications...</p>
+      </div>
+    ),
+  },
+);
 
 interface NotificationPopoverProps {
   unreadCount?: number;

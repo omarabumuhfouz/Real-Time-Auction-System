@@ -8,7 +8,7 @@ namespace MazadZone.Application.Features.Auctions.Commands.CreateAuction;
 public sealed record CreateAuctionCommand(
     UserId SellerId,
     ItemStatus Status,
-    Description Condition,
+    string Condition,
     Address ShippingAddress,
     decimal StartBidAmount,
     decimal MinBidAmount,

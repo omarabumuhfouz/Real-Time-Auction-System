@@ -63,7 +63,7 @@ export function SubmitSellerReviewDialog({
     }
 
     try {
-      const reviewerId = user?.id || "mock-user-123";
+      const reviewerId = user?.id || "";
 
       // Execute backend ready mutation
       await submitMutation.mutateAsync({

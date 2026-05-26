@@ -31,13 +31,15 @@ export {
 // Mutations
 export { useCreateAuction, useUpdateAuction, useDeleteAuction } from "./api";
 
-// Async fetch functions (for prefetching or non-hook usage)
+// Pure REST API methods (for prefetching or non-hook usage)
 export {
-  fetchActiveAuctions,
-  fetchAuctionById,
-  fetchAuctionsByCategory,
-  fetchClosingSoonAuctions,
-  fetchUpcomingAuctions,
+  getAuctions,
+  getAuctionById,
+  getSimilarAuctions,
+  createAuction,
+  activateAuction,
+  endAuction,
+  cancelAuction,
 } from "./api";
 
 // Types

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 
@@ -10,31 +11,67 @@ export function AuctionPriceRangeFilter({
   value,
   onChange,
 }: AuctionPriceRangeFilterProps) {
-  const handleMinChange = (min: number) => {
-    // Ensure min doesn't exceed max
-    const newMin = Math.max(0, min);
-    if (newMin > value[1]) {
-      onChange([newMin, newMin]);
+  const [minVal, setMinVal] = useState(value[0].toString());
+  const [maxVal, setMaxVal] = useState(value[1].toString());
+  const [isFocusedMin, setIsFocusedMin] = useState(false);
+  const [isFocusedMax, setIsFocusedMax] = useState(false);
+
+  useEffect(() => {
+    if (!isFocusedMin) {
+      setMinVal(value[0].toLocaleString());
+    }
+  }, [value[0], isFocusedMin]);
+
+  useEffect(() => {
+    if (!isFocusedMax) {
+      setMaxVal(value[1] === 10000 ? "10,000+" : value[1].toLocaleString());
+    }
+  }, [value[1], isFocusedMax]);
+
+  const handleMinFocus = () => {
+    setIsFocusedMin(true);
+    setMinVal(value[0].toString());
+  };
+
+  const handleMaxFocus = () => {
+    setIsFocusedMax(true);
+    setMaxVal(value[1] === 10000 ? "10000" : value[1].toString());
+  };
+
+  const handleMinBlur = () => {
+    setIsFocusedMin(false);
+    const numeric = Number(minVal.replace(/[^0-9]/g, ""));
+    const finalVal = isNaN(numeric) ? 0 : Math.max(0, numeric);
+    if (finalVal > value[1]) {
+      onChange([finalVal, finalVal]);
     } else {
-      onChange([newMin, value[1]]);
+      onChange([finalVal, value[1]]);
     }
   };
 
-  const handleMaxChange = (max: number) => {
-    // Ensure max isn't less than min
-    const newMax = Math.max(0, max);
-    if (newMax < value[0]) {
-      onChange([newMax, newMax]);
+  const handleMaxBlur = () => {
+    setIsFocusedMax(false);
+    const cleanStr = maxVal.replace(/[^0-9+]/g, "");
+    const isPlus = cleanStr.includes("+");
+    const numeric = Number(cleanStr.replace("+", ""));
+    const finalVal = isPlus || numeric >= 10000 || isNaN(numeric) ? 10000 : Math.max(0, numeric);
+    if (finalVal < value[0]) {
+      onChange([finalVal, finalVal]);
     } else {
-      onChange([value[0], newMax]);
+      onChange([value[0], finalVal]);
     }
   };
 
   return (
-    <div className="flex-[2] min-w-[300px] flex flex-col gap-3 px-4 border-x border-border">
-      <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60 text-center">
-        Current Bid Range
-      </span>
+    <div className="flex-2 min-w-[300px] flex flex-col gap-3 px-4 border-x border-border">
+      <div className="flex flex-col gap-0.5 text-center">
+        <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">
+          Price Range
+        </span>
+        <span className="text-xs font-bold text-primary">
+          Min: {value[0].toLocaleString()} &mdash; Max: {value[1] === 10000 ? `${value[1].toLocaleString()}+` : value[1].toLocaleString()}
+        </span>
+      </div>
       <div className="flex flex-col gap-3">
         <Slider
           min={0}
@@ -50,9 +87,11 @@ export function AuctionPriceRangeFilter({
               Min
             </span>
             <Input
-              type="number"
-              value={value[0]}
-              onChange={(e) => handleMinChange(Number(e.target.value))}
+              type="text"
+              value={minVal}
+              onFocus={handleMinFocus}
+              onBlur={handleMinBlur}
+              onChange={(e) => setMinVal(e.target.value)}
               className="h-9 px-2 text-center border border-input rounded-lg text-sm font-bold text-primary bg-muted/20 w-24 shadow-inner focus-visible:ring-ring/20"
             />
           </div>
@@ -61,9 +100,11 @@ export function AuctionPriceRangeFilter({
               Max
             </span>
             <Input
-              type="number"
-              value={value[1]}
-              onChange={(e) => handleMaxChange(Number(e.target.value))}
+              type="text"
+              value={maxVal}
+              onFocus={handleMaxFocus}
+              onBlur={handleMaxBlur}
+              onChange={(e) => setMaxVal(e.target.value)}
               className="h-9 px-2 text-center border border-input rounded-lg text-sm font-bold text-primary bg-muted/20 w-24 shadow-inner focus-visible:ring-ring/20"
             />
           </div>

@@ -31,16 +31,16 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options =>
-{
-    // Define a custom policy named "AllowAll"
-    options.AddPolicy("AllowAll", policy =>
+    builder.Services.AddCors(options =>
     {
-        policy.AllowAnyOrigin()    // Allows access from any domain
-              .AllowAnyHeader()    // Allows any headers (e.g., Content-Type, Authorization)
-              .AllowAnyMethod();   // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
+        // Define a custom policy named "AllowAll"
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()    // Allows access from any domain
+                  .AllowAnyHeader()    // Allows any headers (e.g., Content-Type, Authorization)
+                  .AllowAnyMethod();   // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
+        });
     });
-});
 
 
     builder.Services.AddSerilog((services, lc) => lc
@@ -48,7 +48,7 @@ builder.Services.AddCors(options =>
         .ReadFrom.Services(services));
 
     builder.Services.AddMazadZoneServices(builder.Configuration);
-    
+
     builder.Services.AddSignalR();
 
     builder.Services.AddOpenApi();
@@ -57,19 +57,19 @@ builder.Services.AddCors(options =>
 
     var app = builder.Build();
 
-// Apply pending migrations automatically on startup
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // This will create the DB and apply all migrations if they don't exist
-    dbContext.Database.Migrate(); 
-    
-    // Optional: You can also call a DatabaseSeeder here to insert dummy data!
-    // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-    // await seeder.SeedAsync();
-}
-app.UseCors("AllowAll");
+    // Apply pending migrations automatically on startup
+    // using (var scope = app.Services.CreateScope())
+    // {
+    //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    //     // This will create the DB and apply all migrations if they don't exist
+    //     dbContext.Database.Migrate();
+
+    //     // Optional: You can also call a DatabaseSeeder here to insert dummy data!
+    //     // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    //     // await seeder.SeedAsync();
+    // }
+    app.UseCors("AllowAll");
     //Map Endpoints
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();
@@ -89,34 +89,34 @@ app.UseCors("AllowAll");
 
     }
 
-#region  Seed database
-// if (app.Environment.IsDevelopment())
-// {
-//     // Create a temporary DI scope
-//     using var scope = app.Services.CreateScope();
-    
-//     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//     var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
+    // #region  Seed database
+    // if (app.Environment.IsDevelopment())
+    // {
+    //     // Create a temporary DI scope
+    //     using var scope = app.Services.CreateScope();
 
-//     try
-//     {
-//         Console.WriteLine("Applying database migrations...");
-//         // 1. Ensure the database exists and schema is up to date
-//         await dbContext.Database.MigrateAsync();
+    //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    //     var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
 
-//         Console.WriteLine("Seeding mock data for MazadZone...");
-//         // 2. Execute your MasterDataSeeder
-//         await seeder.SeedAsync();
-        
-//         Console.WriteLine("✅ Database seeded successfully!");
-//     }
-//     catch (Exception ex)
-//     {
-//         Console.WriteLine($"❌ Error during database seeding: {ex.Message}");
-//     }
-// }
+    //     try
+    //     {
+    //         Console.WriteLine("Applying database migrations...");
+    //         // 1. Ensure the database exists and schema is up to date
+    //         await dbContext.Database.MigrateAsync();
 
-#endregion
+    //         Console.WriteLine("Seeding mock data for MazadZone...");
+    //         // 2. Execute your MasterDataSeeder
+    //         await seeder.SeedAsync();
+
+    //         Console.WriteLine("✅ Database seeded successfully!");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"❌ Error during database seeding: {ex}");
+    //     }
+    // }
+
+    // #endregion
     app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseSerilogRequestLogging(options =>
     {
@@ -140,14 +140,14 @@ app.UseCors("AllowAll");
     app.MapScalarApiReference();
     app.UseSerilogRequestLogging();
     app.UseHttpsRedirection();
-    
+
     //Map Hubs
     app.MapHub<AuctionsHub>("/hubs/auctions");
     app.MapHub<NotificationsHub>("/hubs/notifications");
 
     //Hangfire Dashboard
     app.UseHangfireDashboard("/hangfire");
-    
+
     app.Run();
 
 }

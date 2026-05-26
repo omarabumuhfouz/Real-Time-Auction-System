@@ -31,8 +31,8 @@ public class OutbidDomainEventHandler(
         var NotificationId = await _sender.Send(new CreateNotificationCommand(
             UserId: UserId.Load(notification.OutbidBidderId.Value),
             NotificationMethods.ReceiveNotification,
-            Title: $"Your bid of {notification.OutbidBidId:C} has been surpassed",
-            Message: $"Your bid of {notification.OutBidAmount:C} has been surpassed. Place a new bid to stay in the game!"
+            Title: $"Your bid of {notification.OutBidAmount} has been surpassed",
+            Message: $"Your bid of {notification.OutBidAmount} has been surpassed. Place a new bid to stay in the game!"
         ), cancellationToken);
 
 

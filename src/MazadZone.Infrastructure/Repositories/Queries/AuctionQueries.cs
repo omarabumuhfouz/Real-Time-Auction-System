@@ -8,6 +8,7 @@ using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Enums;
 using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Categories;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Users.ValueObjects;
@@ -17,9 +18,9 @@ using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
 
 
-public partial class AuctionQueries (
+public partial class AuctionQueries(
     AppDbContext _context
-): IAuctionQueries
+) : IAuctionQueries
 {
     public async Task<IReadOnlyList<AuctionBiddersDto>> GetActiveAuctionsWithBiddersBySellerIdAsync(UserId sellerId, CancellationToken ct)
     {
@@ -31,7 +32,7 @@ public partial class AuctionQueries (
                 a.Item.Title,
                 a.Bids.Select(b => b.BidderId.Value).ToList()
             ));
-        
+
 
 
         return await auctions.ToListAsync(ct);
@@ -40,6 +41,7 @@ public partial class AuctionQueries (
     public async Task<AuctionDto?> GetAuctionByIdAsync(Guid auctionId, CancellationToken ct)
     {
         var auction = await _context.Auctions
+            .Include(a => a.Bids)
             .Include(a => a.Item)
             .ThenInclude(i => i.Images)
             .AsNoTracking()
@@ -51,10 +53,10 @@ public partial class AuctionQueries (
 
         var sellerUserInfo = await _context.Users.AsNoTracking()
             .Where(s => s.Id == sellerId)
-            .Select(s => new 
-            { 
-                FullName = s.FullName.FirstName + " " + s.FullName.LastName, 
-                Email = s.Email.Value 
+            .Select(s => new
+            {
+                FullName = s.FullName.FirstName + " " + s.FullName.LastName,
+                Email = s.Email.Value
             })
             .FirstOrDefaultAsync(ct);
 
@@ -74,13 +76,13 @@ public partial class AuctionQueries (
                 b.Amount.Amount,
                 (int)b.Status,
                 b.PlacedAtUtc
-            )) 
+            ))
             .ToList() ?? new List<BidDto>();
 
         //Item info
         var ItemTitle = auction.Item.Title;
         var ItemDescription = auction.Item.Description;
-        
+
         var itemImages = auction.Item?.Images?
                 .Select(img => img.Path)
                 .ToList() ?? new List<string>();
@@ -104,22 +106,24 @@ public partial class AuctionQueries (
             );
     }
 
-    public async Task<IReadOnlyList<AuctionsListDto>> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
+    public async Task<IReadOnlyList<AuctionsListDto>?> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
     {
         var baseAuction = await _context.Auctions
+            .Include(a => a.Item)
             .AsNoTracking()
-            .Where(a => a.Id.Equals(auctionId))
+            .Where(a => a.Id == AuctionId.From(auctionId))
             .Select(a => new { a.Item.CategoryId, a.Item.Title, a.Item.Description })
             .FirstOrDefaultAsync(ct);
 
         if (baseAuction == null)
         {
-            return Array.Empty<AuctionsListDto>();
+            return null;
         }
 
         var query = _context.Auctions
+            .Include(a => a.Item)
             .AsNoTracking()
-            .Where(a => a.Id != auctionId && a.Status == AuctionStatus.Active)
+            .Where(a => a.Id != AuctionId.From(auctionId) && a.Status == AuctionStatus.Active)
             .Where(a => a.Item.CategoryId == baseAuction.CategoryId ||
                         EF.Functions.Like(a.Item.Title, $"%{baseAuction.Title}%") ||
                         EF.Functions.Like(a.Item.Description, $"%{baseAuction.Title}%") ||
@@ -150,13 +154,13 @@ public partial class AuctionQueries (
         var rawAuctions = await _context.Auctions
             .AsNoTracking()
             .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value))
-            .Select(a => new 
+            .Select(a => new
             {
                 Id = a.Id.Value,
                 Title = a.Item.Title,
                 SellerId = a.SellerId.Value,
 
-                BidderIds = a.Bids.Select(b => b.BidderId.Value) 
+                BidderIds = a.Bids.Select(b => b.BidderId.Value)
             })
             .ToListAsync(ct);
 
@@ -167,9 +171,9 @@ public partial class AuctionQueries (
             a.Title,
             a.SellerId,
             // get anothers bidders with out current bidder
-            a.BidderIds.Where(id => id != bidderId.Value).ToHashSet() 
+            a.BidderIds.Where(id => id != bidderId.Value).ToHashSet()
         )).ToList();
-    
+
     }
 
     public async Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(UserId bidderId, MyBidsQueryParameters parameters, CancellationToken ct)
@@ -254,7 +258,7 @@ public partial class AuctionQueries (
             .AsNoTracking()
             .Where(o => o.Id.Equals(orderId))
             .Select(o => o.TotalAmount).FirstOrDefaultAsync();
-        
+
     }
 
     public async Task<PagedList<AuctionsListDto>> SearchAuctionsAsync(AuctionQueryParameters parameters, CancellationToken ct)
@@ -266,15 +270,15 @@ public partial class AuctionQueries (
         {
 
             query = query.Where(a => EF.Functions.Like(a.Item.Title, $"%{parameters.SearchTerm}%") ||
-                                    EF.Functions.Like(a.Item.Description, $"%{parameters.SearchTerm}%"));
+                                    EF.Functions.Like(a.Item.Description.ToString(), $"%{parameters.SearchTerm}%"));
 
         }
 
         if (parameters.CategoryId.HasValue)
         {
 
-            query = query.Where(a => a.Item.CategoryId == parameters.CategoryId.Value);
-            
+            query = query.Where(a => a.Item.CategoryId == parameters.CategoryId);
+
         }
 
         if (!string.IsNullOrEmpty(parameters.Status) &&
@@ -315,6 +319,19 @@ public partial class AuctionQueries (
                 : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault()),
             _ => isAsc ? query.OrderBy(a => a.CreatedOnUtc) : query.OrderByDescending(a => a.CreatedOnUtc)
         };
+
+        if (!string.IsNullOrEmpty(parameters.ItemStatus) &&
+        Enum.TryParse<ItemStatus>(parameters.ItemStatus, true, out var itemStatus))
+        {
+            query = query.Where(a => a.Item.Status == itemStatus);
+
+        }
+
+        if (!string.IsNullOrEmpty(parameters.Condition))
+        {
+            query = query.Where(a => EF.Functions.Like(a.Item.Condition.ToString(), $"%{parameters.Condition}%"));
+
+        }
 
         var totalCount = await query.CountAsync(ct);
 

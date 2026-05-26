@@ -4,7 +4,7 @@ public sealed record Currency
 {
     // Pre-defined allowed currencies
     public static readonly Currency Usd = new("USD");
-    public static readonly Currency Jod = new("JOD"); 
+    public static readonly Currency Jod = new("JOD");
     public static readonly Currency Eur = new("EUR");
 
     public string Code { get; }

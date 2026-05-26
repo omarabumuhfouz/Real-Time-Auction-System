@@ -5,7 +5,6 @@ export interface UserProfile {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  dateOfBirth?: string;
   nationalId?: string;
   avatarUrl?: string;
   avatarInitial?: string;
@@ -25,7 +24,6 @@ export interface UpdateProfileInput {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  dateOfBirth?: string;
   avatarUrl?: string;
 }
 

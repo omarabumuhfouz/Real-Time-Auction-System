@@ -4,6 +4,7 @@ import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountInfoForm } from "./AccountInfoForm";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 import { AddressBook } from "./AddressBook";
 import { ProfileSettingsSkeleton } from "./ProfileSettingsSkeleton";
 import { useGetProfile } from "../api/profile.queries";
@@ -50,6 +51,9 @@ export function ProfileSettingsPage() {
 
         {/* Account Info Card */}
         <AccountInfoForm profile={profile} />
+
+        {/* Change Password Card */}
+        <ChangePasswordForm />
 
         {/* Address Book Card */}
         <AddressBook />

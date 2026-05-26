@@ -65,6 +65,8 @@ public class DisputeTests
         var dispute = Dispute.Open(orderId, disputeTypeId, title, description);
 
         // Assert
+        result.ShouldNotBeNull();
+
         var domainEvents = dispute.DomainEvents;
         domainEvents.Count.ShouldBe(1);
         

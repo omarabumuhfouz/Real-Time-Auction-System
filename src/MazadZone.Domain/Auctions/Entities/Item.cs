@@ -27,6 +27,8 @@ public sealed class Item : Entity<ItemId>
     {
         AuctionId = auctionId;
         CategoryId = categoryId;
+        Status = status;
+        Condition = condition;
         Title = title;
         _images = images;
         Description = description;
@@ -56,6 +58,9 @@ public sealed class Item : Entity<ItemId>
     {
         if (string.IsNullOrWhiteSpace(title) || title.Length > AuctionConstants.MaxTitleLength)
             return ItemErrors.InvalidTitle;
+
+        if (condition is null)
+            return MazadZone.Domain.Shared.Errors.DescriptionErrors.Empty;
 
         var descriptionResult = Description.Create(description);
         if (descriptionResult.IsFailure)

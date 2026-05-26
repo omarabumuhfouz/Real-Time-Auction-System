@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { Search, Gavel, Package, Bell, User, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Search, Gavel, Package, User, ChevronDown, LayoutDashboard } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,9 +22,6 @@ export interface DesktopHeaderProps {
   role: string | undefined;
   logout: () => void;
   mounted: boolean;
-  handleCategoryClick: (category: string) => void;
-  handleSellClick: () => void;
-  isSeller: boolean;
   pathname: string;
 }
 
@@ -33,17 +29,23 @@ export const DesktopHeader = ({
   isAuthenticated,
   logout,
   mounted,
-  handleCategoryClick,
-  handleSellClick,
-  isSeller,
   pathname,
 }: DesktopHeaderProps) => {
-  const user = useAuthStore((state) => state.user);
-  const { data: serverUnreadCount = 0 } = useGetUnreadCount(user?.id || "", { enabled: isAuthenticated });
-  const notifications = useNotificationStore((state) => state.notifications);
-  const storeUnreadCount = useNotificationStore((state) => state.getUnreadCount());
+  const userId = useAuthStore((state) => state.user?.id);
+  const { data: serverUnreadCount = 0 } = useGetUnreadCount(userId || "", {
+    enabled: isAuthenticated,
+  });
+  const hasLocalNotifications = useNotificationStore(
+    (state) => state.notifications.length > 0,
+  );
+  const localUnreadCount = useNotificationStore((state) =>
+    state.notifications.reduce(
+      (count, notification) => count + (notification.isRead ? 0 : 1),
+      0,
+    ),
+  );
 
-  const unreadCount = notifications.length > 0 ? storeUnreadCount : serverUnreadCount;
+  const unreadCount = hasLocalNotifications ? localUnreadCount : serverUnreadCount;
 
 
   return (
@@ -65,53 +67,57 @@ export const DesktopHeader = ({
           <span className="cursor-pointer text-primary">EN</span>
         </div>
 
-        {mounted && (
-          <div className="flex items-center gap-6">
-            {!isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <Link href={ROUTES.AUTH.LOGIN} className="text-lg font-medium hover:text-primary transition-colors">
-                  Sign In
-                </Link>
-                <Link href={ROUTES.AUTH.REGISTER} className="text-2xl font-medium bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
-                  Sign Up
-                </Link>
-              </div>
-            ) : (
-              <>
-                <Link href={ROUTES.BIDDING.MY_BIDS} className={cn("hidden lg:flex items-center gap-2 text-xl font-medium transition-colors hover:text-primary", pathname === ROUTES.BIDDING.MY_BIDS ? "text-primary" : "")}>
-                  <Gavel className="h-7 w-7" />
-                  My Bids
-                </Link>
+        <div
+          className={cn(
+            "flex items-center gap-6",
+            !mounted && "invisible pointer-events-none select-none",
+          )}
+          aria-hidden={!mounted}
+        >
+          {!isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <Link href={ROUTES.AUTH.LOGIN} className="text-lg font-medium hover:text-primary transition-colors">
+                Sign In
+              </Link>
+              <Link href={ROUTES.AUTH.REGISTER} className="text-lg font-medium bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                Sign Up
+              </Link>
+            </div>
+          ) : (
+            <>
+              <Link href={ROUTES.BIDDING.MY_BIDS} className={cn("hidden lg:flex items-center gap-2 text-xl font-medium transition-colors hover:text-primary", pathname === ROUTES.BIDDING.MY_BIDS ? "text-primary" : "")}>
+                <Gavel className="h-7 w-7" />
+                My Bids
+              </Link>
 
-                <Link href={ROUTES.ORDERS.LIST} className={cn("hidden lg:flex items-center gap-2 text-xl font-medium transition-colors hover:text-primary", pathname === ROUTES.ORDERS.LIST ? "text-primary" : "")}>
-                  <Package className="h-7 w-7" />
-                  My Orders
-                </Link>
+              <Link href={ROUTES.ORDERS.LIST} className={cn("hidden lg:flex items-center gap-2 text-xl font-medium transition-colors hover:text-primary", pathname === ROUTES.ORDERS.LIST ? "text-primary" : "")}>
+                <Package className="h-7 w-7" />
+                My Orders
+              </Link>
 
-                <NotificationPopover unreadCount={unreadCount} />
-
-
+              <NotificationPopover unreadCount={unreadCount} />
 
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-1 hover:text-primary transition-colors outline-none">
-                    <User className="h-7 w-7" />
-                    <ChevronDown className="h-7 w-7" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-white text-black border-none rounded-md shadow-lg">
-                    <DropdownMenuItem asChild>
-                      <Link href={ROUTES.PROFILE.VIEW} className="cursor-pointer font-medium">Profile Settings</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 font-medium focus:text-red-600">
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
-          </div>
-        )}
+
+
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 hover:text-primary transition-colors outline-none">
+                  <User className="h-7 w-7" />
+                  <ChevronDown className="h-7 w-7" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white text-black border-none rounded-md shadow-lg">
+                  <DropdownMenuItem asChild>
+                    <Link href={ROUTES.PROFILE.VIEW} className="cursor-pointer font-medium">Profile Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 font-medium focus:text-red-600">
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+        </div>
       </div>
 
     </>
@@ -132,7 +138,7 @@ export const DesktopBottomRow = ({
   router: { push: (path: string) => void };
 }) => {
   return (
-    <div className="hidden md:flex mx-auto h-14 max-w-[1408px] items-center justify-between pt-4 ">
+    <div className="hidden md:flex mx-auto h-14 max-w-[1408px] items-center justify-between pt-4 px-4 md:px-0">
       <nav className="flex items-center gap-6 whitespace-nowrap overflow-x-auto no-scrollbar pt-1.5">
         {CATEGORIES.map((category) => (
           <button

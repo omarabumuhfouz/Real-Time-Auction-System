@@ -5,4 +5,5 @@ namespace MazadZone.Domain.Auctions.ValueObjects;
 public partial struct ItemId
 {
     public static ItemId New() => From(Guid.CreateVersion7());
+    public static ItemId Empty => From(Guid.Empty);
 }

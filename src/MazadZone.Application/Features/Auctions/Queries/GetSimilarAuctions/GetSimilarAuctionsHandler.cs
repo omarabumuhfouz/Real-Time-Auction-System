@@ -16,10 +16,10 @@ public class GetSimilarAuctionsHandler(
 
         var similarAuctions = await _auctionQueries.GetSimilarAuctionsAsync(request.AuctionId.Value, request.Limit, ct);
 
-        if (similarAuctions == null || similarAuctions.Count == 0)
+        if (similarAuctions == null)
         {
             _logger.LogNoSimilarAuctionsFound(request.AuctionId.Value);
-            return Result.Failure<IReadOnlyList<AuctionsListDto>>(AuctionErrors.NotFound);
+            return Result.Failure<IReadOnlyList<AuctionsListDto>>(AuctionErrors.NotFoundSimmeler);
         }
 
         _logger.LogSimilarAuctionsSuccess(request.AuctionId.Value, similarAuctions.Count);
