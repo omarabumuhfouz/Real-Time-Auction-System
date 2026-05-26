@@ -24,7 +24,7 @@ public static class GetDashboard
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromRoute] SellerId id,
+        [FromRoute] UserId id,
         [AsParameters] SellerDashboardFilter filter,
         [FromServices] ISender sender,
         CancellationToken ct)
