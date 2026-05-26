@@ -1,8 +1,6 @@
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Sellers.Events;
-using MazadZone.Domain.Users.ValueObjects;
+using MazadZone.Domain.Users.ValueObjects; // Assuming UserId resides here based on old tests
 using Shouldly;
 
 namespace Tests.Domain.Sellers;
@@ -15,32 +13,13 @@ public class SellerTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void BecomeSeller_BankAccountIsInvalid_ReturnsInvalidBankAccountError(string? invalidBankAccount)
-    {
-        // Arrange
-        var bidderId = UserId.New();
-        var nationalId = "9991012345";
-
-        // Act
-        var result = Seller.BecomeSeller(bidderId, invalidBankAccount, nationalId);
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(SellerErrors.InvalidBankAccount);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
     public void BecomeSeller_NationalIdIsInvalid_ReturnsInvalidNationalIdError(string? invalidNationalId)
     {
         // Arrange
         var bidderId = UserId.New();
-        var bankAccount = "JO99ASEB000000123456789";
 
         // Act
-        var result = Seller.BecomeSeller(bidderId, bankAccount, invalidNationalId);
+        var result = Seller.BecomeSeller(bidderId, invalidNationalId!);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -52,22 +31,21 @@ public class SellerTests
     {
         // Arrange
         var bidderId = UserId.New();
-        var bankAccount = "JO99ASEB000000123456789";
         var nationalId = "9991012345";
 
         // Act
-        var result = Seller.BecomeSeller(bidderId, bankAccount, nationalId);
+        var result = Seller.BecomeSeller(bidderId, nationalId);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
         
         var seller = result.Value;
         seller.Id.Value.ShouldBe(bidderId.Value);
-        seller.BankAccountNumber.ShouldBe(bankAccount);
         seller.NationalId.ShouldBe(nationalId);
         seller.IsVerified.ShouldBeFalse();
         seller.Rating.ShouldBe(0);
         seller.ReviewsCount.ShouldBe(0);
+        seller.ListedAuctionsCount.ShouldBe(0);
 
         // Verify Domain Event
         var domainEvents = seller.DomainEvents;
@@ -80,41 +58,21 @@ public class SellerTests
 
     #region Method: UpdateBankDetails
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void UpdateBankDetails_NewAccountIsInvalid_ReturnsInvalidBankAccountError(string? invalidBankAccount)
-    {
-        // Arrange
-        var seller = CreateValidSeller();
-
-        // Act
-        var result = seller.UpdateBankDetails(invalidBankAccount);
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(SellerErrors.InvalidBankAccount);
-    }
-
     [Fact]
-    public void UpdateBankDetails_ValidAccount_UpdatesAccountAndRevokesVerificationStatus()
+    public void UpdateBankDetails_WhenCalled_RevokesVerificationStatus()
     {
         // Arrange
         var seller = CreateValidSeller();
-        seller.Verify(); // Force it to be verified first to test the reset logic
-        seller.ClearDomainEvents(); // Clear the verification event
-
-        var newAccount = "JO99ASEB888888123456789";
+        seller.Verify(); // Force verification status to true
+        seller.ClearDomainEvents(); 
 
         // Act
-        var result = seller.UpdateBankDetails(newAccount);
+        var result = seller.UpdateBankDetails();
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        seller.BankAccountNumber.ShouldBe(newAccount);
         
-        // Critical Business Rule: Changing financial details revokes verification status
+        // Critical Business Rule: Updating bank info revokes verified status
         seller.IsVerified.ShouldBeFalse(); 
     }
 
@@ -123,11 +81,11 @@ public class SellerTests
     #region Method: Verify
 
     [Fact]
-    public void Verify_ValidSeller_SetsVerifiedFlagAndRaisesSellerVerifiedDomainEvent()
+    public void Verify_UnverifiedSeller_SetsVerifiedFlagAndRaisesSellerVerifiedDomainEvent()
     {
         // Arrange
         var seller = CreateValidSeller();
-        seller.ClearDomainEvents(); // Clear creation event
+        seller.ClearDomainEvents(); // Clear construction creation event
 
         // Act
         seller.Verify();
@@ -140,6 +98,22 @@ public class SellerTests
         domainEvents.Count.ShouldBe(1);
         var verifiedEvent = domainEvents.First().ShouldBeOfType<SellerVerifiedDomainEvent>();
         verifiedEvent.SellerId.ShouldBe(seller.Id);
+    }
+
+    [Fact]
+    public void Verify_AlreadyVerifiedSeller_DoesNotRaiseDuplicateDomainEvent()
+    {
+        // Arrange
+        var seller = CreateValidSeller();
+        seller.Verify(); // First verification
+        seller.ClearDomainEvents(); // Wipe out the events baseline
+
+        // Act
+        seller.Verify(); // Second verification call
+
+        // Assert
+        seller.IsVerified.ShouldBeTrue();
+        seller.DomainEvents.Count.ShouldBe(0); // Guard clause should have hit `return;`
     }
 
     #endregion
@@ -182,12 +156,30 @@ public class SellerTests
 
     #endregion
 
+    #region Method: RecordListedAuction
+
+    [Fact]
+    public void RecordListedAuction_WhenCalled_IncrementsListedAuctionsCount()
+    {
+        // Arrange
+        var seller = CreateValidSeller();
+        seller.ListedAuctionsCount.ShouldBe(0);
+
+        // Act
+        seller.RecordListedAuction();
+        seller.RecordListedAuction();
+
+        // Assert
+        seller.ListedAuctionsCount.ShouldBe(2);
+    }
+
+    #endregion
+
     // --- Helpers ---
     private static Seller CreateValidSeller()
     {
         return Seller.BecomeSeller(
             UserId.New(), 
-            "JO99ASEB000000123456789", 
             "9991012345").Value;
     }
 }

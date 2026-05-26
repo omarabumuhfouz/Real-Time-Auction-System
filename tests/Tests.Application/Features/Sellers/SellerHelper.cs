@@ -1,10 +1,8 @@
 using MazadZone.Application.Features.Sellers.Commands.BecomeSeller;
-using MazadZone.Application.Features.Sellers.Commands.UpdateBankDetails;
 using MazadZone.Application.Features.Sellers.Commands.Verify;
 using MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 using MazadZone.Application.Features.Sellers.Queries.GetUnverifiedSellers;
 using MazadZone.Domain.Sellers;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace Tests.Application.Features.Sellers;
 
@@ -17,20 +15,13 @@ public static class SellerHelper
     {
         return Seller.BecomeSeller(
             UserId.New(),
-            "Test Bank Account",
             "Test National Id"
         ).Value;
     }
 
     public static BecomeSellerCommand CreateBecomeSellerCommand()
     {
-        return new BecomeSellerCommand(UserId.New(), "JO99ASEB000000123456789");
-    }
-
-    public static UpdateBankDetailsCommand CreateUpdateBankDetailsCommand()
-    {
-        return new UpdateBankDetailsCommand(UserId.New(), "JO99ASEB000000123456789");
-
+        return new BecomeSellerCommand(UserId.New());
     }
 
     public static VerifySellerCommand CreateVerifyCommand()

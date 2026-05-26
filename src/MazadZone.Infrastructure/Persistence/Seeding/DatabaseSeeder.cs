@@ -145,7 +145,7 @@ public class DatabaseSeeder : IDatabaseSeeder
 
             if (roles.Contains(UserRole.Seller))
             {
-                var seller = Seller.BecomeSeller(user.Id, f.Finance.Account(12), f.Random.Replace("##########")).Value;
+                var seller = Seller.BecomeSeller(user.Id,  f.Random.Replace("##########")).Value;
                 seller.Verify();
                 sellers.Add(seller);
             }

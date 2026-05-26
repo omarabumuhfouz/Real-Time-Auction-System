@@ -9,10 +9,8 @@ public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditabl
 
     private Seller(
         UserId id, 
-        string bankAccountNumber, 
         string nationalId) : base(id)
     {
-        BankAccountNumber = bankAccountNumber;
         NationalId = nationalId;
         Rating = 0;
         ReviewsCount = 0;
@@ -20,9 +18,6 @@ public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditabl
 
         RaiseDomainEvent(new SellerCreatedDomainEvent(Id));
     }
-
-    public string BankAccountNumber { get; private set; }
-
     public decimal Rating { get; private set; }
     public int ReviewsCount { get; private set; }
 
@@ -57,22 +52,17 @@ public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditabl
     }
 
     // Logic: Updating banking info (triggers a re-verification check usually)
-    public Result UpdateBankDetails(string newAccountNumber)
+    public Result UpdateBankDetails()
     {
-        if (string.IsNullOrWhiteSpace(newAccountNumber)) return SellerErrors.InvalidBankAccount;
-
-        BankAccountNumber = newAccountNumber;
-        IsVerified = false; // Reset verification if banking changes
+        IsVerified = false; 
 
         return Result.Success();
     }
 
-    public static Result<Seller> BecomeSeller(UserId bidderId, string bankAccountNumber, string nationalId)
+    public static Result<Seller> BecomeSeller(UserId bidderId,  string nationalId)
     {
-        if (string.IsNullOrWhiteSpace(bankAccountNumber)) return SellerErrors.InvalidBankAccount;
-
         if (string.IsNullOrWhiteSpace(nationalId)) return SellerErrors.InvalidNationalId;
 
-        return new Seller(bidderId, bankAccountNumber, nationalId);
+        return new Seller(bidderId, nationalId);
     }
 }

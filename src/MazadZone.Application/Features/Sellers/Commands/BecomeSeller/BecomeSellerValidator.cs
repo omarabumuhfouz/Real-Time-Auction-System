@@ -8,6 +8,5 @@ public sealed class BecomeSellerValidator : AbstractValidator<BecomeSellerComman
     public BecomeSellerValidator()
     {
         RuleFor(x => x.UserId).MustBeValidUserId();
-        RuleFor(x => x.BankAccountNumber).MustBeValidBankAccount();
     }
 }
