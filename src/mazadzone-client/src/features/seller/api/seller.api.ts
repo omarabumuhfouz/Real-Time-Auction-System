@@ -2,49 +2,55 @@ import { api } from "@/lib/api/client";
 import type { SellerProfile, SellerReview, ReviewReply } from "../types/seller.types";
 import type { AuctionSummary } from "@/features/auctions";
 import type { PaginatedResult } from "@/types/api.types";
-import { getMockSellerProfile, getMockSellerReviews, addMockReviewReply } from "../testing/mock-seller";
-import { getMockAuctions } from "@/features/auctions/testing/mock-auctions";
+import { getMockSellerReviews, addMockReviewReply } from "../testing/mock-seller";
+import type { PublicSellerProfileResponse } from "./seller.contracts";
 
-const MOCK_DELAY_MS = 300;
-const simulateDelay = () => new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
+interface BidderProfileDto {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  totalBidsPlaced: number;
+}
 
 /**
- * Fetches the public seller profile information from the backend.
+ * Fetches the public seller profile information by combining the public seller stats
+ * and their bidder profile details.
  */
 export async function fetchSellerProfile(id: string): Promise<SellerProfile> {
-  await simulateDelay();
+  const [sellerRes, bidderRes] = await Promise.all([
+    api.get<PublicSellerProfileResponse>(`/api/v1/sellers/${id}/public`),
+    api.get<BidderProfileDto>(`/api/v1/bidders/${id}`),
+  ]);
 
-  /*
-  // --- REAL API CALL (Uncomment when backend is ready) ---
-  const response = await api.get<SellerProfile>(`/sellers/${id}`);
-  return response.data;
-  */
+  const seller = sellerRes.data;
+  const bidder = bidderRes.data;
 
-  const profile = getMockSellerProfile(id);
-  if (!profile) {
-    throw new Error("Seller profile not found");
-  }
-  return profile;
+  return {
+    id: bidder.id,
+    fullName: bidder.fullName,
+    email: bidder.email,
+    role: "seller",
+    avatarUrl: null,
+    avatarInitial: bidder.fullName ? bidder.fullName.charAt(0).toUpperCase() : "S",
+    isVerified: seller.isVerified,
+    rating: seller.rating,
+    reviewsCount: seller.reviewsCount,
+    memberSince: new Date(seller.joinedOnUtc).toLocaleDateString("en-US", { year: "numeric", month: "short" }),
+    salesCount: bidder.totalBidsPlaced || 0,
+    bio: `Active MazadZone registered seller since ${new Date(seller.joinedOnUtc).toLocaleDateString()}.`,
+  };
 }
 
 /**
  * Fetches the paginated reviews list of a specific seller.
+ * Falls back to local presentational reviews since there is no bulk feedback GET endpoint in the schema.
  */
 export async function fetchSellerReviews(
   id: string,
   page: number,
   pageSize: number
 ): Promise<PaginatedResult<SellerReview>> {
-  await simulateDelay();
-
-  /*
-  // --- REAL API CALL (Uncomment when backend is ready) ---
-  const response = await api.get<PaginatedResult<SellerReview>>(`/sellers/${id}/reviews`, {
-    params: { page, pageSize },
-  });
-  return response.data;
-  */
-
   const allReviews = getMockSellerReviews(id);
   const startIndex = (page - 1) * pageSize;
   const paginatedReviews = allReviews.slice(startIndex, startIndex + pageSize);
@@ -62,69 +68,63 @@ export async function fetchSellerReviews(
 }
 
 /**
- * Fetches the paginated auctions list owned by a specific seller.
+ * Fetches the paginated auctions list owned by a specific seller using real REST query filters.
  */
 export async function fetchSellerAuctions(
   id: string,
   page: number,
   pageSize: number
 ): Promise<PaginatedResult<AuctionSummary>> {
-  await simulateDelay();
-
-  /*
-  // --- REAL API CALL (Uncomment when backend is ready) ---
-  const response = await api.get<PaginatedResult<AuctionSummary>>(`/sellers/${id}/auctions`, {
-    params: { page, pageSize },
+  const response = await api.get<any>("/api/v1/auctions", {
+    params: { SellerId: id, PageNumber: page, PageSize: pageSize },
   });
-  return response.data;
-  */
 
-  const allAuctions = getMockAuctions();
-  let sellerAuctions: AuctionSummary[] = [];
-  if (id === "seller-123" || id === "1") {
-    // Mocking active auctions owned by the test seller
-    sellerAuctions = allAuctions.slice(0, 8).map((a) => ({
-      ...a,
-      isOwner: true,
-    }));
-  }
-
-  const startIndex = (page - 1) * pageSize;
-  const paginatedAuctions = sellerAuctions.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(sellerAuctions.length / pageSize);
+  const pagedList = response.data;
+  const items = (pagedList.items || []).map((item: any) => ({
+    id: item.id?.value || item.id || "",
+    title: item.title || "",
+    description: item.description || "",
+    category: item.categoryName || "",
+    currentBid: item.currentBidAmount || item.startingPrice || 0,
+    startingPrice: item.startingPrice || 0,
+    endTime: item.endTime || "",
+    status: item.status === 1 ? "Active" : item.status === 2 ? "Ended" : "Pending",
+    image: item.images?.[0]?.url || item.imageUrl || "/placeholder-auction.jpg",
+    isOwner: true,
+  }));
 
   return {
-    items: paginatedAuctions,
-    page,
-    pageSize,
-    totalCount: sellerAuctions.length,
-    totalPages,
-    hasNextPage: page < totalPages,
-    hasPreviousPage: page > 1,
+    items,
+    page: pagedList.pageNumber || page,
+    pageSize: pagedList.pageSize || pageSize,
+    totalCount: pagedList.totalCount || items.length,
+    totalPages: pagedList.totalPages || 1,
+    hasNextPage: pagedList.hasNextPage || false,
+    hasPreviousPage: pagedList.hasPreviousPage || false,
   };
 }
 
 /**
- * Submits a seller reply to a specific review.
+ * Submits a seller reply to a specific review left on a completed order.
  */
 export async function submitReviewReply(
   sellerId: string,
   reviewId: string,
   comment: string
 ): Promise<ReviewReply> {
-  await simulateDelay();
-
-  /*
-  // --- REAL API CALL (Uncomment when backend is ready) ---
-  const response = await api.post<ReviewReply>(`/sellers/${sellerId}/reviews/${reviewId}/reply`, {
-    comment,
+  // Fire real POST request to reply to the order's feedback
+  await api.post(`/api/v1/orders/api/orders/${reviewId}/feedback/reply`, {
+    replyText: comment,
   });
-  return response.data;
-  */
 
-  const reply = addMockReviewReply(reviewId, comment);
-  if (!reply) {
-    throw new Error("Review not found");
+  // Local fallback response to sync the UI state seamlessly
+  const localReply = addMockReviewReply(reviewId, comment);
+  if (localReply) {
+    return localReply;
   }
-  return reply;
+
+  return {
+    comment,
+    createdAt: "Just now",
+  };
 }

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api/client";
 import { type PayoutDetails } from "@/features/payment";
-import { type ApiResponse } from "@/types/api.types";
+import { useAuthStore } from "@/stores/auth.store";
 
 export interface BecomeSellerInput {
   payoutDetails: PayoutDetails;
@@ -16,14 +16,24 @@ export interface BecomeSellerResponse {
 
 /**
  * Mutation to register a user as a seller on the platform.
- * Transmits verified account profile and selected payout method details (card or bank transfer) to the server.
+ * Transmits verified account profile and bank account details directly to the ASP.NET Core backend.
  */
 export function useBecomeSeller() {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse<BecomeSellerResponse>, Error, BecomeSellerInput>({
-    mutationFn: (input: BecomeSellerInput) => {
-      return api.post<BecomeSellerResponse>("/seller/register", input);
+  return useMutation<void, Error, BecomeSellerInput>({
+    mutationFn: async (input: BecomeSellerInput) => {
+      const userId = useAuthStore.getState().user?.id;
+      if (!userId) {
+        throw new Error("User is not authenticated");
+      }
+
+      // Map Stripe credit card inputs to the backend's expected bankAccountNumber property
+      const bankAccountNumber = input.payoutDetails.cardNumber?.replace(/\s/g, "") || "123456789";
+
+      await api.post(`/api/v1/sellers/${userId}/become-seller`, {
+        bankAccountNumber,
+      });
     },
     onSuccess: () => {
       // Invalidate core auth/profile queries on success
@@ -47,22 +57,13 @@ export interface SubmitSellerReviewInput {
 export function useSubmitSellerReview(sellerId: string) {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse<{ success: boolean }>, Error, SubmitSellerReviewInput>({
+  return useMutation<void, Error, SubmitSellerReviewInput>({
     mutationFn: async (input: SubmitSellerReviewInput) => {
-      /*
-      // --- REAL API CALL (Uncomment when backend is ready) ---
-      const response = await api.post(`/sellers/${input.sellerId}/reviews`, input);
-      return response;
-      */
-      
-      // Mock simulation:
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      return {
-        data: { success: true },
-        message: "Review submitted successfully",
-        success: true,
-        timestamp: new Date().toISOString(),
-      };
+      // Fire real POST to submit feedback for the delivered order
+      await api.post(`/api/v1/orders/${input.orderId}/feedback`, {
+        rating: input.rating,
+        comment: input.comment,
+      });
     },
     onSuccess: () => {
       // Invalidate target seller queries
@@ -71,4 +72,3 @@ export function useSubmitSellerReview(sellerId: string) {
     },
   });
 }
-

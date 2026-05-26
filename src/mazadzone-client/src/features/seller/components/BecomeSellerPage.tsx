@@ -36,7 +36,7 @@ export function BecomeSellerPage() {
     redirectToUnauthorized: ROUTES.SELLER.AUCTIONS,
     unauthorizedMessage: "You are already registered as a seller.",
     loginMessage: "Please log in to apply for seller privileges.",
-    bypassTesting: true, // Keep bypass testing for local development/testing
+    bypassTesting: false, // Keep bypass testing for local development/testing
   });
 
   const [isLoading, setIsLoading] = useState(false);
