@@ -17,32 +17,35 @@ public class BidderQueries : ResilientRepository, IBidderQueries
     {
         var query = @"
         SELECT 
-          b.Id,
-          u.FirstName + ' ' + u.LastName AS FullName,
-          u.Email,
-          u.PhoneNumber,
+    b.Id,
+    u.FirstName + ' ' + u.LastName AS FullName,
+    u.Email,
+    u.PhoneNumber,
 
-          CASE u.Status
-          WHEN 1 THEN 'Active' 
-          WHEN 2 THEN 'Suspended' 
-          WHEN 3 THEN 'Banned' 
-          ELSE 'UnKnown'
-          END AS Status,
+    -- Map the numeric status to a readable string
+    CASE u.Status
+        WHEN 1 THEN 'Active' 
+        WHEN 2 THEN 'Suspended' 
+        WHEN 3 THEN 'Banned' 
+        ELSE 'UnKnown'
+    END AS Status,
 
-          b.IsVerified,
-          u.CreatedOnUtc AS MemberSince,
-          u.LastLogin,
-          a.City,
-          a.Street,
-          a.Building,
-          a.Landmark,
-          COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced,
-          COALESCE(b.AuctionParticipatedCount, 0) AS AuctionParticipatedCount,
-          COALESCE(b.AuctionsWonCount, 0) AS AuctionsWonCount,
-          COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
-        FROM Bidders b
-        JOIN Users u
-        WHERE b.Id = @bidderId
+    b.IsVerified,
+    u.CreatedOnUtc AS MemberSince,
+    u.LastLogin,
+    b.City,
+    b.Street,
+    b.Building,
+    b.Landmark,
+    
+    -- Handle potential nulls
+    COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced,
+    COALESCE(b.AuctionParticipatedCount, 0) AS AuctionParticipatedCount,
+    COALESCE(b.AuctionsWonCount, 0) AS AuctionsWonCount,
+    COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
+FROM Bidders b
+JOIN Users u ON b.Id = u.Id -- Added missing ON condition
+WHERE b.Id = @bidderId;
         ";
 
         return await ExecuteResilientAsync(connection =>

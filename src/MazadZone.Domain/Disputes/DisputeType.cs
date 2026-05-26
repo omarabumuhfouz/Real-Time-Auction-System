@@ -3,7 +3,7 @@ namespace MazadZone.Domain.Orders; // Or MazadZone.Domain.Support
 using MazadZone.Domain.Primitives;
 using MazadZone.Domain.Shared.ValueObjects;
 
-public sealed class DisputeType : AggregateRoot<DisputeTypeId>, ISoftDeletable , IAuditableEntity
+public sealed class DisputeType : AggregateRoot<DisputeTypeId> , IAuditableEntity
 {
     private DisputeType() { }
 
@@ -17,8 +17,8 @@ public sealed class DisputeType : AggregateRoot<DisputeTypeId>, ISoftDeletable ,
     public Description Description { get; private set; }
     
     public bool IsActive { get; private set; } = true; 
-    public bool IsDeleted { get; private set; }
     public DateTime? DeletedOnUtc { get; private set; }
+
     public DateTime CreatedOnUtc { get; set ; }
     public DateTime? ModifiedOnUtc { get ; set ; }
 
@@ -41,15 +41,15 @@ public sealed class DisputeType : AggregateRoot<DisputeTypeId>, ISoftDeletable ,
 
     public Result Delete()
     {
-        if (IsDeleted) return Result.Success();
-        IsDeleted = true;
+        if (!IsActive) return Result.Success();
+        IsActive = false;
         DeletedOnUtc = DateTime.UtcNow;
         return Result.Success();
     }
 
     public Result Restore()
     {
-        IsDeleted = false;
+        IsActive = true;
         DeletedOnUtc = null;
         return Result.Success();
     }

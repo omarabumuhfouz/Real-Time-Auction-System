@@ -6,7 +6,7 @@ public class CommentConverter : ValueConverter<Comment, string>
     public CommentConverter() 
         : base(
             comment => comment.Value,
-            dbValue => Comment.Create(dbValue).Value)
+            dbValue => Comment.FromDatabase(dbValue))
     {
     }
 }

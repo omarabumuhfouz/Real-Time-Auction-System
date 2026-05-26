@@ -7,7 +7,7 @@ public class ResolveDisputeValidator : AbstractValidator<ResolveDisputeCommand>
 {
     public ResolveDisputeValidator()
     {
-        RuleFor(x => x.OrderId).MustBeValidOrderId();
+        RuleFor(x => x.DisputeId).MustBeValidDisputeId();
 
         RuleFor(x => x.Resolution).MustBeValidResolution();
     }

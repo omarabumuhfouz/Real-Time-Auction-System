@@ -23,47 +23,41 @@ public sealed class SellerQueries : ResilientRepository, ISellerQueries
 
         const string sql = @"
             SELECT 
-            u.Id , 
-            u.FirstName + ' ' + u.LastName AS FullName,
-            u.Email,
-            u.PhoneNumber,
-            s.IsVerified,
-            u.CreatedOnUtc AS MemberSince,
-            u.LastLogin,
-            s.Rating, 
-            s.ReviewsCount, 
-            s.ListedAuctionsCount,
-            b.TotalBidsPlaced,
-            b.AuctionParticipatedCount,
-            b.AuctionsWonCount,
-            b.CompletedPurchasesCount
-            f.Id as FeedbackId,
-            f.Rating,
-                COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced,
-                COALESCE(b.AuctionParticipatedCount, 0) AS AuctionParticipatedCount,
-                COALESCE(b.AuctionsWonCount, 0) AS AuctionsWonCount,
-                COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
-            
-            FROM Users 
-            JOIN Sellers s b ON u.Id = s.Id
-            JOIN Bidders b ON u.Id = b.Id
-            WHERE u.Id = @SellerId;
+    u.Id, 
+    u.FirstName + ' ' + u.LastName AS FullName,
+    u.Email,
+    u.PhoneNumber,
+    s.IsVerified,
+    u.CreatedOnUtc AS MemberSince,
+    u.LastLogin,
+    s.Rating, 
+    s.ReviewsCount, 
+    s.ListedAuctionsCount,
 
-            -- Get Feedbacks
 
-            SELECT 
-            f.Id,
-            u.FirstName + ' ' + u.LastName AS AuthorName,
-            f.Rating,
-            f.Comment,
-            f.Reply,
-            f.CreatedAtUtc AS CreatedAt
-            FROM Orders o
-            JOIN Feedbacks f on o.Id = f.OrderId
-            JOIN Users u on o.BidderId = u.Id 
-            JOIN Auctions a ON o.AuctionId = a.Id
-            WHERE a.SellerId = @SellerId
-            ORDER BY f.CreatedAtUtc DESC;
+            COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced, 
+            COALESCE(b.AuctionParticipatedCount, 0) AS AuctionParticipatedCount,
+            COALESCE(b.AuctionsWonCount, 0) AS AuctionsWonCount,
+            COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
+FROM Users u 
+JOIN Sellers s ON u.Id = s.Id
+LEFT JOIN Bidders b ON u.Id = b.Id 
+WHERE u.Id = @SellerId;
+
+
+SELECT 
+    f.Id,
+    u.FirstName + ' ' + u.LastName AS AuthorName,
+    f.Rating,
+    f.Comment,
+    f.Reply,
+    f.CreatedAtUtc AS CreatedAt
+FROM Orders o
+JOIN Feedbacks f ON o.Id = f.OrderId
+JOIN Users u ON o.BidderId = u.Id 
+JOIN Auctions a ON o.AuctionId = a.Id
+WHERE a.SellerId = @SellerId
+ORDER BY f.CreatedAtUtc DESC;
             ";
         return await ExecuteResilientAsync(async connection =>
         {
@@ -100,16 +94,18 @@ public sealed class SellerQueries : ResilientRepository, ISellerQueries
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = """
-            SELECT 
-                u.Id , 
-                u.FirstName
-                CreatedOnUtc AS JoinedOn
-            FROM Sellers
-            JOIN Users u ON u.Id = Sellers.Id
-            WHERE IsVerified = 0
-            ORDER BY CreatedOnUtc ASC
-            """;
+        const string sql = @"
+            SELECT
+                u.Id,
+                u.FirstName + ' ' + u.LastName AS FullName,
+                u.Email,
+                u.PhoneNumber,
+                u.CreatedOnUtc AS JoinedOn
+            FROM Sellers s
+            JOIN Users u ON u.Id = s.Id
+            WHERE s.IsVerified = 0
+            ORDER BY JoinedOn
+            ";
 
         var command = new CommandDefinition(sql, cancellationToken: cancellationToken);
         var result = await connection.QueryAsync<UnverifiedSellerSummaryResponse>(command);

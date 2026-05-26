@@ -21,12 +21,10 @@ public static class DisputeEndpoints
 
         // Map sub-slice query endpoints
         GetById.MapEndpoint(disputeGroup);
-        GetOpens.MapEndpoint(disputeGroup);
-        GetUnderReview.MapEndpoint(disputeGroup);
-        GetResolved.MapEndpoint(disputeGroup);
-
+        GetFiltered.MapEndpoint(disputeGroup);
         OpenDispute.MapEndpoint(disputeGroup);
         ResolveDispute.MapEndpoint(disputeGroup);
+        UnderReview.MapEndpoint(disputeGroup);
 
     }
 }

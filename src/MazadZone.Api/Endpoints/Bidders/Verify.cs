@@ -1,6 +1,4 @@
-using MazadZone.Domain.Bidders;
 using MazadZone.Application.Features.Bidders.Commands.Verify;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Bidders;
 
@@ -8,7 +6,7 @@ public static class Verify
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPatch("/{id:guid}/verify", HandleAsync)
+        app.MapPut("/{id:guid}/verify", HandleAsync)
             // .RequireAuthorization("AdminPolicy") 
             .WithSummary("Verify a bidder's identity")
             .WithDescription("Marks a specific bidder profile as verified. This operation updates the bidder's status and is typically restricted to administrative roles.")

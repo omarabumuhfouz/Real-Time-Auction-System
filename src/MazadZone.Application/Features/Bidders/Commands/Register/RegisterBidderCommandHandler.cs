@@ -101,7 +101,7 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
     private BidderProfileDto CreateBidderProfile(User user, Bidder bidder)
 {
     return new BidderProfileDto(
-        Id: user.Id,
+        Id: user.Id.Value,
         FullName: user.FullName.GetDisplayName(),
         Email: user.Email.Value,
         PhoneNumber: user.PhoneNumber.Value,
@@ -109,7 +109,10 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         IsVerified: bidder.IsVerified,
         MemberSince: user.CreatedOnUtc,
         LastLogin: user.LastLogin,
-        Address: AddressDto.FromAddress(bidder.DefaultShippingAddress),
+        bidder.DefaultShippingAddress.City,
+        bidder.DefaultShippingAddress.Street,
+        bidder.DefaultShippingAddress.Building,
+        bidder.DefaultShippingAddress.Landmark,
         TotalBidsPlaced: bidder.TotalPidsPlaced, // Using the property name from your Bidder entity
         AuctionParticipatedCount: bidder.AuctionParticipatedCount,
         AuctionsWonCount: bidder.AuctionsWonCount,

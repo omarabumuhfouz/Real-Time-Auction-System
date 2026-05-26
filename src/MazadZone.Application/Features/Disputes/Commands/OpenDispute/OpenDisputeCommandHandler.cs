@@ -3,7 +3,7 @@ using MazadZone.Domain.Repositories;
 
 namespace MazadZone.Application.Features.Disputes.Commands.OpenDispute;
 
-public class OpenDisputeCommandHandler : ICommandHandler<OpenDisputeCommand, Unit>
+public class OpenDisputeCommandHandler : ICommandHandler<OpenDisputeCommand, Guid>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IDisputeRepository _disputeRepository;
@@ -23,7 +23,7 @@ public class OpenDisputeCommandHandler : ICommandHandler<OpenDisputeCommand, Uni
         _disputeRepository = disputeRepository;
     }
 
-    public async Task<Result<Unit>> Handle(OpenDisputeCommand request, CancellationToken ct)
+    public async Task<Result<Guid>> Handle(OpenDisputeCommand request, CancellationToken ct)
     {
         // OpenDisputeLogs.LogAttempt(_logger, request.OrderId, request.Reason);
 
@@ -65,7 +65,7 @@ if (request.Images is not null && request.Images.Any())
 
         OpenDisputeLogs.LogSuccess(_logger, request.OrderId);
 
-        return Unit.Value;
+        return dispute.Id.Value;
     }
 
 }

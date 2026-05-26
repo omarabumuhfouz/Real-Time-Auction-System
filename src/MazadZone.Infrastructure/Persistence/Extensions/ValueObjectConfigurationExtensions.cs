@@ -3,6 +3,7 @@ namespace MazadZone.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MazadZone.Domain.Shared;
 using MazadZone.Domain.Shared.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 
 public static class ValueObjectConfigurationExtensions
 {
@@ -12,19 +13,23 @@ public static class ValueObjectConfigurationExtensions
 
         builder.Property(a => a.Street)
             .IsRequired()
-            .HasMaxLength(SharedConstainst.MaxStreetLength);
+            .HasMaxLength(SharedConstainst.MaxStreetLength)
+            .HasColumnName("Street");
 
         builder.Property(a => a.City)
             .IsRequired()
-            .HasMaxLength(SharedConstainst.MaxCityLength);
+            .HasMaxLength(SharedConstainst.MaxCityLength)
+            .HasColumnName("City");
 
         builder.Property(a => a.Building)
             .IsRequired()
-            .HasMaxLength(SharedConstainst.MaxBuildingLength);
+            .HasMaxLength(SharedConstainst.MaxBuildingLength)
+            .HasColumnName("Building");
 
         builder.Property(a => a.Landmark)
             .IsRequired()
-            .HasMaxLength(SharedConstainst.MaxLandmarkLength);
+            .HasMaxLength(SharedConstainst.MaxLandmarkLength)
+            .HasColumnName("Landmark");
 
 
         return builder;
