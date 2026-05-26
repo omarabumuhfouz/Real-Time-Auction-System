@@ -20,14 +20,16 @@ public sealed class GetAuctionsValidator : AbstractValidator<GetAuctionsQuery>
             .When(x => !string.IsNullOrEmpty(x.SearchTerm))
             .WithMessage("Search term must not exceed 200 characters.");
 
-        RuleFor(x => x.CurrentBidAmount.Max)
-            .GreaterThanOrEqualTo(0)
-            .When(x => x.CurrentBidAmount.Max.HasValue)
+        RuleFor(x => x.CurrentBidAmount)
+            .Must(c => c!.Max >= 0)
+            .When(x => x.CurrentBidAmount != null && x.CurrentBidAmount.Max.HasValue)
+            .OverridePropertyName("CurrentBidAmount.Max")
             .WithMessage("Current bid amount must be zero or positive.");
-        
-        RuleFor(x => x.CurrentBidAmount.Min)
-            .GreaterThanOrEqualTo(0)
-            .When(x => x.CurrentBidAmount.Min.HasValue);
+
+        RuleFor(x => x.CurrentBidAmount)
+            .Must(c => c!.Min >= 0)
+            .When(x => x.CurrentBidAmount != null && x.CurrentBidAmount.Min.HasValue)
+            .OverridePropertyName("CurrentBidAmount.Min");
 
 
         RuleFor(x => x.SortBy)
@@ -37,5 +39,14 @@ public sealed class GetAuctionsValidator : AbstractValidator<GetAuctionsQuery>
         RuleFor(x => x.SortDirection)
             .Must(x => x == "asc" || x == "desc")
             .WithMessage("Sort direction must be 'asc' or 'desc'.");
+
+        RuleFor(x => x.ItemStatus)
+            .Must(x => new[] { "New", "LikeNew", "Good", "Fair", "Poor" }.Contains(x))
+            .WithMessage("Start must be one of : New, LikeNew, Good, Fair, Poor");
+
+        RuleFor(x => x.Condition)
+        .MaximumLength(200);
+
+
     }
 }

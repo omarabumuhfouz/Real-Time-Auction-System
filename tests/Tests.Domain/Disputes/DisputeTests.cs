@@ -41,10 +41,10 @@ public class DisputeTests
     {
         // Arrange & Act
         var dispute = Dispute.Open(
-            OrderId.New(), 
-            DisputeTypeId.New(), 
-            Title.Create("Title").Value, 
-            Description.Create("Description").Value, 
+            OrderId.New(),
+            DisputeTypeId.New(),
+            Title.Create("Title").Value,
+            Description.Create("Description").Value,
             images: null); // Explicitly passing null
 
         // Assert
@@ -65,11 +65,11 @@ public class DisputeTests
         var dispute = Dispute.Open(orderId, disputeTypeId, title, description);
 
         // Assert
-        result.ShouldNotBeNull();
+        dispute.ShouldNotBeNull();
 
         var domainEvents = dispute.DomainEvents;
         domainEvents.Count.ShouldBe(1);
-        
+
         var openedEvent = domainEvents.First().ShouldBeOfType<DisputeOpenedDomainEvent>();
         openedEvent.OrderId.ShouldBe(orderId);
         openedEvent.DisputeId.ShouldBe(dispute.Id);
@@ -98,8 +98,8 @@ public class DisputeTests
     {
         // Arrange
         var dispute = CreateValidDispute();
-        dispute.UnderReview(); 
-        
+        dispute.UnderReview();
+
         // Act
         var result = dispute.UnderReview();
 
@@ -120,7 +120,7 @@ public class DisputeTests
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(DisputeErrors.AlreadyResolved); 
+        result.TopError.ShouldBe(DisputeErrors.AlreadyResolved);
         dispute.Status.ShouldBe(DisputeStatus.Resolved);
     }
 
@@ -146,10 +146,10 @@ public class DisputeTests
         dispute.IsResolved.ShouldBeTrue();
         dispute.ResolvedAtUtc.ShouldNotBeNull();
         dispute.ResolvedAtUtc.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
-        
+
         var domainEvents = dispute.DomainEvents;
         domainEvents.Count.ShouldBe(1);
-        
+
         var resolvedEvent = domainEvents.First().ShouldBeOfType<DisputeResolvedDomainEvent>();
         resolvedEvent.DisputeId.ShouldBe(dispute.Id);
         resolvedEvent.OrderId.ShouldBe(dispute.OrderId);
@@ -182,7 +182,7 @@ public class DisputeTests
         var dispute = CreateValidDispute();
         dispute.Resolve(CreateValidResolution());
         dispute.ClearDomainEvents();
-        
+
         var newResolution = Resolution.Create("Attempting new resolution.").Value;
 
         // Act
@@ -191,10 +191,10 @@ public class DisputeTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         dispute.DomainEvents.ShouldBeEmpty(); // Event should not fire again
-        
+
         // Note: Because it returns early with Result.Success(), the new resolution value is technically ignored 
         // by the domain. This assertion proves the state remains untouched.
-        dispute.Resolution.Value.ShouldNotBe(newResolution.Value); 
+        dispute.Resolution.Value.ShouldNotBe(newResolution.Value);
     }
 
     #endregion
