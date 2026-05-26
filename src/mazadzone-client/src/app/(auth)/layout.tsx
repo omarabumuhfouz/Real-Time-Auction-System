@@ -2,7 +2,7 @@
  * Auth route group layout.
  *
  * Provides a centered layout without the main header/footer,
- * suitable for login, register, and forgot-password pages.
+ * suitable for login and register pages.
  * 
  * NOTE: For the Register page, the layout is handled by AuthSplitLayout 
  * directly inside the page to allow for full-screen bleed, but we keep this 

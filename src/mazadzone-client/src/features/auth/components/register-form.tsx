@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -14,13 +13,14 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { FileInputWithButton } from "@/components/ui/file-input-with-button";
 import { registerSchema, type RegisterFormValues } from "../validations/register.schema";
 import { ROUTES } from "@/config/routes.config";
+import { useRegisterMutation } from "../api";
 
 /**
  * RegisterForm
  * The main registration form component for creating an account.
  */
 export function RegisterForm() {
-  const [isLoading, setIsLoading] = useState(false);
+  const registerMutation = useRegisterMutation();
 
   const {
     register,
@@ -43,16 +43,10 @@ export function RegisterForm() {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
-    setIsLoading(true);
     try {
-      console.log("Form data ready for submission:", data);
-      // TODO: Hook up API mutation here
-      // await registerMutation.mutateAsync(data);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
+      await registerMutation.mutateAsync(data);
     } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error("Registration submission error:", error);
     }
   };
 
@@ -199,10 +193,10 @@ export function RegisterForm() {
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isLoading}
+        disabled={registerMutation.isPending}
         className="w-full rounded-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-[15px] font-semibold  transition-colors"
       >
-        {isLoading ? "Signing up..." : "Sign up"}
+        {registerMutation.isPending ? "Signing up..." : "Sign up"}
       </Button>
 
       {/* Login Link */}
