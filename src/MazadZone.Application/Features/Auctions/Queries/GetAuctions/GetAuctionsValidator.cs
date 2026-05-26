@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using FluentValidation;
 
 namespace MazadZone.Application.Features.Auctions.Queries.GetAuctions;
@@ -42,6 +43,7 @@ public sealed class GetAuctionsValidator : AbstractValidator<GetAuctionsQuery>
 
         RuleFor(x => x.ItemStatus)
             .Must(x => new[] { "New", "LikeNew", "Good", "Fair", "Poor" }.Contains(x))
+            .When(x => !string.IsNullOrEmpty(x.ItemStatus)) // 👈 Add this line
             .WithMessage("Start must be one of : New, LikeNew, Good, Fair, Poor");
 
         RuleFor(x => x.Condition)
