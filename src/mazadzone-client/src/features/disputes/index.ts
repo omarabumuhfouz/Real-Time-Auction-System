@@ -6,7 +6,7 @@
  */
 
 export { DisputeDialog } from "./components/DisputeDialog";
-export { useFileDispute } from "./api/disputes.queries";
+export { useFileDispute } from "./api";
 export * from "./types/disputes.types";
 export * from "./validations/disputes.schemas";
 
