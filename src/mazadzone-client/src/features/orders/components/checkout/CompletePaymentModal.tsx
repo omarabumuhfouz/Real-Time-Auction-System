@@ -6,7 +6,7 @@ import { VisuallyHidden } from "radix-ui";
 import { useGetAddresses, useGetProfile } from "@/features/profile";
 import { useGetSavedPaymentMethods } from "@/features/bidding";
 import { cn } from "@/lib/utils";
-import { useCompleteOrderPayment } from "../../api/orders.queries";
+import { useCompleteOrderPayment } from "../../api";
 import type { CheckoutState, CheckoutAddress, CheckoutPaymentMethod } from "../../types/checkout.types";
 
 import { AddressSelectStep } from "@/features/profile";

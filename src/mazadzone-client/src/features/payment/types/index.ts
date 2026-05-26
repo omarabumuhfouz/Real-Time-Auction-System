@@ -6,5 +6,5 @@ export interface PayoutDetails {
   cardType: string;
   expiryDate: string;
   cvv: string;
-  cardholderName: string;
+  cardholderName?: string;
 }
