@@ -10,4 +10,9 @@ public interface IAuctionRepository : IGenericRepository<Auction, AuctionId>, IS
     Task<int> CancelAllActiveBySellerIdAsync(Guid sellerId, CancellationToken ct);
     Task<int> RemoveActiveBidsByBidderIdAsync(UserId bidderId, CancellationToken ct);
     Task<Auction?> GetByIdWithBidsAsync(AuctionId id, CancellationToken cancellationToken = default);
+    Task<bool> HasBidderAlreadyParticipatedAsync(
+        AuctionId auctionId,
+        UserId bidderId,
+        BidId excludeBidId,
+        CancellationToken cancellationToken = default);
 }

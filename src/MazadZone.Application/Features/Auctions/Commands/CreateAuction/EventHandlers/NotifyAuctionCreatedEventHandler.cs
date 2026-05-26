@@ -24,34 +24,34 @@ public class NotifyAuctionCreatedEventHandler
     public async Task Handle(AuctionCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
 
-        _logger.LogInformation("Handling AuctionCreatedDomainEvent for Auction ID: {AuctionId}", notification.auctionId);
+        _logger.LogInformation("Handling AuctionCreatedDomainEvent for Auction ID: {AuctionId}", notification.AuctionId);
 
-        var auction = await _auctionRepository.GetByIdAsync(notification.auctionId, cancellationToken);
+        var auction = await _auctionRepository.GetByIdAsync(notification.AuctionId, cancellationToken);
         if (auction is null)
         {
-            _logger.LogWarning("Auction with ID {AuctionId} not found for creation event.", notification.auctionId);
+            _logger.LogWarning("Auction with ID {AuctionId} not found for creation event.", notification.AuctionId);
             return;
         }
         // Broadcast the auction creation event to clients  
-        _logger.LogInformation("Broadcasting auction creation update for Auction ID: {AuctionId}", notification.auctionId);
+        _logger.LogInformation("Broadcasting auction creation update for Auction ID: {AuctionId}", notification.AuctionId);
         await _auctionStreamService.BroadcastAuctionUpdateAsync(BroadcastAuctionUpdateTypes.AuctionCreated, new AuctionStatusUpdateDto{
-            AuctionId = notification.auctionId.Value,
+            AuctionId = notification.AuctionId.Value,
             Status = AuctionStatus.Pending.ToString(),
         }, cancellationToken);
-        _logger.LogInformation("Broadcasted auction creation update for Auction ID: {AuctionId}", notification.auctionId);
+        _logger.LogInformation("Broadcasted auction creation update for Auction ID: {AuctionId}", notification.AuctionId);
         
         
         var item = await _itemRepository.GetItemByIdAsync(auction.Item.Id.Value, cancellationToken);
         
         if (item is null)
         {
-            _logger.LogWarning("Item with ID {ItemId} not found for auction ID {AuctionId}.", auction.Item.Id.Value, notification.auctionId);
+            _logger.LogWarning("Item with ID {ItemId} not found for auction ID {AuctionId}.", auction.Item.Id.Value, notification.AuctionId);
             return;
         }
 
         //Broadcast update
         await _auctionStreamService.BroadcastAuctionUpdateAsync(BroadcastAuctionUpdateTypes.StatusChanged, new AuctionStatusUpdateDto{
-            AuctionId = notification.auctionId.Value,
+            AuctionId = notification.AuctionId.Value,
             Status = AuctionStatus.Cancelled.ToString(),
         }, cancellationToken);
         
@@ -61,7 +61,7 @@ public class NotifyAuctionCreatedEventHandler
         var message = $"Your auction for {itemTitle} has been successfully created and is now live! Start bidding to attract potential buyers.";
         
         // Send notification to the seller about the auction creation
-        _logger.LogInformation("Sending notification for auction creation for Auction ID: {AuctionId}", notification.auctionId);
+        _logger.LogInformation("Sending notification for auction creation for Auction ID: {AuctionId}", notification.AuctionId);
         var notificationId = await _sender.Send(
                 new CreateNotificationCommand(
                     UserId.Load(auction.SellerId.Value),
@@ -71,6 +71,6 @@ public class NotifyAuctionCreatedEventHandler
                 cancellationToken);
 
 
-        _logger.LogInformation("Finished handling AuctionCreatedDomainEvent for Auction ID: {AuctionId}", notification.auctionId);
+        _logger.LogInformation("Finished handling AuctionCreatedDomainEvent for Auction ID: {AuctionId}", notification.AuctionId);
     }
 }
