@@ -55,7 +55,7 @@ public class DisputeTests
         // Assert
         result.ShouldNotBeNull();
 
-        var domainEvents = dispute.DomainEvents;
+        var domainEvents = result.DomainEvents;
         domainEvents.Count.ShouldBe(1);
         
         var openedEvent = domainEvents.First().ShouldBeOfType<DisputeOpenedDomainEvent>();
