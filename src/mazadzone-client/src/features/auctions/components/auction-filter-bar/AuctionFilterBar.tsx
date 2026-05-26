@@ -32,8 +32,8 @@ export function AuctionFilterBar({
 }: AuctionFilterBarProps) {
   const [search, setSearch] = useState(initialFilters.search || "");
   const [priceRange, setPriceRange] = useState<[number, number]>([
-    initialFilters.minPrice ?? 20,
-    initialFilters.maxPrice ?? 5000,
+    initialFilters.minPrice ?? 0,
+    initialFilters.maxPrice ?? 10000,
   ]);
   const [category, setCategory] = useState<string>(initialFilters.category || "all");
   const [subcategory, setSubcategory] = useState<string>(initialFilters.subcategory || "all");
@@ -54,7 +54,10 @@ export function AuctionFilterBar({
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(initialFilters.search || "");
-      setPriceRange([initialFilters.minPrice ?? 20, initialFilters.maxPrice ?? 5000]);
+      setPriceRange([
+        initialFilters.minPrice ?? 0,
+        initialFilters.maxPrice ?? 10000,
+      ]);
       setCategory(initialFilters.category || "all");
       setSubcategory(initialFilters.subcategory || "all");
       setCondition(initialFilters.condition || "all");
@@ -84,8 +87,8 @@ export function AuctionFilterBar({
         subcategory: subcategory !== "all" ? (subcategory as AuctionSubcategory) : undefined,
         condition: condition !== "all" ? (condition as AuctionCondition) : undefined,
         status: status as AuctionStatus,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
+        minPrice: priceRange[0] !== 0 ? priceRange[0] : undefined,
+        maxPrice: priceRange[1] !== 10000 ? priceRange[1] : undefined,
         sortBy: sortBy as AuctionSortBy,
         sortDirection: sortDirection,
       };
