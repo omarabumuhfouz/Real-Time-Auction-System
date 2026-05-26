@@ -18,6 +18,14 @@ public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuction
         _context = context;
     }
 
+    public override async Task<Auction?> GetByIdAsync(AuctionId id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<Auction>()
+            .Include(a => a.Item)
+            .Include(a => a.Bids)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
     public async Task<Auction?> GetByIdWithBidsAsync(AuctionId id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<Auction>()

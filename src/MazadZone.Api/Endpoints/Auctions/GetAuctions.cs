@@ -36,10 +36,11 @@ public static class GetAuctions
             parameters.MinCurrentBid is null && parameters.MaxCurrentBid is null
                 ? null
                 : new CurrentBidAmountRange { Min = parameters.MinCurrentBid, Max = parameters.MaxCurrentBid },
-            parameters.Status,
+            string.IsNullOrEmpty(parameters.Status) ? null : parameters.Status,
             string.IsNullOrEmpty(parameters.SortBy) ? "CreationDate" : parameters.SortBy,
-            string.IsNullOrEmpty(parameters.SortDirection) ? "desc" : parameters.SortDirection);
-
+            string.IsNullOrEmpty(parameters.SortDirection) ? "desc" : parameters.SortDirection,
+            string.IsNullOrEmpty(parameters.ItemStatus) ? null : parameters.ItemStatus,
+            string.IsNullOrEmpty(parameters.Condition) ? null : parameters.Condition);
         var result = await sender.Send(query, ct);
         return result.Match(onValue: value => Results.Ok(value), onError: e => e.ToProblem());
     }
@@ -57,5 +58,7 @@ public static class GetAuctions
         public string? Status { get; set; }
         public string? SortBy { get; set; }
         public string? SortDirection { get; set; }
+        public string? ItemStatus { get; set; }
+        public string? Condition { get; set; }
     }
 }

@@ -41,6 +41,7 @@ public partial class AuctionQueries(
     public async Task<AuctionDto?> GetAuctionByIdAsync(Guid auctionId, CancellationToken ct)
     {
         var auction = await _context.Auctions
+            .Include(a => a.Bids)
             .Include(a => a.Item)
             .ThenInclude(i => i.Images)
             .AsNoTracking()
@@ -105,22 +106,24 @@ public partial class AuctionQueries(
             );
     }
 
-    public async Task<IReadOnlyList<AuctionsListDto>> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
+    public async Task<IReadOnlyList<AuctionsListDto>?> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
     {
         var baseAuction = await _context.Auctions
+            .Include(a => a.Item)
             .AsNoTracking()
-            .Where(a => a.Id.Equals(auctionId))
+            .Where(a => a.Id == AuctionId.From(auctionId))
             .Select(a => new { a.Item.CategoryId, a.Item.Title, a.Item.Description })
             .FirstOrDefaultAsync(ct);
 
         if (baseAuction == null)
         {
-            return Array.Empty<AuctionsListDto>();
+            return null;
         }
 
         var query = _context.Auctions
+            .Include(a => a.Item)
             .AsNoTracking()
-            .Where(a => a.Id != auctionId && a.Status == AuctionStatus.Active)
+            .Where(a => a.Id != AuctionId.From(auctionId) && a.Status == AuctionStatus.Active)
             .Where(a => a.Item.CategoryId == baseAuction.CategoryId ||
                         EF.Functions.Like(a.Item.Title, $"%{baseAuction.Title}%") ||
                         EF.Functions.Like(a.Item.Description, $"%{baseAuction.Title}%") ||
@@ -267,7 +270,7 @@ public partial class AuctionQueries(
         {
 
             query = query.Where(a => EF.Functions.Like(a.Item.Title, $"%{parameters.SearchTerm}%") ||
-                                    EF.Functions.Like(a.Item.Description, $"%{parameters.SearchTerm}%"));
+                                    EF.Functions.Like(a.Item.Description.ToString(), $"%{parameters.SearchTerm}%"));
 
         }
 
@@ -316,6 +319,19 @@ public partial class AuctionQueries(
                 : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault()),
             _ => isAsc ? query.OrderBy(a => a.CreatedOnUtc) : query.OrderByDescending(a => a.CreatedOnUtc)
         };
+
+        if (!string.IsNullOrEmpty(parameters.ItemStatus) &&
+        Enum.TryParse<ItemStatus>(parameters.ItemStatus, true, out var itemStatus))
+        {
+            query = query.Where(a => a.Item.Status == itemStatus);
+
+        }
+
+        if (!string.IsNullOrEmpty(parameters.Condition))
+        {
+            query = query.Where(a => EF.Functions.Like(a.Item.Condition.ToString(), $"%{parameters.Condition}%"));
+
+        }
 
         var totalCount = await query.CountAsync(ct);
 

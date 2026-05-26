@@ -15,14 +15,14 @@ public sealed record Name
     {
         if (string.IsNullOrWhiteSpace(value)) return NameErrors.Empty;
 
-        if (value.Length > SharedConstainst.MaxNameLength)return NameErrors.TooLong;
+        if (value.Length > SharedConstainst.MaxNameLength) return NameErrors.TooLong;
 
-        return Result.Success(new Name(value.Trim())); 
+        return Result.Success(new Name(value.Trim()));
     }
 
     public static implicit operator string(Name name) => name.Value;
 
     public static Name FromDatabase(string value) => new Name(value ?? string.Empty);
-    
+
     public override string ToString() => Value;
 }

@@ -44,14 +44,27 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
             {
                 await ProcessMessagesAsync(stoppingToken);
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // Graceful shutdown requested during message processing
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while processing outbox messages.");
             }
 
-            // Wait 10 seconds before polling again. 
-            // Adjust this based on how real-time you need emails/reactions to be.
-            await Task.Delay(TimeSpan.FromSeconds(_options.IntervalInSeconds), stoppingToken);
+            try
+            {
+                // Wait 10 seconds before polling again. 
+                // Adjust this based on how real-time you need emails/reactions to be.
+                await Task.Delay(TimeSpan.FromSeconds(_options.IntervalInSeconds), stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Graceful shutdown requested during delay
+                break;
+            }
         }
     }
 
@@ -86,7 +99,21 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
                 }
 
                 // 2. Deserialize
-                var domainEvent = JsonConvert.DeserializeObject(message.Content, type) as IDomainEvent;
+                var settings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.All,
+                    Converters = new JsonConverter[]
+                    {
+                        new MoneyJsonConverter(),
+                        new CurrencyJsonConverter(),
+                        new NameJsonConverter(),
+                        new ImageJsonConverter(),
+                        new DescriptionJsonConverter(),
+                        new TitleJsonConverter(),
+                        new ReasonJsonConverter()
+                    }
+                };
+                var domainEvent = JsonConvert.DeserializeObject(message.Content, type, settings) as IDomainEvent;
 
                 if (domainEvent is null)
                 {
@@ -101,6 +128,11 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
                 // 4. Mark as processed
                 message.ProcessedOnUtc = DateTime.UtcNow;
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // Rethrow to let the caller handle graceful exit
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to process outbox message {MessageId}", message.Id);
@@ -108,6 +140,13 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
             }
         }
 
-        await dbContext.SaveChangesAsync(stoppingToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Graceful shutdown requested during save changes
+        }
     }
 }

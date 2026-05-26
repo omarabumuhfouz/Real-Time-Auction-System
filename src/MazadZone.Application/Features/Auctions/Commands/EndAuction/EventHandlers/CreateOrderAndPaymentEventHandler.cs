@@ -31,8 +31,10 @@ public class CreateOrderAndPaymentEventHandler(
         if (auction is null || auction.CurrentLeadingBid is null) return;
 
         var winningBid = auction.CurrentLeadingBid;
-        var address = await _userQueries.GetAddressByIdAsync(winningBid.BidderId.Value, cancellationToken);
-        if (address is null) return;
+        var addressResult = await _userQueries.GetAddressByIdAsync(winningBid.BidderId.Value, cancellationToken);
+        if (addressResult is null || addressResult.IsFailure) return;
+
+        var address = addressResult.Value;
 
         // 2. Create auction
         var orderResult = Order.Create(
@@ -40,7 +42,7 @@ public class CreateOrderAndPaymentEventHandler(
             bidderId: winningBid.BidderId,
             winningBidId: winningBid.Id,
             totalAmount: winningBid.Amount.Amount,
-            receiptAddress: address.Value
+            receiptAddress: address
         );
         if (orderResult.IsFailure)
         {

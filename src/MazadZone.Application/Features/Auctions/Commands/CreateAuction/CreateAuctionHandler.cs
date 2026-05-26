@@ -32,10 +32,17 @@ public class CreateAuctionHandler
             images.Add(imageResult.Value);
         }
 
+        var conditionResult = Description.Create(request.Condition);
+        if (conditionResult.IsFailure)
+        {
+            CreateAuctionLog.LogDomainViolation(_logger, conditionResult.TopError.Message);
+            return Result.Failure<AuctionId>(conditionResult.TopError);
+        }
+
         var createResult = Auction.Create(
             request.SellerId,
             request.Status,
-            request.Condition,
+            conditionResult.Value,
             request.ShippingAddress,
             request.StartBidAmount,
             request.MinBidAmount,

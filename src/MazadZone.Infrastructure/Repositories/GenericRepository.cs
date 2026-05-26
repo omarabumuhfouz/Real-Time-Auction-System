@@ -36,7 +36,7 @@ where TId : notnull
         DbSet.Remove(entity);
     }
 
-    public async Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
     {
         return await DbSet.FindByIdAsync(id, cancellationToken);
     }
