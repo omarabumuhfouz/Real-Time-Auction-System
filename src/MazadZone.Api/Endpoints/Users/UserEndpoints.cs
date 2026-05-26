@@ -25,6 +25,9 @@ public static class UserEndpoints
         // Map Auth Actions
         ChangePassword.MapEndpoint(userGroup);
         ChangeEmail.MapEndpoint(userGroup);
+
+        // Map Payment Method Actions
+        AddPaymentMethod.MapEndpoint(userGroup);
         CreateAdmin.MapEndpoint(userGroup);
     }
 }

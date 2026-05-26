@@ -3,6 +3,8 @@ using MazadZone.Domain.Users.Errors;
 using MazadZone.Domain.Users.Events;
 using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Domain.ValueObjects;
+using MazadZone.Domain.Users.Entities;
+using MazadZone.Domain.Users.Enums;
 
 namespace MazadZone.Domain.Users;
 
@@ -42,6 +44,9 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public DateTime? ModifiedOnUtc { get; set; }
 
     private readonly List<HashedRefreshToken> _hashedRefreshTokens = new();
+    private readonly List<PaymentMethod> _paymentMethods = new();
+
+    public IReadOnlyCollection<PaymentMethod> PaymentMethods => _paymentMethods.AsReadOnly();
 
     public bool IsSeller => Roles.Contains(UserRole.Seller);
     public bool IsBidder => Roles.Contains(UserRole.Bidder);
@@ -285,4 +290,44 @@ public bool HasActiveRefreshToken(string hashedToken)
     return _hashedRefreshTokens.Any(t => t.Token == hashedToken && t.IsActive);
 }
 
+    public Result<PaymentMethod> AddPaymentMethod(
+        string last4Digits,
+        int expiryMonth,
+        int expiryYear,
+        string cardholderName,
+        CardBrand brand,
+        string gatewayToken,
+        bool isDefault)
+    {
+        if (_paymentMethods.Count >= PaymentMethodConstants.MaxPerUser)
+            return PaymentMethodErrors.MaxPaymentMethodsReached;
+
+        // Force first payment method to be default
+        bool shouldBeDefault = isDefault || _paymentMethods.Count == 0;
+
+        var methodResult = PaymentMethod.Create(
+            Id,
+            last4Digits,
+            expiryMonth,
+            expiryYear,
+            cardholderName,
+            brand,
+            gatewayToken,
+            shouldBeDefault);
+
+        if (methodResult.IsFailure) return methodResult.TopError;
+
+        if (shouldBeDefault)
+        {
+            foreach (var existing in _paymentMethods)
+            {
+                existing.UnsetDefault();
+            }
+        }
+
+        _paymentMethods.Add(methodResult.Value);
+        ModifiedOnUtc = DateTime.UtcNow; // Force parent modification for concurrency check
+
+        return methodResult.Value;
+    }
 }

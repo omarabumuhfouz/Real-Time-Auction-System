@@ -28,6 +28,13 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
              .FindByIdAsync(id, ct);
     }
 
+    public Task<User?> GetByIdWithPaymentMethodsAsync(UserId id, CancellationToken ct)
+    {
+        return _context.Users
+             .Include(u => u.PaymentMethods)
+             .FindByIdAsync(id, ct);
+    }
+
     public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct)
     {
         return _context.Users
