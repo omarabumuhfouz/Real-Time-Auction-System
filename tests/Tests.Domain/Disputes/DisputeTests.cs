@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MazadZone.Domain.Disputes;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Shared.ValueObjects;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Domain.Disputes;
 
@@ -103,7 +99,7 @@ public class DisputeTests
     {
         // Arrange
         var dispute = CreateValidDispute();
-        dispute.UnderReview(); // Set to UnderReview
+        dispute.UnderReview();
 
         // Act
         var result = dispute.UnderReview();

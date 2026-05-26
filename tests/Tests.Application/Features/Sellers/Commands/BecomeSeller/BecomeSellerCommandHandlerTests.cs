@@ -37,7 +37,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         var user = UserHelper.CreateActiveUser();
         var command = SellerHelper.CreateBecomeSellerCommand() with {UserId = user.Id};
 
-        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdWithTokensAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _bidderRepository.GetNationalIdByBidderIdAsync(user.Id, Arg.Any<CancellationToken>())
@@ -55,32 +55,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
     }
 
-    [Fact]
-    public async Task Handle_SellerInvariantsFail_ReturnsDomainError()
-    {
-        // Arrange
-        var user = UserHelper.CreateActiveUser();
-
-        // Passing an explicitly empty/invalid bank account string to prompt domain failure inside Seller.BecomeSeller
-        var command = SellerHelper.CreateBecomeSellerCommand() with { UserId = user.Id, BankAccountNumber = string.Empty };
-
-        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
-            .Returns(user);
-
-        _bidderRepository.GetNationalIdByBidderIdAsync(user.Id, Arg.Any<CancellationToken>())
-            .Returns("9991012345"); // National ID is present
-
-        // Act
-        var result = await Handler.Handle(command, default);
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.Code.ShouldNotBe(BidderErrors.NotFound.Code); // Failure originates from factory invariants
-
-        // Verify that state changes on the aggregate were not saved down to database wires
-        _sellerRepository.DidNotReceiveWithAnyArgs().Add(default!);
-        await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
-    }
+    
 
     [Fact]
     public async Task Handle_ValidCommand_CreatesSellerAndSavesChanges()
@@ -90,7 +65,7 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         var command = SellerHelper.CreateBecomeSellerCommand() with { UserId = user.Id };
         var expectedNationalId = "9991012345";
 
-        _userRepository.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>())
+        _userRepository.GetByIdWithTokensAsync(command.UserId, Arg.Any<CancellationToken>())
             .Returns(user);
 
         _bidderRepository.GetNationalIdByBidderIdAsync(user.Id, Arg.Any<CancellationToken>())
@@ -105,7 +80,6 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        result.Value.ShouldBe(Unit.Value);
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
 
 
@@ -113,7 +87,6 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         
         capturedSeller.Id.Value.ShouldBe(user.Id.Value); 
         
-        capturedSeller.BankAccountNumber.ShouldBe(command.BankAccountNumber);
         
         capturedSeller.NationalId.ShouldBe(expectedNationalId);
     }

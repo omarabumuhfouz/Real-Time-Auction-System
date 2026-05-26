@@ -1,5 +1,4 @@
 using MazadZone.Application.Features.Sellers.Commands.BecomeSeller;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace Tests.Application.Features.Sellers.Commands.BecomeSeller;
 
@@ -38,29 +37,7 @@ public class BecomeSellerValidatorTests
         // Assert
         result.IsValid.ShouldBeFalse();
         result.ShouldHaveValidationErrorFor(x => x.UserId);
-        
-        // Ensure the bank account rule didn't cross-contaminate the failure results
-        result.ShouldNotHaveValidationErrorFor(x => x.BankAccountNumber);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    // [InlineData("SHORT_ACC_123")] // Malformed string
-    public void Validate_BankAccountNumberIsInvalid_FailsValidation(string? invalidAccount)
-    {
-        // Arrange
-        var command = SellerHelper.CreateBecomeSellerCommand() with { BankAccountNumber = invalidAccount };
-
-        // Act
-        var result = _validator.TestValidate(command);
-
-        // Assert
-        result.IsValid.ShouldBeFalse();
-        
-        // Confirms your .MustBeValidBankAccount() intercepts empty/malformed text inputs gracefully
-        result.ShouldHaveValidationErrorFor(x => x.BankAccountNumber);
-        result.ShouldNotHaveValidationErrorFor(x => x.UserId);
-    }
+   
 }

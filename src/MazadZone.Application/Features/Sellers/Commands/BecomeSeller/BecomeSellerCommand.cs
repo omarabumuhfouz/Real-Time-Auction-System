@@ -1,6 +1,5 @@
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Users.ValueObjects;
+using MazadZone.Application.Features.Authentication.DTOs;
 
 namespace MazadZone.Application.Features.Sellers.Commands.BecomeSeller;
 
-public sealed record BecomeSellerCommand(UserId UserId, string BankAccountNumber) : ICommand<Unit>;
+public sealed record BecomeSellerCommand(UserId UserId) : ICommand<TokenDto>;
