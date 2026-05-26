@@ -20,5 +20,6 @@ public static class TableNames
     public const string Bidders = nameof(Bidders);
     public const string Notifications = nameof(Notifications);  
     public const string Images = nameof(Images);
+    public const string PaymentMethods = nameof(PaymentMethods);
 
 }

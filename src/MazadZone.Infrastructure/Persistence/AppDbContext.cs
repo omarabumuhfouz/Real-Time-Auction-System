@@ -6,6 +6,7 @@ using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.Users.Entities;
 using MazadZone.Domain.Users;
 using MazadZone.Infrastructure.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ public class AppDbContext : DbContext
     public DbSet<Bid> Bids { get; set; } = null!;
     public DbSet<Payment> Payments { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
+    public DbSet<PaymentMethod> PaymentMethods { get; set; } = null!;
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

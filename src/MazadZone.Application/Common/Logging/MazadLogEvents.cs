@@ -282,5 +282,13 @@ public static class DisputeTypes
         public const int UpdateSuccess = 6024;
     }
 
+    public static class PaymentMethods
+    {
+        // AddPaymentMethod: 7000 - 7009
+        public const int AddAttempt = 7000;
+        public const int AddDomainViolation = 7001;
+        public const int AddSuccess = 7002;
+    }
 
-}
+
+}
