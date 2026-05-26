@@ -1,6 +1,5 @@
 /**
  * React Query hooks for fetching Bidding data.
- * Fully aligned with the real backend DTO contracts.
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
