@@ -8,6 +8,7 @@ using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Enums;
 using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Categories;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Users.ValueObjects;
@@ -17,9 +18,9 @@ using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
 
 
-public partial class AuctionQueries (
+public partial class AuctionQueries(
     AppDbContext _context
-): IAuctionQueries
+) : IAuctionQueries
 {
     public async Task<IReadOnlyList<AuctionBiddersDto>> GetActiveAuctionsWithBiddersBySellerIdAsync(UserId sellerId, CancellationToken ct)
     {
@@ -31,7 +32,7 @@ public partial class AuctionQueries (
                 a.Item.Title,
                 a.Bids.Select(b => b.BidderId.Value).ToList()
             ));
-        
+
 
 
         return await auctions.ToListAsync(ct);
@@ -51,10 +52,10 @@ public partial class AuctionQueries (
 
         var sellerUserInfo = await _context.Users.AsNoTracking()
             .Where(s => s.Id == sellerId)
-            .Select(s => new 
-            { 
-                FullName = s.FullName.FirstName + " " + s.FullName.LastName, 
-                Email = s.Email.Value 
+            .Select(s => new
+            {
+                FullName = s.FullName.FirstName + " " + s.FullName.LastName,
+                Email = s.Email.Value
             })
             .FirstOrDefaultAsync(ct);
 
@@ -74,13 +75,13 @@ public partial class AuctionQueries (
                 b.Amount.Amount,
                 (int)b.Status,
                 b.PlacedAtUtc
-            )) 
+            ))
             .ToList() ?? new List<BidDto>();
 
         //Item info
         var ItemTitle = auction.Item.Title;
         var ItemDescription = auction.Item.Description;
-        
+
         var itemImages = auction.Item?.Images?
                 .Select(img => img.Path)
                 .ToList() ?? new List<string>();
@@ -150,13 +151,13 @@ public partial class AuctionQueries (
         var rawAuctions = await _context.Auctions
             .AsNoTracking()
             .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value))
-            .Select(a => new 
+            .Select(a => new
             {
                 Id = a.Id.Value,
                 Title = a.Item.Title,
                 SellerId = a.SellerId.Value,
 
-                BidderIds = a.Bids.Select(b => b.BidderId.Value) 
+                BidderIds = a.Bids.Select(b => b.BidderId.Value)
             })
             .ToListAsync(ct);
 
@@ -167,9 +168,9 @@ public partial class AuctionQueries (
             a.Title,
             a.SellerId,
             // get anothers bidders with out current bidder
-            a.BidderIds.Where(id => id != bidderId.Value).ToHashSet() 
+            a.BidderIds.Where(id => id != bidderId.Value).ToHashSet()
         )).ToList();
-    
+
     }
 
     public async Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(UserId bidderId, MyBidsQueryParameters parameters, CancellationToken ct)
@@ -254,7 +255,7 @@ public partial class AuctionQueries (
             .AsNoTracking()
             .Where(o => o.Id.Equals(orderId))
             .Select(o => o.TotalAmount).FirstOrDefaultAsync();
-        
+
     }
 
     public async Task<PagedList<AuctionsListDto>> SearchAuctionsAsync(AuctionQueryParameters parameters, CancellationToken ct)
@@ -273,8 +274,8 @@ public partial class AuctionQueries (
         if (parameters.CategoryId.HasValue)
         {
 
-            query = query.Where(a => a.Item.CategoryId == parameters.CategoryId.Value);
-            
+            query = query.Where(a => a.Item.CategoryId == parameters.CategoryId);
+
         }
 
         if (!string.IsNullOrEmpty(parameters.Status) &&
