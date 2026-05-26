@@ -8,8 +8,11 @@ public record ProfileSettingsResponse(
     string Email,
     string PhoneNumber,
     string NationalId,
-    List<AddressDto> Addresses
+    string City,
+    string Street,
+    string Building,
+    string Landmark
 )
 {
-    public static ProfileSettingsResponse Empty => new ProfileSettingsResponse(Guid.Empty, "", "", "", "", new List<AddressDto>());
+    public static ProfileSettingsResponse Empty => new ProfileSettingsResponse(Guid.Empty, "", "", "", "","", "", "", "");
 }

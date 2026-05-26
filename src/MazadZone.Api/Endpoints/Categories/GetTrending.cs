@@ -3,8 +3,6 @@ using MazadZone.Application.Features.Categories.Queries.GetTrendingCategories;
 
 namespace MazadZone.Api.Endpoints.Categories;
 
-internal sealed record GetTrendingRequest(int Limit = 10);
-
 public static class GetTrending
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
@@ -19,12 +17,12 @@ public static class GetTrending
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromBody]GetTrendingRequest request,
         [FromServices] ISender sender,
-        CancellationToken ct)
+        CancellationToken ct,
+        [FromQuery] int Limit = 10)
 
     {
-        var result = await sender.Send(new GetTrendingCategoriesQuery(request.Limit), ct);
+        var result = await sender.Send(new GetTrendingCategoriesQuery(Limit), ct);
 
         return result.Match(
             onValue: trending => Results.Ok(trending),

@@ -55,46 +55,24 @@ public class UserQueries : ResilientRepository, IUserQueries
     {
         const string sql = @"
             SELECT 
-                -- Base User Data
-                u.Id,
-                u.FirstName + ' ' + u.SecondName + ' ' + u.ThirdName + ' ' + u.LastName AS FullName,
-                u.Email,
-                u.PhoneNumber,
-                b.NationalId
-            FROM Users u
-            LEFT JOIN Bidders b ON u.Id = b.Id
-            WHERE u.Id = @UserId;
-
-            SELECT 
-                a.City,
-                a.Street,
-                a.Building,
-                a.Landmark
-            FROM Addresses a
-            WHERE a.UserId = @UserId;
+    u.Id,
+    u.FirstName + ' ' + u.LastName AS FullName,
+    u.Email,
+    u.PhoneNumber,
+    b.NationalId,
+    b.City,
+    b.Street,
+    b.Building,
+    b.Landmark
+FROM Users u
+JOIN Bidders b ON b.Id = u.Id
+WHERE u.Id = @UserId;
             ";
 
-        return await ExecuteResilientAsync(async connection =>
-        {
-            using var multi = await connection.QueryMultipleAsync(sql, new { UserId = userId.Value });
-
-            var user = await multi.ReadFirstOrDefaultAsync<UserBaseProfile>();
-            if (user is null) return null;
-
-            var addresses = (await multi.ReadAsync<AddressDto>()).ToList();
-            if (!addresses.Any()) return null;
-
-            return new ProfileSettingsResponse(
-                user.Id,
-                user.FullName,
-                user.Email,
-                user.PhoneNumber,
-                user.NationalId,
-                addresses
-            );
-        });
+        return await ExecuteResilientAsync(connection =>
+               connection.QueryFirstOrDefaultAsync<ProfileSettingsResponse>(sql, new { UserId = userId.Value })
+        );
     }
 
-    private record UserBaseProfile(Guid Id, string FullName, string Email, string PhoneNumber, string NationalId);
 
 }
