@@ -30,6 +30,8 @@ public static class AuctionErrorCodes
     public const string DatabaseError = "Auction.DatabaseError";
     public const string PlaceBidFailed = "Auction.PlaceBidFailed";
     public const string NotActive = "Auction.NotActive";
+
+    public const string NotFoundSimmeler = "Auction.NotFoundSimmeler";
 }
 
 public static class AuctionErrors
@@ -113,4 +115,7 @@ public static class AuctionErrors
         Error.Conflict(AuctionErrorCodes.DatabaseError, "Database error");
     public static Error NotActive =>
         Error.Conflict(AuctionErrorCodes.NotActive, "Auction is not active");
+
+    public static Error NotFoundSimmeler =>
+        Error.NotFound(AuctionErrorCodes.NotFoundSimmeler, "No similar auctions found.");
 }

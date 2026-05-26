@@ -14,9 +14,27 @@ public class UserQueries : ResilientRepository, IUserQueries
 {
     public UserQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy): base(sqlFactory, resiliencePolicy){}
 
-    public Task<Result<Address>> GetAddressByIdAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<Result<Address>> GetAddressByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        const string sql = @"
+            SELECT 
+                DefaultShippingAddress_City AS City,
+                DefaultShippingAddress_Street AS Street,
+                DefaultShippingAddress_Building AS Building,
+                DefaultShippingAddress_Landmark AS Landmark
+            FROM Bidders
+            WHERE Id = @UserId;
+        ";
+
+        var addressDto = await ExecuteResilientAsync(connection =>
+            connection.QueryFirstOrDefaultAsync<AddressDto>(sql, new { UserId = userId }));
+
+        if (addressDto is null)
+        {
+            return Result.Failure<Address>(Error.NotFound("Address.NotFound", "Address not found for the user."));
+        }
+
+        return Address.Create(addressDto.City, addressDto.Street, addressDto.Building, addressDto.Landmark);
     }
 
     public async Task<Result<Email>> GetEmailByIdAsync(Guid userId, CancellationToken cancellationToken)

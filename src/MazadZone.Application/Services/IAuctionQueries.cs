@@ -17,7 +17,7 @@ public interface IAuctionQueries : IScopedService
     Task<PagedList<MyBidAuctionDto>> SearchMyBidsAsync(UserId bidderId, MyBidsQueryParameters queryParameters, CancellationToken ct);
     Task<Money> GetWinningBidAmountByOrderIdAsync(Guid orderId, CancellationToken ct);
     Task<Money> GetRemainingBalanceAsync(Payment payment, CancellationToken ct);
-    Task<IReadOnlyList<AuctionsListDto>> GetSimilarAuctionsAsync(Guid auctionId, int Limit, CancellationToken ct);
+    Task<IReadOnlyList<AuctionsListDto>?> GetSimilarAuctionsAsync(Guid auctionId, int Limit, CancellationToken ct);
 
 }
 

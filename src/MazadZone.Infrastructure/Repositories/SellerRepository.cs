@@ -17,14 +17,12 @@ public class SellerRepository : GenericRepository<Seller, UserId>, ISellerReposi
 
     public Task<Seller?> GetByAuctionIdAsync(AuctionId auctionId, CancellationToken ct)
     {
-        
-        // var query = from auction in _context.Auctions
-        //             where auction.Id == auctionId
-        //             join seller in _context.Sellers on auction.SellerId equals seller.Id
-        //             select seller;
+        var query = from auction in _context.Auctions
+                    where auction.Id == auctionId
+                    join seller in _context.Sellers on auction.SellerId equals seller.Id
+                    select seller;
 
-        // return query.FirstOrDefaultAsync(ct);
-        return null;
+        return query.FirstOrDefaultAsync(ct);
     }
 
     public Task<Seller?> GetByOrderIdAsync(OrderId orderId, CancellationToken ct)

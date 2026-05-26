@@ -10,8 +10,8 @@ namespace MazadZone.Api.Endpoints.Auctions;
 
 public record CreateAuctionRequest(
     UserId SellerId,
-    ItemStatus Status,
-    Description Condition,
+    string Status,
+    string Condition,
     AddressDto ShippingAddress,
     decimal StartBidAmount,
     decimal MinBidAmount,
@@ -24,7 +24,7 @@ public record CreateAuctionRequest(
 {
     public CreateAuctionCommand ToCommand() => new(
         SellerId,
-        Status,
+        Enum.TryParse<ItemStatus>(Status?.Replace(" ", ""), true, out var itemStatus) ? itemStatus : (ItemStatus)0,
         Condition,
         ShippingAddress.ToAddress(),
         StartBidAmount,

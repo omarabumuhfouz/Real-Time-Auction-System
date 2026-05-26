@@ -9,10 +9,10 @@ public sealed record Money : IComparable<Money>
     public Currency Currency { get; init; }
 
 
-    public static Result<Money> Create(decimal amount, Currency currency )
+    public static Result<Money> Create(decimal amount, Currency currency)
     {
         if (amount < 0) return MoneyErrors.AmountTooLow;
-        
+
         return new Money(amount, currency);
     }
 
@@ -24,7 +24,7 @@ public sealed record Money : IComparable<Money>
 
     // --- Factory Methods ---
     public static Money Zero() => new(0, Currency.Jod);
-    
+
     // --- Business Behaviors ---
     public bool IsZero() => Amount == 0;
 
@@ -91,7 +91,7 @@ public sealed record Money : IComparable<Money>
     }
 
     public static bool operator >=(Money first, Money second) => first == second || first > second;
-    
+
     public static bool operator <=(Money first, Money second) => first == second || first < second;
 
     public int CompareTo(Money? other)

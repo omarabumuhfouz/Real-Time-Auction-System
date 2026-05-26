@@ -13,6 +13,8 @@ public record AuctionQueryParameters
     public string Status { get; init; }
     public string SortBy { get; init; }
     public string? SortDirection { get; init; }
+    public string? ItemStatus { get; init; }
+    public string? Condition { get; init; }
 }
 
 public class CurrentBidAmountRange
