@@ -80,23 +80,39 @@ public static class DependencyInjection
     }
 
     private static IServiceCollection AddPollyPolicies(this IServiceCollection services, IConfiguration configuration)
-    {
-        var options = new ResilienceOptions();
-        configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
+{
+    var options = new ResilienceOptions();
+    configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
 
-        var retryPolicy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(options.RetryCount, retryAttempt =>
-                TimeSpan.FromSeconds(Math.Pow(options.BaseDelaySeconds, retryAttempt)),
-                (exception, timeSpan, retryCount, context) =>
-                {
-                    // Log logic here
-                });
+    // 1. Define Retry Policy
+    var retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(options.RetryCount, retryAttempt =>
+            TimeSpan.FromSeconds(Math.Pow(options.BaseDelaySeconds, retryAttempt)),
+            (exception, timeSpan, retryCount, context) =>
+            {
+                // Log logic here
+            });
 
-        services.AddSingleton<IAsyncPolicy>(retryPolicy);
+    // 2. Define Bulkhead Policy
+    var bulkheadPolicy = Policy.BulkheadAsync(
+        options.BulkheadMaxConcurrentRequests, 
+        options.BulkheadMaxQueuedRequests,
+        onBulkheadRejectedAsync: context =>
+        {
+            // Log or handle when the bulkhead is full and requests are rejected
+            return Task.CompletedTask;
+        });
 
-        return services;
-    }
+    // 3. Wrap them together 
+    // This executes bulkhead first, then retry inside it.
+    var combinedPolicy = Policy.WrapAsync(bulkheadPolicy, retryPolicy);
+
+    // Register the wrapped policy
+    services.AddSingleton<IAsyncPolicy>(combinedPolicy);
+
+    return services;
+}
 
    private static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
     {

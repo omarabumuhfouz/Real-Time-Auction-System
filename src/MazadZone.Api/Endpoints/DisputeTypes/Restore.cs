@@ -13,7 +13,7 @@ public static class Restore
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/restore", HandleAsync)
-           .RequireAuthorization(Policies.AdminOnly) 
+        //    .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Restore a soft-deleted Dispute Type")
            .WithDescription("Removes the soft-delete marker from a previously deleted dispute type, making it active again.")
            .Produces(StatusCodes.Status204NoContent)

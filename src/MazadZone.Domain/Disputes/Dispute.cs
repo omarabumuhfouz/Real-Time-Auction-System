@@ -50,6 +50,8 @@ public sealed class Dispute : AggregateRoot<DisputeId>
         if (Status == DisputeStatus.Resolved) return Result.Success();
 
         Resolution = resolution;
+        Status = DisputeStatus.Resolved;
+        ResolvedAtUtc = DateTime.UtcNow;
         RaiseDomainEvent(new DisputeResolvedDomainEvent(this.Id, OrderId, resolution.Value));
         return Result.Success();
     }
@@ -58,34 +60,12 @@ public sealed class Dispute : AggregateRoot<DisputeId>
     {
         if (Status == DisputeStatus.UnderReview) return Result.Success();
 
-        if (Status == DisputeStatus.Resolved) return Result.Success();
+        if (Status == DisputeStatus.Resolved) return DisputeErrors.AlreadyResolved;
 
         Status = DisputeStatus.UnderReview;
         return Result.Success();
     }
 
 
-    internal Result ChangeDescription(Description description)
-    {
-        if (Status == DisputeStatus.Resolved)
-            return OrderErrors.DisputeCannotChangeReason;
-
-        Description = description;
-        return Result.Success();
-    }
-
-    internal Result Resolve(string resolutionText)
-    {
-        if (Status == DisputeStatus.Resolved)
-            return OrderErrors.DisputeAlreadyResolved;
-
-        var resolutionResult = Resolution.Create(resolutionText);
-        if (resolutionResult.IsFailure) return resolutionResult.TopError;
-
-        Resolution = resolutionResult.Value;
-        Status = DisputeStatus.Resolved;
-        ResolvedAtUtc = DateTime.UtcNow; 
-        
-        return Result.Success();
-    }
+    
 }

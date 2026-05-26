@@ -38,6 +38,6 @@ internal sealed class DeleteDisputeTypeCommandHandler : ICommandHandler<DeleteDi
         await _unitOfWork.SaveChangesAsync(ct);
 
         DisputeTypeLogs.LogDeleteSuccess(_logger, request.DisputeTypeId);
-        return Result.Success(Unit.Value);
+        return Unit.Value;
     }
 }

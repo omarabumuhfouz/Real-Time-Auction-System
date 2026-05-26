@@ -40,21 +40,24 @@ public static class BidderHelper
     }
 
     public static BidderProfileDto CreateValidBidderProfileDto()
-    {
-        return new BidderProfileDto(
-            Id: UserId.New(), 
-            FullName: "Omar Abumuhfouz",
-            Email: "omar.abumuhfouz@mazadzone.com",
-            PhoneNumber: "0791234567",
-            Status: "Active",
-            IsVerified: true,
-            MemberSince: DateTime.UtcNow.AddMonths(-12),
-            LastLogin: DateTime.UtcNow.AddHours(-2),
-            Address: new AddressDto("Jordan", "Amman", "Queen Rania St", "11118"),
-            TotalBidsPlaced: 42,
-            AuctionParticipatedCount: 10,
-            AuctionsWonCount: 3,
-            CompletedPurchasesCount: 3
-        );
-    }
+{
+    return new BidderProfileDto(
+        Id: Guid.NewGuid(), 
+        FullName: "Omar Abumuhfouz",
+        Email: "omar.abumuhfouz@mazadzone.com",
+        PhoneNumber: "0791234567",
+        Status: "Active",
+        IsVerified: true,
+        MemberSince: DateTime.UtcNow.AddMonths(-12),
+        LastLogin: DateTime.UtcNow.AddHours(-2),
+        City: "Amman",
+        Street: "Queen Rania St",
+        Building: "Building 12B", // Example building data
+        Landmark: "Near University Gate", // Example landmark data
+        TotalBidsPlaced: 42,
+        AuctionParticipatedCount: 10,
+        AuctionsWonCount: 3,
+        CompletedPurchasesCount: 3
+    );
+}
 }

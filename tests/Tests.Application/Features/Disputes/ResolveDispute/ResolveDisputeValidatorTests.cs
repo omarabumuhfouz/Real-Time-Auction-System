@@ -1,6 +1,8 @@
+using FluentValidation.TestHelper;
 using MazadZone.Application.Features.Orders.Commands.ResolveDispute;
 using MazadZone.Application.Orders.ResolveDispute;
-using MazadZone.Domain.Orders;
+using MazadZone.Domain.Disputes;
+using MazadZone.Domain.Orders; // Adjust if DisputeId is in a different namespace
 
 namespace Tests.Application.Features.Orders.Commands.ResolveDispute;
 
@@ -14,7 +16,7 @@ public class ResolveDisputeValidatorTests
     }
 
     [Fact]
-    public void Should_Not_Have_Error_When_Command_Is_Valid()
+    public void Validate_WhenCommandIsValid_ShouldNotHaveAnyErrors()
     {
         // Arrange
         var command = OrderHelper.CreateResolveDisputeCommand();
@@ -27,23 +29,24 @@ public class ResolveDisputeValidatorTests
     }
 
     [Fact]
-    public void Should_Have_Error_When_OrderId_Is_Empty()
+    public void Validate_WhenDisputeIdIsEmpty_ShouldHaveValidationError()
     {
         // Arrange
-        var command = OrderHelper.CreateResolveDisputeCommand() with { OrderId = OrderId.Empty };
+        // Note: Corrected from OrderId to DisputeId to match the validator
+        var command = OrderHelper.CreateResolveDisputeCommand() with { DisputeId = DisputeId.Empty };
 
         // Act
         var result = _validator.TestValidate(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.OrderId);
+        result.ShouldHaveValidationErrorFor(x => x.DisputeId);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Should_Have_Error_When_Resolution_Is_Invalid(string? invalidResolution)
+    public void Validate_WhenResolutionIsNullOrWhitespace_ShouldHaveValidationError(string? invalidResolution)
     {
         // Arrange
         var command = OrderHelper.CreateResolveDisputeCommand() with { Resolution = invalidResolution };
@@ -56,10 +59,10 @@ public class ResolveDisputeValidatorTests
     }
 
     [Fact]
-    public void Should_Have_Error_When_Resolution_Is_Too_Short()
+    public void Validate_WhenResolutionIsTooShort_ShouldHaveValidationError()
     {
         // Arrange
-        // Assuming MustBeValidResolution requires a minimum length (e.g., 10-20 chars)
+        // This assumes MustBeValidResolution requires a specific minimum length
         var command = OrderHelper.CreateResolveDisputeCommand() with { Resolution = "Too short" };
 
         // Act

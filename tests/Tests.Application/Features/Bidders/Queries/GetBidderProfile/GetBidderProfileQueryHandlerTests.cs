@@ -32,7 +32,7 @@ public class GetBidderProfileQueryHandlerTests : BidderBaseTest<GetBidderProfile
         var query = new GetBidderProfileQuery(bidderId);
 
         // Create a fake DTO response that matches your BidderProfileDto shape
-        var expectedProfile = BidderHelper.CreateValidBidderProfileDto() with { Id = bidderId };
+        var expectedProfile = BidderHelper.CreateValidBidderProfileDto() with { Id = bidderId.Value };
 
         _bidderQueries.GetBidderProfile(query.BidderId)
             .Returns(expectedProfile);
