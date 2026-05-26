@@ -8,7 +8,7 @@ interface BidHistoryRowProps {
 }
 
 export function BidHistoryRow({ entry }: BidHistoryRowProps) {
-  const bidderId = `bidder-${entry.bidderName.toLowerCase().replace(/\s/g, "-").replace(/\./g, "")}`;
+  const bidderId = entry.bidderId || `bidder-${entry.bidderName.toLowerCase().replace(/\s/g, "-").replace(/\./g, "")}`;
 
   return (
     <div

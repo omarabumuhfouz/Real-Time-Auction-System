@@ -28,7 +28,7 @@ export function SellerDashboardPage() {
 
   // Table Filtering, Sorting, Pagination from URL
   const activeStatus = searchParams.get("status") || "All";
-  const sortBy = searchParams.get("sortBy") || "EndDate";
+  const sortBy = searchParams.get("sortBy") || "EndTime";
   const tablePage = parseInt(searchParams.get("page") || "1", 10);
 
   // 1. Fetch ALL seller auctions to calculate overall dashboard summary statistics

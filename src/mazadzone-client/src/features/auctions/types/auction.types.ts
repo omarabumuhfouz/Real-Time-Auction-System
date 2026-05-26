@@ -66,10 +66,10 @@ export type AuctionCondition =
   (typeof AuctionCondition)[keyof typeof AuctionCondition];
 
 export const AuctionSortBy = {
-  CREATION_DATE: "creationDate",
-  PRICE: "Price",
+  CREATION_DATE: "CreationDate",
   START_TIME: "StartTime",
   END_TIME: "EndTime",
+  CURRENT_BID_AMOUNT: "CurrentBidAmount",
 } as const;
 
 export type AuctionSortBy =
@@ -116,6 +116,8 @@ export interface AuctionSummary {
   subcategory: AuctionSubcategory;
   condition: AuctionCondition;
   status: AuctionStatus;
+  description: string;
+  conditionDescription?: string;
 
   pricing: {
     startingPrice: number;
@@ -146,6 +148,7 @@ export interface BidHistoryEntry {
   amount: number;
   timeAgo: string;
   isHighest: boolean;
+  bidderId?: string;
 }
 
 export interface Seller extends AuthUser {
