@@ -3,6 +3,7 @@ using MazadZone.Application.Features.Auctions;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
 using MazadZone.Application.Features.Auctions.Queries.GetAuctions;
+using MazadZone.Domain.Categories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc.Formatters.Xml;
 
@@ -32,10 +33,10 @@ public static class GetAuctions
             parameters.SearchTerm,
             parameters.CategoryId,
             parameters.SubCategoryId,
-            parameters.MinCurrentBid is null && parameters.MaxCurrentBid is null 
-                ? null 
+            parameters.MinCurrentBid is null && parameters.MaxCurrentBid is null
+                ? null
                 : new CurrentBidAmountRange { Min = parameters.MinCurrentBid, Max = parameters.MaxCurrentBid },
-            string.IsNullOrEmpty(parameters.Status) ? "Active" : parameters.Status,
+            parameters.Status,
             string.IsNullOrEmpty(parameters.SortBy) ? "CreationDate" : parameters.SortBy,
             string.IsNullOrEmpty(parameters.SortDirection) ? "desc" : parameters.SortDirection);
 
@@ -44,17 +45,17 @@ public static class GetAuctions
     }
 
     // Create a flat parameter group structure
-public class AuctionQueryParameters
-{
-    public int Page { get; set; }
-    public int PageSize { get; set; }
-    public string? SearchTerm { get; set; }
-    public Guid? CategoryId { get; set; }
-    public Guid? SubCategoryId { get; set; }
-    public decimal? MinCurrentBid { get; set; }
-    public decimal? MaxCurrentBid { get; set; }
-    public string? Status { get; set; }
-    public string? SortBy { get; set; }
-    public string? SortDirection { get; set; }
-}
+    public class AuctionQueryParameters
+    {
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public string? SearchTerm { get; set; }
+        public CategoryId? CategoryId { get; set; }
+        public CategoryId? SubCategoryId { get; set; }
+        public decimal? MinCurrentBid { get; set; }
+        public decimal? MaxCurrentBid { get; set; }
+        public string? Status { get; set; }
+        public string? SortBy { get; set; }
+        public string? SortDirection { get; set; }
+    }
 }

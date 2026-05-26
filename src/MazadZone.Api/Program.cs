@@ -58,17 +58,17 @@ try
     var app = builder.Build();
 
     // Apply pending migrations automatically on startup
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // using (var scope = app.Services.CreateScope())
+    // {
+    //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // This will create the DB and apply all migrations if they don't exist
-        dbContext.Database.Migrate();
+    //     // This will create the DB and apply all migrations if they don't exist
+    //     dbContext.Database.Migrate();
 
-        // Optional: You can also call a DatabaseSeeder here to insert dummy data!
-        // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-        // await seeder.SeedAsync();
-    }
+    //     // Optional: You can also call a DatabaseSeeder here to insert dummy data!
+    //     // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    //     // await seeder.SeedAsync();
+    // }
     app.UseCors("AllowAll");
     //Map Endpoints
     app.MapNotificationEndpoints();
@@ -89,34 +89,34 @@ try
 
     }
 
-    #region  Seed database
-    if (app.Environment.IsDevelopment())
-    {
-        // Create a temporary DI scope
-        using var scope = app.Services.CreateScope();
+    // #region  Seed database
+    // if (app.Environment.IsDevelopment())
+    // {
+    //     // Create a temporary DI scope
+    //     using var scope = app.Services.CreateScope();
 
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
+    //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    //     var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
 
-        try
-        {
-            Console.WriteLine("Applying database migrations...");
-            // 1. Ensure the database exists and schema is up to date
-            await dbContext.Database.MigrateAsync();
+    //     try
+    //     {
+    //         Console.WriteLine("Applying database migrations...");
+    //         // 1. Ensure the database exists and schema is up to date
+    //         await dbContext.Database.MigrateAsync();
 
-            Console.WriteLine("Seeding mock data for MazadZone...");
-            // 2. Execute your MasterDataSeeder
-            await seeder.SeedAsync();
+    //         Console.WriteLine("Seeding mock data for MazadZone...");
+    //         // 2. Execute your MasterDataSeeder
+    //         await seeder.SeedAsync();
 
-            Console.WriteLine("✅ Database seeded successfully!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error during database seeding: {ex}");
-        }
-    }
+    //         Console.WriteLine("✅ Database seeded successfully!");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"❌ Error during database seeding: {ex}");
+    //     }
+    // }
 
-    #endregion
+    // #endregion
     app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseSerilogRequestLogging(options =>
     {
