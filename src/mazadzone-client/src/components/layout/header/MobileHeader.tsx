@@ -134,7 +134,7 @@ export const MobileHeader = ({
                 </Link>
                 {isSeller && (
                   <Link
-                    href={ROUTES.SELLER.DASHBOARD}
+                    href={ROUTES.SELLER.AUCTIONS}
                     className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

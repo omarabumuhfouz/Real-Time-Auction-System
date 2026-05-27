@@ -25,7 +25,6 @@ export const MAIN_NAV: NavItem[] = [
  * Seller dashboard navigation.
  */
 export const SELLER_NAV: NavItem[] = [
-  { label: "Dashboard", href: ROUTES.SELLER.DASHBOARD, roles: ["seller"] },
   { label: "My Auctions", href: ROUTES.SELLER.AUCTIONS, roles: ["seller"] },
   {
     label: "Create Auction",
