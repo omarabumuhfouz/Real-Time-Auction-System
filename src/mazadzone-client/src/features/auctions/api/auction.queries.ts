@@ -16,7 +16,10 @@ import {
   getAuctions,
   getAuctionById,
   getSimilarAuctions,
+  getRootCategories,
+  getCategoryTree,
 } from "./auction.api";
+import type { CategoryDto } from "./auction.contracts";
 
 import { auctionKeys } from "./auction.keys";
 import {
@@ -240,5 +243,27 @@ export function useGetSellerAuctions(filters?: {
         hasPreviousPage: raw.hasPreviousPage ?? false,
       };
     },
+  });
+}
+
+/**
+ * Hook to retrieve root categories from the API.
+ */
+export function useGetRootCategories() {
+  return useQuery<CategoryDto[]>({
+    queryKey: ["categories", "roots"],
+    queryFn: getRootCategories,
+    staleTime: 60 * 60 * 1000, // Keep cached for 1 hour since category structure rarely changes
+  });
+}
+
+/**
+ * Hook to retrieve the complete categories and subcategories tree from the API.
+ */
+export function useGetCategoryTree() {
+  return useQuery<CategoryDto[]>({
+    queryKey: ["categories", "tree"],
+    queryFn: getCategoryTree,
+    staleTime: 60 * 60 * 1000,
   });
 }

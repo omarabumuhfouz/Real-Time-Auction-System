@@ -27,11 +27,8 @@ export function AuctionMainInfo({
   const hasBids = auction.pricing.bidCount > 0 && auction.pricing.currentBid !== null;
   const displayPrice = auction.pricing.currentBid ?? auction.pricing.startingPrice;
 
-  // Min increment only relevant when bidding is possible
-  const minIncrement =
-    displayPrice < 100 ? 5 :
-      displayPrice < 1000 ? 50 :
-        displayPrice < 10000 ? 100 : 250;
+  // Min increment directly fetched from the API data
+  const minIncrement = auction.pricing.minimumIncrement ?? 10;
 
   const getButtonContent = () => {
     if (auction.isOwner) {
