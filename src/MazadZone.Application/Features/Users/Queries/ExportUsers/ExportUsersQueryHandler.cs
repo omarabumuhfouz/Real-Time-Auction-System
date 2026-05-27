@@ -18,7 +18,7 @@ public class ExportUsersQueryHandler : IQueryHandler<ExportUsersQuery, ExportFil
         var exportParams = request.FilterParams with { IsExport = true };
 
         // 2. Fetch all matching records from Dapper
-        var users = await _userQueries.GetUsersAsync(exportParams, ct);
+        var pagedList = await _userQueries.GetUsersAsync(exportParams, ct);
 
         // 3. Build CSV string
         var csvBuilder = new StringBuilder();
@@ -27,7 +27,7 @@ public class ExportUsersQueryHandler : IQueryHandler<ExportUsersQuery, ExportFil
         csvBuilder.AppendLine("Id,Full Name,Email,Phone Number,Role,Status,Joined At,Last Login");
 
         // Rows
-        foreach (var user in users)
+        foreach (var user in pagedList.Items)
         {
             // Escape values with double quotes to prevent commas inside data from breaking columns
             csvBuilder.AppendLine(
