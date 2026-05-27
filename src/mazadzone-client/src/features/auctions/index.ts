@@ -64,6 +64,7 @@ export {
 
 // Hooks
 export { useAuctionCountdown } from "./hooks/use-auction-countdown";
+export { useRealtimeAuctions } from "./hooks/useRealtimeAuctions";
 
 // Utils
 export {

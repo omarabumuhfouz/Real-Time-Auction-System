@@ -2,8 +2,10 @@
 
 import { Clock, Play, Flag } from "lucide-react";
 import { format } from "date-fns";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { useAuctionCountdown } from "@/features/auctions";
+import { useAuctionCountdown, auctionKeys } from "@/features/auctions";
 
 interface CountdownTimerProps {
   /** Date object of when the auction starts */
@@ -53,7 +55,15 @@ export function CountdownTimer({
   const targetDate = status === "Upcoming" && startDate ? startDate : endDate;
   const { remainingSeconds, isExpired, isMounted } = useAuctionCountdown(targetDate);
   const isLarge = variant === "large";
-  const isEnded = status === "Ended" || status === "Won" || status === "Lost" || isExpired;
+  const isEnded = status === "Ended";
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (isExpired && isMounted) {
+      void queryClient.invalidateQueries({ queryKey: auctionKeys.all });
+    }
+  }, [isExpired, isMounted, queryClient]);
 
   // -- Hydration Safe Skeleton ---------------------------------
   if (!isMounted) {

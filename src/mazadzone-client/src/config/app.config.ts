@@ -25,5 +25,5 @@ export const APP_CONFIG = {
     locale: "en-JO",
   },
   /** Central toggle to globally disable SignalR until the backend is fully ready */
-  enableRealtime: false,
+  enableRealtime: true,
 } as const;
