@@ -132,11 +132,7 @@ export function AuctionDetailContent({
         auctionId={auction.id}
         auctionTitle={auction.title}
         currentBid={auction.pricing.currentBid ?? auction.pricing.startingPrice}
-        minIncrement={
-          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 100 ? 5 :
-          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 1000 ? 50 :
-          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 10000 ? 100 : 250
-        }
+        minIncrement={auction.pricing.minimumIncrement ?? 10}
         isOpen={isBidModalOpen}
         onClose={() => setIsBidModalOpen(false)}
       />

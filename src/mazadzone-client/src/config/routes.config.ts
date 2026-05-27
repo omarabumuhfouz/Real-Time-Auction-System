@@ -35,7 +35,7 @@ export const ROUTES = {
 
   // --- Seller --------------------------------------------
   SELLER: {
-    DASHBOARD: "/seller",
+    DASHBOARD: "/seller/auctions",
     AUCTIONS: "/seller/auctions",
     CREATE_AUCTION: "/seller/auctions/create",
     EDIT_AUCTION: (id: string) => `/seller/auctions/${id}/edit` as const,

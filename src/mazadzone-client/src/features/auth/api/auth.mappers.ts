@@ -3,7 +3,7 @@
  * Decouples raw backend DTO models from presentation ViewModels and session state.
  */
 
-import type { AuthUser } from "@/stores/auth.store";
+import type { AuthUser, UserRole } from "@/stores/auth.store";
 import type { RegisterFormValues } from "../validations/register.schema";
 import type { RegisterBidderRequest } from "./auth.contracts";
 
@@ -46,6 +46,24 @@ export function mapRegisterFormToRequest(
 }
 
 /**
+ * Safely decodes a Base64URL encoded string to a UTF-8 string.
+ * Handles unpadded strings and correctly maps Unicode characters.
+ */
+function base64UrlDecode(str: string): string {
+  let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = base64.length % 4;
+  if (pad) {
+    base64 += "=".repeat(4 - pad);
+  }
+  return decodeURIComponent(
+    atob(base64)
+      .split("")
+      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+      .join("")
+  );
+}
+
+/**
  * Parses a JWT token payload to extract standard claims for the user's active session.
  */
 export function decodeJwtToken(token: string): AuthUser {
@@ -53,21 +71,53 @@ export function decodeJwtToken(token: string): AuthUser {
     const payload = token.split(".")[1];
     if (!payload) throw new Error("Invalid JWT token structure");
 
-    const decoded = JSON.parse(atob(payload)) as {
-      sub?: string;
-      email?: string;
-      name?: string;
-      role?: string;
-    };
+    const decoded = JSON.parse(base64UrlDecode(payload)) as any;
+
+    // Standard Claim URIs
+    const microsoftRoleClaim = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+    const microsoftNameClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
+    const microsoftIdClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+
+    // 1. Extract Role (can be a string or array of strings under role/roles/claim URI)
+    const rawRole = decoded.role || decoded.roles || decoded[microsoftRoleClaim];
+    let finalRole: UserRole = "bidder";
+
+    if (rawRole) {
+      if (Array.isArray(rawRole)) {
+        const rolesLower = rawRole.map((r: string) => r.toLowerCase());
+        if (rolesLower.includes("admin")) {
+          finalRole = "admin";
+        } else if (rolesLower.includes("seller")) {
+          finalRole = "seller";
+        } else if (rolesLower.includes("bidder")) {
+          finalRole = "bidder";
+        }
+      } else if (typeof rawRole === "string") {
+        const roleLower = rawRole.toLowerCase();
+        if (roleLower.includes("admin")) {
+          finalRole = "admin";
+        } else if (roleLower.includes("seller")) {
+          finalRole = "seller";
+        } else {
+          finalRole = "bidder";
+        }
+      }
+    }
+
+    // 2. Extract Full Name
+    const fullName = decoded.name || decoded[microsoftNameClaim] || decoded.fullName || "User";
+
+    // 3. Extract User ID
+    const id = decoded.sub || decoded[microsoftIdClaim] || decoded.id || "unknown-id";
 
     return {
-      id: decoded.sub || "unknown-id",
-      email: decoded.email || "",
-      fullName: decoded.name || "User",
-      role: (decoded.role?.toLowerCase() as any) || "bidder",
+      id,
+      email: decoded.email || decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
+      fullName,
+      role: finalRole,
     };
   } catch (error) {
-    console.error("Failed to decode JWT token payload:", error);
+    console.error("Failed to decode JWT token payload safely:", error);
     return {
       id: "unknown-id",
       email: "",

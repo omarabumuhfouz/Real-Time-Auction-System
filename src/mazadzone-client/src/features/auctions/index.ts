@@ -26,6 +26,8 @@ export {
   useGetClosingSoonAuctions,
   useGetUpcomingAuctions,
   useGetSellerAuctions,
+  useGetRootCategories,
+  useGetCategoryTree,
 } from "./api";
 
 // Mutations

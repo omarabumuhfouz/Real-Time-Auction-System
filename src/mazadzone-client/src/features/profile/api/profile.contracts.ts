@@ -25,3 +25,16 @@ export interface ChangePasswordRequest {
   newPassword?: string;
   confirmNewPassword?: string;
 }
+
+export interface ProfileSettingsDto {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  nationalId: string;
+  city: string;
+  street: string;
+  building: string;
+  landmark: string;
+}
+

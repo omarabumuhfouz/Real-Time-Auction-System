@@ -1,6 +1,6 @@
 import { api } from "@/lib/api/client";
 import type { UserProfile, Address } from "../types/profile.types";
-import type { BidderProfileDto, ChangePasswordRequest } from "./profile.contracts";
+import type { BidderProfileDto, ChangePasswordRequest, ProfileSettingsDto } from "./profile.contracts";
 import { mapBidderProfileToUserProfile, mapBidderProfileToDefaultAddress } from "./profile.mappers";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -176,3 +176,15 @@ export async function removeAddress(id: string): Promise<void> {
 export async function changePassword(input: ChangePasswordRequest): Promise<void> {
   await api.put("/api/v1/users/password", input);
 }
+
+/**
+ * Fetches the user profile settings from the ASP.NET Core backend.
+ */
+export async function fetchProfileSettings(userId: string): Promise<ProfileSettingsDto> {
+  if (!userId) {
+    throw new Error("User ID is required to fetch profile settings");
+  }
+  const response = await api.get<ProfileSettingsDto>(`/api/v1/users/users/${userId}/profile-settings`);
+  return response.data;
+}
+

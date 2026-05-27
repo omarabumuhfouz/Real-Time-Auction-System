@@ -23,7 +23,7 @@ export function SellerDashboardPage() {
   const { isAuthorized, isLoading: isAuthLoading } = useRequireRole(["seller"], {
     loginMessage: "Please log in to access the Seller Dashboard.",
     unauthorizedMessage: "You must activate your seller privileges to view this page.",
-    bypassTesting: true, // Bypass checking while in testing/development mode
+    bypassTesting: false, // Strict seller-only authorization check enforced
   });
 
   // Table Filtering, Sorting, Pagination from URL

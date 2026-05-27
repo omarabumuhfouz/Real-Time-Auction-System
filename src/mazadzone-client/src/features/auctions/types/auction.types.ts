@@ -123,6 +123,7 @@ export interface AuctionSummary {
     startingPrice: number;
     currentBid: number | null;
     bidCount: number;
+    minimumIncrement?: number;
   };
 
   timing: {
@@ -174,8 +175,8 @@ export interface AuctionCardProps {
 export interface CreateAuctionInput {
   title: string;
   description: string;
-  category: AuctionCategory;
-  subcategory: AuctionSubcategory;
+  category: string;
+  subcategory: string;
   condition: AuctionCondition;
   conditionDescription?: string;
   startingPrice: number;
@@ -183,7 +184,7 @@ export interface CreateAuctionInput {
   shippingLocation: string;
   startDate: string;
   endDate: string;
-  images: File[];
+  images: (File | string)[];
 }
 
 export interface UpdateAuctionInput {

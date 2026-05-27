@@ -13,8 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/config/routes.config";
-
-import { AuctionCategory, AuctionSubcategory, AuctionCondition } from "../../types/auction.types";
+import { AuctionCondition } from "../../types/auction.types";
+import { useGetCategoryTree } from "../../api/auction.queries";
+import { useGetProfileSettings } from "@/features/profile/api/profile.queries";
+import { useAuthStore } from "@/stores/auth.store";
 
 // Formats a standard float string to dot-separated thousands and decimal (e.g., "111111111.00" -> "111.111.111.00")
 const formatPriceOnBlur = (val: string): string => {
@@ -57,48 +59,51 @@ export function AuctionDetailsForm() {
   const {
     register,
     control,
-    watch,
     setValue,
     formState: { errors },
   } = useFormContext();
 
   const selectedCategory = useWatch({ name: "category", control });
 
-  // Pre-configured address list representing the user's registered addresses
+  // 1. Fetch dynamic categories tree from ASP.NET Core API
+  const { data: categoryTree } = useGetCategoryTree();
+
+  // 2. Fetch shipping location dynamically from active user's profile settings
+  const { user } = useAuthStore();
+  const { data: profileSettings } = useGetProfileSettings(user?.id || "");
+
+  // Format primary address safely
+  const primaryAddressStr = profileSettings
+    ? [profileSettings.city, profileSettings.street, profileSettings.building ? `Bldg ${profileSettings.building}` : ""]
+        .filter(Boolean)
+        .join(", ")
+    : "Amman, Jordan";
+
   const defaultAddresses = [
-    { id: "addr_1", label: "Primary: Amman, Jordan (Registered)", value: "Amman, Jordan" },
-    { id: "addr_2", label: "Work: Salt, Jordan", value: "Salt, Jordan" },
+    { id: "addr_1", label: `Primary: ${primaryAddressStr} (Registered)`, value: primaryAddressStr },
     { id: "custom", label: "+ Add Custom Shipping Location", value: "custom" }
   ];
 
-  // Initialize default shipping location
+  // Initialize/Sync default shipping location
   useEffect(() => {
-    setValue("shippingLocation", "Amman, Jordan");
-  }, [setValue]);
+    if (primaryAddressStr) {
+      setValue("shippingLocation", primaryAddressStr);
+    }
+  }, [primaryAddressStr, setValue]);
 
   // Sync address selection or navigate to profile editing
   const handleAddressSelectChange = (val: string) => {
     if (val === "custom") {
-      // Redirect to profile settings to let user add a verified address
       router.push(ROUTES.PROFILE.EDIT);
     } else {
       setValue("shippingLocation", val, { shouldValidate: true });
     }
   };
 
-  // Subcategory mapping dictionary
-  const subcategoriesByCategory: Record<string, string[]> = {
-    [AuctionCategory.TECH_ELECTRONICS]: ["Laptops", "Smartphones", "Cameras", "Others"],
-    [AuctionCategory.FASHION_STYLE]: ["Watches", "Shoes", "Accessories", "Others"],
-    [AuctionCategory.HOME_LIVING]: ["Furniture", "Decor", "Others"],
-    [AuctionCategory.MOTORS]: ["Cars", "Motorcycles", "Others"],
-    [AuctionCategory.COLLECTIBLES_ART]: ["Paintings", "Antiques", "Sculptures", "Others"],
-    [AuctionCategory.HOBBIES_LEISURE]: ["Books", "Musical Instruments", "Sports Equipment", "Others"]
-  };
-
-  const availableSubcategories = selectedCategory 
-    ? subcategoriesByCategory[selectedCategory] || ["Others"] 
-    : [];
+  // 3. Find selected category's subcategories
+  const currentCategoryNode = categoryTree?.find((c) => c.id === selectedCategory);
+  const subCategoriesList = currentCategoryNode?.subCategories || currentCategoryNode?.subcategories || [];
+  const hasSubcategories = subCategoriesList.length > 0;
 
   // Sync subcategory resetting if category changes
   useEffect(() => {
@@ -199,8 +204,8 @@ export function AuctionDetailsForm() {
               {...register("category")}
             >
               <option value="" disabled>Select a category</option>
-              {Object.values(AuctionCategory).map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+              {categoryTree?.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
@@ -218,15 +223,19 @@ export function AuctionDetailsForm() {
           <div className="relative">
             <select
               id="subcategory"
-              disabled={!selectedCategory}
+              disabled={!selectedCategory || !hasSubcategories}
               className="h-12 w-full appearance-none rounded-xl border border-input bg-input-background px-4 pr-10 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-              {...register("subcategory")}
+              {...register("subcategory", { required: hasSubcategories })}
             >
               <option value="" disabled>
-                {selectedCategory ? "Select a subcategory" : "Select category first"}
+                {!selectedCategory 
+                  ? "Select category first" 
+                  : !hasSubcategories 
+                  ? "No subcategories available" 
+                  : "Select a subcategory"}
               </option>
-              {availableSubcategories.map((sub) => (
-                <option key={sub} value={sub}>{sub}</option>
+              {subCategoriesList.map((sub) => (
+                <option key={sub.id} value={sub.id}>{sub.name}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />

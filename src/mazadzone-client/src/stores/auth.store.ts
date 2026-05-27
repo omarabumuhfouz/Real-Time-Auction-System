@@ -96,6 +96,20 @@ export const useAuthStore = create<AuthStore>()(
           if (storedToken !== state.accessToken) {
             setTokens(state.accessToken, "");
           }
+
+          // Dynamically decode token on load to ensure user profile & roles are perfectly in sync
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { decodeJwtToken } = require("@/features/auth/api/auth.mappers") as {
+              decodeJwtToken: (token: string) => AuthUser;
+            };
+            const decodedUser = decodeJwtToken(state.accessToken);
+            if (decodedUser && decodedUser.id !== "unknown-id") {
+              state.user = decodedUser;
+            }
+          } catch (err) {
+            console.error("Failed to automatically sync user role from token on reload:", err);
+          }
         }
         state?.setHydrated();
       },

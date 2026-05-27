@@ -7,14 +7,16 @@ import {
   updateAddress,
   removeAddress,
   changePassword,
+  fetchProfileSettings,
 } from "./profile.api";
 import type { UserProfile, Address } from "../types/profile.types";
-import type { ChangePasswordRequest } from "./profile.contracts";
+import type { ChangePasswordRequest, ProfileSettingsDto } from "./profile.contracts";
 
 export const profileKeys = {
   all: ["profile"] as const,
   info: () => [...profileKeys.all, "info"] as const,
   addresses: () => [...profileKeys.all, "addresses"] as const,
+  settings: (userId: string) => [...profileKeys.all, "settings", userId] as const,
 };
 
 /**
@@ -24,6 +26,17 @@ export function useGetProfile() {
   return useQuery<UserProfile>({
     queryKey: profileKeys.info(),
     queryFn: fetchUserProfile,
+  });
+}
+
+/**
+ * Hook to fetch profile settings for become seller page or profile display.
+ */
+export function useGetProfileSettings(userId: string) {
+  return useQuery<ProfileSettingsDto>({
+    queryKey: profileKeys.settings(userId),
+    queryFn: () => fetchProfileSettings(userId),
+    enabled: !!userId,
   });
 }
 
