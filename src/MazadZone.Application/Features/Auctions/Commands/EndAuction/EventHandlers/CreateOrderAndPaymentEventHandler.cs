@@ -54,7 +54,7 @@ public class CreateOrderAndPaymentEventHandler(
         _orderRepository.Add(order);
 
         // 3. payment  
-        var paymentResult = Payment.Create(order.Id, UserId.From(winningBid.BidderId.Value), winningBid.DepositAmount);
+        var paymentResult = Payment.Create(order.Id, UserId.From(winningBid.BidderId.Value), winningBid.DepositAmount, order.TotalAmount, MazadZone.Domain.Payments.PaymentConstants.DefaultPlatformFeePercentage);
 
         System.Console.WriteLine("\n\n\n\npaymentId: ", paymentResult.Value.Id.Value);
         System.Console.WriteLine("OrderId: ", paymentResult.Value.OrderId.Value);

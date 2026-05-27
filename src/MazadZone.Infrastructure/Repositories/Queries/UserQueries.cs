@@ -18,10 +18,10 @@ public class UserQueries : ResilientRepository, IUserQueries
     {
         const string sql = @"
             SELECT 
-                DefaultShippingAddress_City AS City,
-                DefaultShippingAddress_Street AS Street,
-                DefaultShippingAddress_Building AS Building,
-                DefaultShippingAddress_Landmark AS Landmark
+                City,
+                Street,
+                Building,
+                Landmark
             FROM Bidders
             WHERE Id = @UserId;
         ";
