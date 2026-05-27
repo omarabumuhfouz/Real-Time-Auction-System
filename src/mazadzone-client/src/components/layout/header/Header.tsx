@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { DesktopHeader, DesktopBottomRow } from "./DesktopHeader";
 import { MobileHeader } from "./MobileHeader";
 import { useRealtimeNotifications } from "@/features/notifications";
+import { useRealtimeAuctions } from "@/features/auctions";
 
 /**
  * Header
@@ -23,8 +24,10 @@ export function Header() {
   const { user, logout, isAuthenticated } = useAuthStore();
   const role = user?.role;
 
-  // Listen for real-time notifications
+  // Listen for real-time notifications and auctions
   useRealtimeNotifications(user?.id);
+  useRealtimeAuctions();
+
 
 
   // States

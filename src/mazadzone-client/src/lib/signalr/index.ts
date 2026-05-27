@@ -3,6 +3,8 @@ export { createBiddingHubClient } from "./bidding-hub.client";
 export { createNotificationsHubClient } from "./notifications-hub.client";
 export type {
   BidPlacedEvent,
+  StatusChangedEvent,
+  AuctionCreatedEvent,
   AuctionEndedEvent,
   CountdownTickEvent,
   PlaceBidPayload,
@@ -12,3 +14,4 @@ export type {
   NotificationReceivedEvent,
   NotificationsHubClient,
 } from "./notifications-hub.client";
+

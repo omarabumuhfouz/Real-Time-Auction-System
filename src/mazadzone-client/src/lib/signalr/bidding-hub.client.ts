@@ -9,10 +9,17 @@ import {
 
 export interface BidPlacedEvent {
   auctionId: string;
-  bidderId: string;
-  bidderName: string;
-  amount: number;
-  timestamp: string;
+  newPrice: number;
+}
+
+export interface StatusChangedEvent {
+  auctionId: string;
+  status: string;
+}
+
+export interface AuctionCreatedEvent {
+  auctionId: string;
+  status: string;
 }
 
 export interface AuctionEndedEvent {
@@ -37,18 +44,18 @@ export interface PlaceBidPayload {
 // --- Bidding Hub Client ------------------------------------------
 
 /**
- * Typed client for the Bidding SignalR hub.
+ * Typed client for the Bidding / Auctions SignalR hub.
  *
  * Usage:
  * ```ts
  * const hub = createBiddingHubClient();
  * await hub.start();
  * hub.onBidPlaced((event) => console.log(event));
- * await hub.joinAuction("auction-123");
  * ```
  */
 export function createBiddingHubClient(accessTokenFactory?: () => string | Promise<string>) {
-  const connection: HubConnection = createHubConnection("/bidding", accessTokenFactory);
+  // Connect to the "/auctions" hub (which maps to "/hubs/auctions" on backend)
+  const connection: HubConnection = createHubConnection("/auctions", accessTokenFactory);
 
   return {
     /** The underlying SignalR connection (for advanced use) */
@@ -64,6 +71,17 @@ export function createBiddingHubClient(accessTokenFactory?: () => string | Promi
       return () => connection.off("BidPlaced", callback);
     },
 
+    onStatusChanged: (callback: (event: StatusChangedEvent) => void) => {
+      connection.on("StatusChanged", callback);
+      return () => connection.off("StatusChanged", callback);
+    },
+
+    onAuctionCreated: (callback: (event: AuctionCreatedEvent) => void) => {
+      connection.on("AuctionCreated", callback);
+      return () => connection.off("AuctionCreated", callback);
+    },
+
+    // Legacy event listeners preserved for stability
     onAuctionEnded: (callback: (event: AuctionEndedEvent) => void) => {
       connection.on("AuctionEnded", callback);
       return () => connection.off("AuctionEnded", callback);
@@ -74,7 +92,7 @@ export function createBiddingHubClient(accessTokenFactory?: () => string | Promi
       return () => connection.off("CountdownTick", callback);
     },
 
-    // -- Invoke server methods ------------------------------
+    // -- Invoke server methods (Unused/Empty on backend AuctionsHub) -------
     placeBid: (payload: PlaceBidPayload) =>
       connection.invoke("PlaceBid", payload),
 
@@ -87,3 +105,4 @@ export function createBiddingHubClient(accessTokenFactory?: () => string | Promi
 }
 
 export type BiddingHubClient = ReturnType<typeof createBiddingHubClient>;
+

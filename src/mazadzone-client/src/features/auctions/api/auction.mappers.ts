@@ -147,16 +147,16 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
 }
 
 /**
- * Helper to convert local time strings from the form directly into timezone-agnostic UTC ISO strings
- * matching the exact shape: "YYYY-MM-DDTHH:mm:ss.000Z".
+ * Helper to convert local time strings from the form directly into timezone-agnostic local ISO strings
+ * matching the exact shape: "YYYY-MM-DDTHH:mm:ss".
  */
 export function convertLocalToUtcIsoString(localDateTimeStr: string): string {
   if (!localDateTimeStr) return "";
   
   // localDateTimeStr is in the format "YYYY/MM/DD HH:mm"
   const clean = localDateTimeStr.replace(/\//g, "-").replace(" ", "T");
-  // Formats literally as "YYYY-MM-DDTHH:mm:00.000Z" keeping the exact hours selected
-  return `${clean}:00.000Z`;
+  // Formats literally as "YYYY-MM-DDTHH:mm:00" keeping the exact hours selected
+  return `${clean}:00`;
 }
 
 /**
