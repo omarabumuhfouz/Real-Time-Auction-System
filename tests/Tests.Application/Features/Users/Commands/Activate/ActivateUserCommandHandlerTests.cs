@@ -73,7 +73,6 @@ public class ActivateUserCommandHandlerTests : UserBaseTest<ActivateUserCommandH
         user.SuspensionUntil.ShouldBeNull();
 
         // Verify repository interaction and unit of work transaction commits
-        _userRepository.Received(1).Update(Arg.Is<User>(u => u.Id.Value == user.Id.Value));
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

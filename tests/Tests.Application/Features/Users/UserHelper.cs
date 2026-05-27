@@ -23,7 +23,7 @@ public static class UserHelper
             "$2a$12$R9h/lSBaCR9xlBq6Z.a6COEa2vJw6.E8F/.C3PZpH7tH7D6bZc3Ky",
             "0791234567",
             "Omar", "Ahmad", "Ali", "Al-Saeed",
-            new HashSet<UserRole>()).Value;
+            UserRole.Bidder).Value;
     }
 
     public static User CreateBannedUser()

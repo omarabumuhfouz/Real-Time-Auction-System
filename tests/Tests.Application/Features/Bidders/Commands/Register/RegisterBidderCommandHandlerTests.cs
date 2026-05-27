@@ -102,7 +102,7 @@ public class RegisterBidderCommandHandlerTests : BidderBaseTest<RegisterBidderCo
         capturedUser.ShouldNotBeNull();
         capturedUser.Email.Value.ShouldBe(command.Email);
         capturedUser.PasswordHash.Value.ShouldBe(expectedPasswordHash); // Verifies hash was assigned, not plaintext
-        capturedUser.Roles.ShouldContain(UserRole.Bidder);
+        capturedUser.IsBidder.ShouldBeTrue();
 
         capturedBidder.ShouldNotBeNull();
         capturedBidder.Id.Value.ShouldBe(capturedUser.Id.Value); // Bidder ID must perfectly match User ID

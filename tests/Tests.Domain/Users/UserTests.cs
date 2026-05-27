@@ -1,5 +1,3 @@
-using MazadZone.Domain.Orders;
-using MazadZone.Domain.Primitives.Results;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.Errors;
@@ -13,7 +11,7 @@ public class UserTests
 {
     private const string ValidEmail = "omar@mazadzone.com";
     private const string ValidHash = "$2a$12$R9h/lSBaCR9xlBq6Z.a6COEa2vJw6.E8F/.C3PZpH7tH7D6bZc3Ky";
-    private const string ValidPhone = "0791234567"; // Adjust according to your UserConstants length
+    private const string ValidPhone = "0791234567"; 
     private const string First = "Omar";
     private const string Second = "Ahmad";
     private const string Third = "Ali";
@@ -26,7 +24,7 @@ public class UserTests
     public void Create_Should_ReturnUser_When_AllInputsAreValid()
     {
         // Arrange
-        var roles = new HashSet<UserRole> { UserRole.Bidder };
+        var roles = UserRole.Bidder;
 
         // Act
         var result = User.Create(ValidEmail, ValidHash, ValidPhone, First, Second, Third, Last, roles);
@@ -44,7 +42,7 @@ public class UserTests
     public void Create_Should_FailFast_When_ValueObjectValidationFails()
     {
         // Act - Invalid email string breaks the chain at step 1
-        var result = User.Create("invalid-email-format", ValidHash, ValidPhone, First, Second, Third, Last, new());
+        var result = User.Create("invalid-email-format", ValidHash, ValidPhone, First, Second, Third, Last, UserRole.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -203,7 +201,7 @@ public class UserTests
         redundantResult.IsSuccess.ShouldBeTrue();
         user.Status.ShouldBe(UserStatus.Banned); // State remains unchanged
 
-        // 🧠 CRITICAL ASSERTION: Ensure NO new domain event was raised on the redundant call
+        // Ensure NO new domain event was raised on the redundant call
         user.DomainEvents.OfType<UserBannedDomainEvent>().ShouldBeEmpty();
     }
 
@@ -241,10 +239,10 @@ public class UserTests
         var result = user.Activate();
 
         // Assert
-        result.IsSuccess.ShouldBeTrue(); // Matches your new 'return Result.Success()' logic
+        result.IsSuccess.ShouldBeTrue(); 
         user.Status.ShouldBe(UserStatus.Active);
 
-        // CRITICAL: Ensure no redundant activation event is fired into your event bus
+        // Ensure no redundant activation event is fired into your event bus
         user.DomainEvents.OfType<UserActivatedDomainEvent>().ShouldBeEmpty();
     }
 
@@ -359,6 +357,7 @@ public class UserTests
         resultOne.IsSuccess.ShouldBeTrue();
         resultTwo.IsSuccess.ShouldBeTrue();
 
+        // Verify session collection metrics
         user.HashedRefreshTokens.Count.ShouldBe(2);
         user.HashedRefreshTokens.Any(t => t.Token == "device_web_hash" && t.IsActive).ShouldBeTrue();
         user.HashedRefreshTokens.Any(t => t.Token == "device_mobile_hash" && t.IsActive).ShouldBeTrue();
@@ -416,183 +415,169 @@ public class UserTests
 
     #endregion
 
-    #region 5. Role Customization Matrix
+    #region 5. Role Customization & Flag Management Matrix
 
     [Fact]
-    public void RoleOperations_Should_ModifyRolesHashSetCorrectly_WithoutDuplicates()
+    public void RoleOperations_Should_ModifyRolesBitmaskFieldsFieldCorrectly()
     {
         // Arrange
-        var user = CreateTestUser(); // starts with empty list roles in factory helper below
+        var user = CreateTestUser(); // starts with UserRole.None via helper method
 
         // Act & Assert for AddRole
         user.AddRole(UserRole.Bidder);
-        user.Roles.Count.ShouldBe(1);
+        user.Roles.ShouldBe(UserRole.Bidder);
         user.IsBidder.ShouldBeTrue();
 
-        // Add duplicate role variant check
+        // Verify bitwise evaluation works correctly by adding duplicate role variant
         user.AddRole(UserRole.Bidder);
-        user.Roles.Count.ShouldBe(1); // Set keeps count flat
+        user.Roles.ShouldBe(UserRole.Bidder); // Bitmask remains clean without artificial duplication values
 
         // Act & Assert for AddSellerRole shortcut method
         user.AddSellerRole();
         user.IsSeller.ShouldBeTrue();
-        user.Roles.Count.ShouldBe(2);
+        user.Roles.ShouldBe(UserRole.Bidder | UserRole.Seller); // Combined flag values (1 | 2 = 3)
 
-        // Redundant seller add step
+        // Redundant seller bitwise set check
         user.AddSellerRole();
-        user.Roles.Count.ShouldBe(2);
+        user.Roles.ShouldBe(UserRole.Bidder | UserRole.Seller);
 
         // Act & Assert for RemoveRole
         user.RemoveRole(UserRole.Bidder);
         user.IsBidder.ShouldBeFalse();
-        user.Roles.Count.ShouldBe(1);
+        user.Roles.ShouldBe(UserRole.Seller);
 
-        // Redundant remove path verification
+        // Redundant remove path validation
         user.RemoveRole(UserRole.Bidder);
-        user.Roles.Count.ShouldBe(1);
+        user.Roles.ShouldBe(UserRole.Seller);
+    }
+
+    [Fact]
+    public void AddRole_Should_AppendRole_When_UserDoesNotAlreadyHaveIt()
+    {
+        // Arrange
+        var user = CreateTestUser(); 
+        user.Roles.ShouldBe(UserRole.None);
+
+        // Act
+        user.AddRole(UserRole.Admin);
+
+        // Assert
+        user.Roles.ShouldBe(UserRole.Admin);
+        user.IsAdmin.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddRole_Should_BeIdempotentAndDoNothing_When_UserAlreadyHasTheRole()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.AddRole(UserRole.Admin);
+        user.Roles.ShouldBe(UserRole.Admin);
+
+        // Act
+        user.AddRole(UserRole.Admin);
+
+        // Assert
+        user.Roles.ShouldBe(UserRole.Admin); 
+    }
+
+    [Fact]
+    public void AddSellerRole_Should_AddSellerRoleAndSetFlag_When_NotAlreadySeller()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.IsSeller.ShouldBeFalse();
+
+        // Act
+        user.AddSellerRole();
+
+        // Assert
+        user.IsSeller.ShouldBeTrue();
+        user.Roles.HasFlag(UserRole.Seller).ShouldBeTrue();
+        user.Roles.ShouldBe(UserRole.Seller);
+    }
+
+    [Fact]
+    public void AddSellerRole_Should_DoNothing_When_UserIsAlreadySeller()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.AddSellerRole();
+        user.Roles.ShouldBe(UserRole.Seller);
+
+        // Act
+        user.AddSellerRole();
+
+        // Assert
+        user.Roles.ShouldBe(UserRole.Seller);
+        user.IsSeller.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddBidderRole_Should_AddBidderRoleAndSetFlag_When_NotAlreadyBidder()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.IsBidder.ShouldBeFalse();
+
+        // Act
+        user.AddBidderRole();
+
+        // Assert
+        user.IsBidder.ShouldBeTrue();
+        user.Roles.HasFlag(UserRole.Bidder).ShouldBeTrue();
+        user.Roles.ShouldBe(UserRole.Bidder);
+    }
+
+    [Fact]
+    public void AddBidderRole_Should_DoNothing_When_UserIsAlreadyBidder()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.AddBidderRole();
+        user.Roles.ShouldBe(UserRole.Bidder);
+
+        // Act
+        user.AddBidderRole();
+
+        // Assert
+        user.Roles.ShouldBe(UserRole.Bidder);
+        user.IsBidder.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RemoveRole_Should_ExtractRoleFromCollection_When_UserHasTheTargetRole()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.AddRole(UserRole.Admin);
+        user.IsAdmin.ShouldBeTrue();
+
+        // Act
+        user.RemoveRole(UserRole.Admin);
+
+        // Assert
+        user.Roles.ShouldBe(UserRole.None); 
+        user.IsAdmin.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RemoveRole_Should_DoNothing_When_UserDoesNotHaveTheTargetRole()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        user.AddRole(UserRole.Bidder);
+
+        // Act - Try to remove a role the user doesn't possess
+        user.RemoveRole(UserRole.Seller);
+
+        // Assert
+        user.IsBidder.ShouldBeTrue();
+        user.IsSeller.ShouldBeFalse();
+        user.Roles.ShouldBe(UserRole.Bidder);
     }
 
     #endregion
-    
-#region 1. General Role Addition & Idempotency Tests
-
-[Fact]
-public void AddRole_Should_AppendRole_When_UserDoesNotAlreadyHaveIt()
-{
-    // Arrange
-    var user = CreateTestUser(); // Starts with an empty roles collection
-    user.Roles.ShouldBeEmpty();
-
-    // Act
-    user.AddRole(UserRole.Admin);
-
-    // Assert
-    user.Roles.Count.ShouldBe(1);
-    user.Roles.Contains(UserRole.Admin).ShouldBeTrue();
-}
-
-[Fact]
-public void AddRole_Should_BeIdempotentAndDoNothing_When_UserAlreadyHasTheRole()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.AddRole(UserRole.Admin);
-    user.Roles.Count.ShouldBe(1);
-
-    // Act
-    user.AddRole(UserRole.Admin);
-
-    // Assert
-    user.Roles.Count.ShouldBe(1); // HashSet naturally prevents duplicates, guard clause handles bypass
-}
-
-#endregion
-
-#region 2. Explicit Shortcut Role Assignment Tests
-
-[Fact]
-public void AddSellerRole_Should_AddSellerRoleAndSetFlag_When_NotAlreadySeller()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.IsSeller.ShouldBeFalse();
-
-    // Act
-    user.AddSellerRole();
-
-    // Assert
-    user.IsSeller.ShouldBeTrue();
-    user.Roles.Contains(UserRole.Seller).ShouldBeTrue();
-    user.Roles.Count.ShouldBe(1);
-}
-
-[Fact]
-public void AddSellerRole_Should_DoNothing_When_UserIsAlreadySeller()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.AddSellerRole();
-    user.Roles.Count.ShouldBe(1);
-
-    // Act
-    user.AddSellerRole();
-
-    // Assert
-    user.Roles.Count.ShouldBe(1);
-    user.IsSeller.ShouldBeTrue();
-}
-
-[Fact]
-public void AddBidderRole_Should_AddBidderRoleAndSetFlag_When_NotAlreadyBidder()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.IsBidder.ShouldBeFalse();
-
-    // Act
-    user.AddBidderRole();
-
-    // Assert
-    user.IsBidder.ShouldBeTrue();
-    user.Roles.Contains(UserRole.Bidder).ShouldBeTrue();
-    user.Roles.Count.ShouldBe(1);
-}
-
-[Fact]
-public void AddBidderRole_Should_DoNothing_When_UserIsAlreadyBidder()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.AddBidderRole();
-    user.Roles.Count.ShouldBe(1);
-
-    // Act
-    user.AddBidderRole();
-
-    // Assert
-    user.Roles.Count.ShouldBe(1);
-    user.IsBidder.ShouldBeTrue();
-}
-
-#endregion
-
-#region 3. Role Removal Validation Tests
-
-[Fact]
-public void RemoveRole_Should_ExtractRoleFromCollection_When_UserHasTheTargetRole()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.AddRole(UserRole.Admin);
-    user.Roles.Contains(UserRole.Admin).ShouldBeTrue();
-
-    // Act
-    user.RemoveRole(UserRole.Admin);
-
-    // Assert
-    user.Roles.ShouldBeEmpty();
-    user.Roles.Contains(UserRole.Admin).ShouldBeFalse();
-}
-
-[Fact]
-public void RemoveRole_Should_DoNothing_When_UserDoesNotHaveTheTargetRole()
-{
-    // Arrange
-    var user = CreateTestUser();
-    user.AddRole(UserRole.Bidder);
-    user.Roles.Count.ShouldBe(1);
-
-    // Act - Try to remove a role the user doesn't possess
-    user.RemoveRole(UserRole.Seller);
-
-    // Assert
-    user.Roles.Count.ShouldBe(1);
-    user.Roles.Contains(UserRole.Bidder).ShouldBeTrue();
-    user.Roles.Contains(UserRole.Seller).ShouldBeFalse();
-}
-
-#endregion
-
 
     // --- Core Factory Helper ---
     private static User CreateTestUser()
@@ -605,6 +590,6 @@ public void RemoveRole_Should_DoNothing_When_UserDoesNotHaveTheTargetRole()
             Second, 
             Third, 
             Last, 
-            new HashSet<UserRole>()).Value;
+            UserRole.None).Value;
     }
 }
