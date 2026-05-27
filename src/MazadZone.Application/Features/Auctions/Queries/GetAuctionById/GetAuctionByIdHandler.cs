@@ -1,8 +1,6 @@
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Repositories;
-using Microsoft.Extensions.Logging;
 
 namespace MazadZone.Application.Features.Auctions.Queries.GetAuctionById;
 

@@ -10,6 +10,7 @@ using MazadZone.Domain.Repositories;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Users.ValueObjects;
 using System.Threading.Tasks.Dataflow;
+using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 
 namespace MazadZone.Application.Features.Auctions.EventHandlers;
 

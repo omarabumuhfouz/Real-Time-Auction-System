@@ -31,7 +31,6 @@ public static class ValueObjectConfigurationExtensions
             .HasMaxLength(SharedConstainst.MaxLandmarkLength)
             .HasColumnName("Landmark");
 
-
         return builder;
     }
 }

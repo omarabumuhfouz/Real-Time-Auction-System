@@ -13,7 +13,6 @@ public sealed class Dispute : AggregateRoot<DisputeId>
         OrderId = orderId;
         Status = DisputeStatus.Open; 
         CreatedAtUtc = DateTime.UtcNow;
-        Status = DisputeStatus.Open;
         Description = description;
         Title = title;
         DisputeTypeId = disputeTypeId;
