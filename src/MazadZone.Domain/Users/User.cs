@@ -134,7 +134,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         if (Status == UserStatus.Banned) return Result.Success();
 
         Status = UserStatus.Banned;
-         EnforcementReason = reason;
+        EnforcementReason = reason;
 
         RevokeAllRefreshTokens();
 
