@@ -8,8 +8,10 @@ public interface IUserRepository : IGenericRepository<User,UserId>, IScopedServi
      Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken);
      Task<bool> IsEmailInUseAsync(Email email, CancellationToken cancellationToken);
     Task<User?> GetByIdWithTokensAsync(UserId id, CancellationToken cancellationToken);
+    Task<User?> GetByIdWithPaymentMethodsAsync(UserId id, CancellationToken cancellationToken);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     Task<bool> IsUserSellerAsync(UserId userId, CancellationToken cancellationToken);
     Task<bool> IsBidderAsync(UserId userId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<User>> GetByIdsAsync(IEnumerable<UserId> ids, CancellationToken ct = default);
 
 }

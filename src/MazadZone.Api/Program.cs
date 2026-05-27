@@ -18,6 +18,7 @@ using MazadZone.Api.Endpoints.Sellers;
 using MazadZone.Api.Endpoints.Auth;
 using MazadZone.Infrastructure.RealTime.Hubs;
 using Hangfire;
+using MazadZone.Api.Endpoints.ChatAgent;
 using MazadZone.Api.Endpoints.Disputes;
 using MazadZone.Api.Endpoints.DisputeTypes;
 
@@ -58,17 +59,20 @@ try
     var app = builder.Build();
 
     // Apply pending migrations automatically on startup
-    // using (var scope = app.Services.CreateScope())
-    // {
-    //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    //     // This will create the DB and apply all migrations if they don't exist
-    //     dbContext.Database.Migrate();
+        // This will create the DB and apply all migrations if they don't exist
+        dbContext.Database.Migrate();
 
-    //     // Optional: You can also call a DatabaseSeeder here to insert dummy data!
-    //     // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-    //     // await seeder.SeedAsync();
-    // }
+        // Fix any items with Status = 0 (due to migration default values)
+        dbContext.Database.ExecuteSqlRaw("UPDATE Items SET Status = 1 WHERE Status = 0");
+
+        // Optional: You can also call a DatabaseSeeder here to insert dummy data!
+        // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+        // await seeder.SeedAsync();
+    }
     app.UseCors("AllowAll");
     //Map Endpoints
     app.MapNotificationEndpoints();
@@ -82,6 +86,7 @@ try
     app.MapDisputeEndpoints();
     app.MapDisputeTypeEndpoints();
     app.MapAuthenticationEndpoints();
+    app.MapChatAgentEndpoints();
 
     if (app.Environment.IsDevelopment())
     {
@@ -108,11 +113,11 @@ try
     //         // 2. Execute your MasterDataSeeder
     //         await seeder.SeedAsync();
 
-    //         Console.WriteLine("✅ Database seeded successfully!");
+    //         Console.WriteLine(" Database seeded successfully!");
     //     }
     //     catch (Exception ex)
     //     {
-    //         Console.WriteLine($"❌ Error during database seeding: {ex}");
+    //         Console.WriteLine($" Error during database seeding: {ex}");
     //     }
     // }
 

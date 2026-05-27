@@ -47,9 +47,8 @@ export function AuctionDetailContent({
     rating: 4.6,
   };
 
-  const fullDescription = `This exceptional ${auction.title} represents the pinnacle of craftsmanship. Featuring premium-grade materials, meticulously hand-finished details, and a design that seamlessly blends timeless elegance with modern sensibility. The item has been carefully maintained and is in ${auction.condition.toLowerCase()} condition. All original accessories and documentation are included. This is a rare opportunity to acquire a sought-after piece in the ${auction.category} category.`;
-
-  const conditionDescription = `The item is in ${auction.condition.toLowerCase()} condition with minimal signs of wear. All functional components have been tested and verified to be working perfectly. There are no major scratches, dents, or structural issues. The original packaging is included and in good shape.`;
+  const fullDescription = auction.description || "";
+  const conditionDescription = auction.conditionDescription || "No condition details provided.";
 
   // ---------------------------------------------------------------------------
   // Handlers

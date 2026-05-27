@@ -16,7 +16,6 @@ public static class SellerEndpoints
 
         // Command Slices
         BecomeSeller.MapEndpoint(sellerGroup);
-        UpdateBankDetails.MapEndpoint(sellerGroup);
         Verify.MapEndpoint(sellerGroup);
 
         // Query Slices

@@ -562,11 +562,6 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("datetime2");
 
@@ -594,6 +589,55 @@ namespace MazadZone.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Sellers", (string)null);
+                });
+
+            modelBuilder.Entity("MazadZone.Domain.Users.Entities.PaymentMethod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Brand")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CardholderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExpiryMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExpiryYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GatewayToken")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Last4Digits")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_PaymentMethods_UserId");
+
+                    b.ToTable("PaymentMethods", (string)null);
                 });
 
             modelBuilder.Entity("MazadZone.Domain.Users.HashedRefreshToken", b =>
@@ -667,6 +711,11 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<int>("Roles")
                         .HasColumnType("int")
                         .HasColumnName("Roles");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -1076,6 +1125,15 @@ namespace MazadZone.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MazadZone.Domain.Users.Entities.PaymentMethod", b =>
+                {
+                    b.HasOne("MazadZone.Domain.Users.User", null)
+                        .WithMany("PaymentMethods")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MazadZone.Domain.Users.HashedRefreshToken", b =>
                 {
                     b.HasOne("MazadZone.Domain.Users.User", null)
@@ -1130,6 +1188,8 @@ namespace MazadZone.Infrastructure.Migrations
             modelBuilder.Entity("MazadZone.Domain.Users.User", b =>
                 {
                     b.Navigation("HashedRefreshTokens");
+
+                    b.Navigation("PaymentMethods");
                 });
 
             modelBuilder.Entity("MzadZone.Domain.Payments.Payment", b =>

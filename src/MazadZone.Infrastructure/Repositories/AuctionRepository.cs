@@ -62,6 +62,18 @@ public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuction
             ct);
     }
 
+    public async Task<bool> HasBidderAlreadyParticipatedAsync(
+        AuctionId auctionId,
+        UserId bidderId,
+        BidId excludeBidId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<Auction>()
+            .Where(a => a.Id == auctionId)
+            .SelectMany(a => a.Bids)
+            .AnyAsync(b => b.BidderId == bidderId && b.Id != excludeBidId, cancellationToken);
+    }
+
     public Task<int> RemoveActiveBidsByBidderIdAsync(UserId bidderId, CancellationToken ct)
     {
         throw new NotImplementedException();

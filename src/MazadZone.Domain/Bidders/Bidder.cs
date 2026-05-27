@@ -33,9 +33,9 @@ public sealed class Bidder : AggregateRoot<UserId>, IAuditableEntity, IVerifiabl
 
     private readonly HashSet<AuctionId> _unpaidAuctions = new();
 
-    public void RecordCompletePurchase() => CompletedPurchasesCount++;
+    public void RecordCompletePurchase() => CompletedPurchasesCount++; 
     public void RecordPidPlaced() => TotalPidsPlaced++;
-    public void RecordAuctionWon() => AuctionsWonCount++;
+    public void RecordAuctionWon() => AuctionsWonCount++; 
     public void RecordAuctionParticipated() => AuctionParticipatedCount++;
 
     

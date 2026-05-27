@@ -11,7 +11,7 @@ using MazadZone.Infrastructure.Configuration;
 using MazadZone.Infrastructure.Outbox;
 using MazadZone.Infrastructure.Persistence;
 using MazadZone.Infrastructure.Persistence.Interceptors;
-using AuthService.Infrastructure.Backgrounds; 
+using AuthService.Infrastructure.Backgrounds;
 
 namespace MazadZone.Infrastructure;
 
@@ -27,7 +27,8 @@ public static class DependencyInjection
             .AddSignalRServices()
             .AddHangfireServices(configuration)
             .AddCachingServices(configuration)
-            .AddBackgroundServices();
+            .AddBackgroundServices()
+            .AddGeminiServices(configuration);
 
 
 
@@ -80,51 +81,50 @@ public static class DependencyInjection
     }
 
     private static IServiceCollection AddPollyPolicies(this IServiceCollection services, IConfiguration configuration)
-{
-    var options = new ResilienceOptions();
-    configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
+    {
+        var options = new ResilienceOptions();
+        configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
 
-    // 1. Define Retry Policy
-    var retryPolicy = Policy
-        .Handle<Exception>()
-        .WaitAndRetryAsync(options.RetryCount, retryAttempt =>
-            TimeSpan.FromSeconds(Math.Pow(options.BaseDelaySeconds, retryAttempt)),
-            (exception, timeSpan, retryCount, context) =>
+        // 1. Define Retry Policy
+        var retryPolicy = Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(options.RetryCount, retryAttempt =>
+                TimeSpan.FromSeconds(Math.Pow(options.BaseDelaySeconds, retryAttempt)),
+                (exception, timeSpan, retryCount, context) =>
+                {
+                    // Log logic here
+                });
+
+        // 2. Define Bulkhead Policy
+        var bulkheadPolicy = Policy.BulkheadAsync(
+            options.BulkheadMaxConcurrentRequests,
+            options.BulkheadMaxQueuedRequests,
+            onBulkheadRejectedAsync: context =>
             {
-                // Log logic here
+                // Log or handle when the bulkhead is full and requests are rejected
+                return Task.CompletedTask;
             });
 
-    // 2. Define Bulkhead Policy
-    var bulkheadPolicy = Policy.BulkheadAsync(
-        options.BulkheadMaxConcurrentRequests, 
-        options.BulkheadMaxQueuedRequests,
-        onBulkheadRejectedAsync: context =>
-        {
-            // Log or handle when the bulkhead is full and requests are rejected
-            return Task.CompletedTask;
-        });
+        // 3. Wrap them together 
+        // This executes bulkhead first, then retry inside it.
+        var combinedPolicy = Policy.WrapAsync(bulkheadPolicy, retryPolicy);
 
-    // 3. Wrap them together 
-    // This executes bulkhead first, then retry inside it.
-    var combinedPolicy = Policy.WrapAsync(bulkheadPolicy, retryPolicy);
+        // Register the wrapped policy
+        services.AddSingleton<IAsyncPolicy>(combinedPolicy);
 
-    // Register the wrapped policy
-    services.AddSingleton<IAsyncPolicy>(combinedPolicy);
+        return services;
+    }
 
-    return services;
-}
-
-   private static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
     {
 
         services.AddMemoryCache();
-services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = configuration.GetConnectionString("Redis");
-            // Optional: Adds a prefix to all keys so you don't clash with other apps sharing the same Redis instance
-            options.InstanceName = "MazadZone_"; 
-        });
-services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = configuration.GetConnectionString("Redis");
+                    options.InstanceName = "MazadZone_";
+                });
+        services.AddScoped<ICacheService, RedisCacheService>();
         return services;
     }
 
@@ -179,7 +179,7 @@ services.AddScoped<ICacheService, RedisCacheService>();
 
     // public static IServiceCollection AddPaymentService(this IServiceCollection services)
     // {
-    //     // تسجيل الخدمة الوهمية وتجاهل خدمة Stripe نهائياً
+    //     
     //     services.AddScoped<IPaymentService, PaymentService>();
     //     return services;
     // }
@@ -191,5 +191,11 @@ services.AddScoped<ICacheService, RedisCacheService>();
         return services;
     }
 
+    private static IServiceCollection AddGeminiServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<Configuration.GeminiOptions>(
+            configuration.GetSection(Configuration.GeminiOptions.SectionName));
+        return services;
+    }
 
 }

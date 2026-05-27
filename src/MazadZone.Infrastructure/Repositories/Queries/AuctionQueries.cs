@@ -2,11 +2,13 @@ using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
 using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
+using MazadZone.Application.Features.ChatAgent.DTOs;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Enums;
+using MazadZone.Domain.Auctions.ValueObjects;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Categories;
 using MazadZone.Domain.Orders;
@@ -18,10 +20,46 @@ using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
 
 
+
 public partial class AuctionQueries(
     AppDbContext _context
 ) : IAuctionQueries
 {
+    public async Task<IReadOnlyList<ActiveAuctionContextDto>> GetActiveAuctionContextAsync(CancellationToken ct)
+    {
+        // Fetch category names separately — Category.Name is a value object with a ValueConverter,
+        // so EF.Property<string> can't be used inside a correlated subquery.
+        var categoryLookup = (await _context.Categories
+            .Select(c => new { c.Id, Name = EF.Property<string>(c, "Name") })
+            .ToListAsync(ct))
+            .ToDictionary(c => c.Id, c => c.Name);
+
+        var rawAuctions = await _context.Auctions
+            .Include(a => a.Item)
+            .AsNoTracking()
+            .Where(a => a.Status == AuctionStatus.Active)
+            .Select(a => new
+            {
+                Id = a.Id.Value,
+                Title = a.Item.Title,
+                CurrentBidAmount = a.Bids
+                    .Where(b => b.Status == BidStatus.Leading)
+                    .Select(b => (decimal?)b.Amount.Amount)
+                    .FirstOrDefault() ?? a.StartBidAmount.Amount,
+                a.EndTime,
+                a.Item.CategoryId
+            })
+            .ToListAsync(ct);
+
+        return rawAuctions.Select(a => new ActiveAuctionContextDto(
+            a.Id,
+            a.Title,
+            a.CurrentBidAmount,
+            a.EndTime,
+            categoryLookup.TryGetValue(a.CategoryId, out var name) ? name : "Uncategorized"
+        )).ToList();
+    }
+
     public async Task<IReadOnlyList<AuctionBiddersDto>> GetActiveAuctionsWithBiddersBySellerIdAsync(UserId sellerId, CancellationToken ct)
     {
         var auctions = _context.Auctions
@@ -70,7 +108,7 @@ public partial class AuctionQueries(
         var rating = sellerRatingAndReviewCount?.Rating ?? 0;
         var reviews = sellerRatingAndReviewCount?.ReviewsCount ?? 0;
 
-        var bids = auction.Bids
+        var bids = auction.Bids.OrderByDescending(b => b.Amount)
             .Select(b => new BidDto(
                 b.BidderId.Value,
                 b.Amount.Amount,
@@ -92,6 +130,7 @@ public partial class AuctionQueries(
                 auction.Item?.Title ?? string.Empty,
                 auction.Item?.Description ?? string.Empty,
                 itemImages,
+                sellerId.Value,
                 sellerName,
                 sellerEmail,
                 rating,
@@ -108,10 +147,11 @@ public partial class AuctionQueries(
 
     public async Task<IReadOnlyList<AuctionsListDto>?> GetSimilarAuctionsAsync(Guid auctionId, int limit, CancellationToken ct)
     {
+        var stronglyTypedId = AuctionId.From(auctionId);
         var baseAuction = await _context.Auctions
             .Include(a => a.Item)
             .AsNoTracking()
-            .Where(a => a.Id == AuctionId.From(auctionId))
+            .Where(a => a.Id == stronglyTypedId)
             .Select(a => new { a.Item.CategoryId, a.Item.Title, a.Item.Description })
             .FirstOrDefaultAsync(ct);
 
@@ -120,31 +160,51 @@ public partial class AuctionQueries(
             return null;
         }
 
+        var categoryId = baseAuction.CategoryId;
+        var title = baseAuction.Title;
+
         var query = _context.Auctions
             .Include(a => a.Item)
+            .ThenInclude(a => a.Images)
             .AsNoTracking()
-            .Where(a => a.Id != AuctionId.From(auctionId) && a.Status == AuctionStatus.Active)
-            .Where(a => a.Item.CategoryId == baseAuction.CategoryId ||
-                        EF.Functions.Like(a.Item.Title, $"%{baseAuction.Title}%") ||
-                        EF.Functions.Like(a.Item.Description, $"%{baseAuction.Title}%") ||
-                        EF.Functions.Like(baseAuction.Title, $"%" + a.Item.Title + "%"));
+            .Where(a => a.Id != stronglyTypedId && a.Status == AuctionStatus.Active)
+            .Where(a => a.Item.CategoryId == categoryId ||
+                        EF.Functions.Like(a.Item.Title, $"%{title}%") ||
+                        EF.Functions.Like(a.Item.Description, $"%{title}%"));
 
-        var similarAuctions = await query
-            .OrderByDescending(a => a.Item.CategoryId == baseAuction.CategoryId)
+        var rawSimilarAuctions = await query
+            .OrderByDescending(a => a.Item.CategoryId == categoryId)
             .ThenByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading)
-                .Select(b => b.Amount.Amount)
-                .FirstOrDefault())
+                .Select(b => (decimal?)b.Amount.Amount)
+                .FirstOrDefault() ?? a.StartBidAmount.Amount)
             .Take(limit)
-            .Select(a => new AuctionsListDto(
-                a.Id.Value,
-                a.Item.Images.Where(img => img.IsMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
-                a.Item.Title,
-                a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault(),
-                a.StartTime,
-                a.EndTime,
-                a.Status.ToString(),
-                a.Bids.Count()))
+            .Select(a => new
+            {
+                Id = a.Id.Value,
+                ImageUrl = a.Item.Images.Where(img => img.IsMain).Select(img => img.Path).FirstOrDefault() ?? string.Empty,
+                Title = a.Item.Title,
+                ItemStatus = a.Item.Status,
+                Condition = a.Item.Condition,
+                CurrentBidAmount = a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => (decimal?)b.Amount.Amount).FirstOrDefault() ?? a.StartBidAmount.Amount,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Status = a.Status,
+                BidsCount = a.Bids.Count()
+            })
             .ToListAsync(ct);
+
+        var similarAuctions = rawSimilarAuctions.Select(a => new AuctionsListDto(
+            a.Id,
+            a.ImageUrl,
+            a.Title,
+            a.ItemStatus.ToString(),
+            a.Condition.ToString(),
+            a.CurrentBidAmount,
+            a.StartTime,
+            a.EndTime,
+            a.Status.ToString(),
+            a.BidsCount
+        )).ToList();
 
         return similarAuctions;
     }
@@ -263,23 +323,31 @@ public partial class AuctionQueries(
 
     public async Task<PagedList<AuctionsListDto>> SearchAuctionsAsync(AuctionQueryParameters parameters, CancellationToken ct)
     {
-        var query = _context.Auctions.AsNoTracking().AsQueryable();
+        var query = _context.Auctions.Include(a => a.Item).AsNoTracking().AsQueryable();
 
 
         if (!string.IsNullOrEmpty(parameters.SearchTerm))
         {
 
-            query = query.Where(a => EF.Functions.Like(a.Item.Title, $"%{parameters.SearchTerm}%") ||
-                                    EF.Functions.Like(a.Item.Description.ToString(), $"%{parameters.SearchTerm}%"));
+            var searchTermLower = parameters.SearchTerm.ToLowerInvariant();
+            var matchingCategoryIds = await _context.Categories
+                .Select(c => new { c.Id, Name = EF.Property<string>(c, "Name") })
+                .ToListAsync(ct);
+            var filteredCategoryIds = matchingCategoryIds
+                .Where(c => c.Name.Contains(searchTermLower, StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.Id)
+                .ToList();
 
+            query = query.Where(a => EF.Functions.Like(a.Item.Title, $"%{parameters.SearchTerm}%") ||
+                                     filteredCategoryIds.Contains(a.Item.CategoryId));
         }
 
         if (parameters.CategoryId.HasValue)
         {
 
             query = query.Where(a => a.Item.CategoryId == parameters.CategoryId);
-
         }
+
 
         if (!string.IsNullOrEmpty(parameters.Status) &&
         Enum.TryParse<AuctionStatus>(parameters.Status, true, out var status))
@@ -298,11 +366,12 @@ public partial class AuctionQueries(
             {
 
                 query = from a in query
-                        let currentPrice = a.Bids.Where(b => b.Status == BidStatus.Leading)
-                                                 .Select(b => (decimal?)b.Amount.Amount)
-                                                 .FirstOrDefault()
-                        where (!min.HasValue || (currentPrice != null && currentPrice >= min.Value))
-                           && (!max.HasValue || (currentPrice != null && currentPrice <= max.Value))
+                        let leadingBid = a.Bids.Where(b => b.Status == BidStatus.Leading)
+                                               .Select(b => (decimal?)b.Amount.Amount)
+                                               .FirstOrDefault()
+                        let currentPrice = leadingBid ?? a.StartBidAmount.Amount
+                        where (!min.HasValue || currentPrice >= min.Value)
+                           && (!max.HasValue || currentPrice <= max.Value)
                         select a;
             }
         }
@@ -315,50 +384,73 @@ public partial class AuctionQueries(
             "StartTime" => isAsc ? query.OrderBy(a => a.StartTime) : query.OrderByDescending(a => a.StartTime),
             "EndTime" => isAsc ? query.OrderBy(a => a.EndTime) : query.OrderByDescending(a => a.EndTime),
             "CurrentBidAmount" => isAsc
-                ? query.OrderBy(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault())
-                : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => b.Amount.Amount).FirstOrDefault()),
+                ? query.OrderBy(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => (decimal?)b.Amount.Amount).FirstOrDefault() ?? a.StartBidAmount.Amount)
+                : query.OrderByDescending(a => a.Bids.Where(b => b.Status == BidStatus.Leading).Select(b => (decimal?)b.Amount.Amount).FirstOrDefault() ?? a.StartBidAmount.Amount),
             _ => isAsc ? query.OrderBy(a => a.CreatedOnUtc) : query.OrderByDescending(a => a.CreatedOnUtc)
         };
 
         if (!string.IsNullOrEmpty(parameters.ItemStatus) &&
         Enum.TryParse<ItemStatus>(parameters.ItemStatus, true, out var itemStatus))
         {
+
+
             query = query.Where(a => a.Item.Status == itemStatus);
 
         }
 
         if (!string.IsNullOrEmpty(parameters.Condition))
         {
-            query = query.Where(a => EF.Functions.Like(a.Item.Condition.ToString(), $"%{parameters.Condition}%"));
 
+            var conditionTerm = parameters.Condition.ToLowerInvariant();
+            var matchingItemIds = await _context.Set<Item>()
+                .Select(i => new { i.Id, Condition = EF.Property<string>(i, "Condition") })
+                .ToListAsync(ct);
+            var filteredItemIds = matchingItemIds
+                .Where(i => i.Condition != null &&
+                            i.Condition.Contains(conditionTerm, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.Id)
+                .ToList();
+            query = query.Where(a => filteredItemIds.Contains(a.Item.Id));
         }
 
         var totalCount = await query.CountAsync(ct);
 
-        var items = await query
+        var queryResult = await query
             .Skip((parameters.Page - 1) * parameters.PageSize)
             .Take(parameters.PageSize)
-            .Select(a => new AuctionsListDto(
-                a.Id.Value,
-
-                a.Item.Images
+            .Select(a => new
+            {
+                Id = a.Id.Value,
+                ImageUrl = a.Item.Images
                     .Where(img => img.IsMain)
                     .Select(img => img.Path)
                     .FirstOrDefault() ?? string.Empty,
-
-                a.Item.Title,
-
-                a.Bids
+                Title = a.Item.Title,
+                ItemStatus = a.Item.Status,
+                Condition = a.Item.Condition,
+                CurrentBidAmount = a.Bids
                     .Where(b => b.Status == BidStatus.Leading)
-                    .Select(b => b.Amount.Amount)
-                    .FirstOrDefault(),
-
-                a.StartTime,
-                a.EndTime,
-                a.Status.ToString(),
-                a.Bids.Count()
-            ))
+                    .Select(b => (decimal?)b.Amount.Amount)
+                    .FirstOrDefault() ?? a.StartBidAmount.Amount,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Status = a.Status,
+                BidsCount = a.Bids.Count()
+            })
             .ToListAsync(ct);
+
+        var items = queryResult.Select(a => new AuctionsListDto(
+            a.Id,
+            a.ImageUrl,
+            a.Title,
+            a.ItemStatus.ToString(),
+            a.Condition.ToString(),
+            a.CurrentBidAmount,
+            a.StartTime,
+            a.EndTime,
+            a.Status.ToString(),
+            a.BidsCount
+        )).ToList();
 
         return new PagedList<AuctionsListDto>(items, parameters.Page, parameters.PageSize, totalCount);
     }

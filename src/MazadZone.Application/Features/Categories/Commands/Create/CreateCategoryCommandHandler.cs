@@ -23,9 +23,7 @@ public sealed class CreateCategoryCommandHandler : ICommandHandler<CreateCategor
 
     public async Task<Result<Guid>> Handle(CreateCategoryCommand request, CancellationToken ct)
     {
-        CategoryId? parentId = request.ParentCategoryId.HasValue ? request.ParentCategoryId : null;
-
-        var parentExistsResult = await _categoryDomainService.ValidateParentExistsAsync(parentId, ct);
+        var parentExistsResult = await _categoryDomainService.ValidateParentExistsAsync(request.ParentCategoryId, ct);
         if (parentExistsResult.IsFailure)
         {
             GlobalLogs.LogCategoryNotFound(_logger, request.ParentCategoryId!.Value);
@@ -34,7 +32,7 @@ public sealed class CreateCategoryCommandHandler : ICommandHandler<CreateCategor
 
         var uniquenessResult = await _categoryDomainService.IsNameUniqueInScopeAsync(
             request.Name,
-            parentId,
+            request.ParentCategoryId,
             null, // No ID to exclude for new categories
             ct);
 
@@ -44,7 +42,7 @@ public sealed class CreateCategoryCommandHandler : ICommandHandler<CreateCategor
             return uniquenessResult.TopError;
         }
 
-        var result = Category.Create(request.Name, request.Description, parentId);
+        var result = Category.Create(request.Name, request.Description, request.ParentCategoryId);
 
         if (result.IsFailure)
         {

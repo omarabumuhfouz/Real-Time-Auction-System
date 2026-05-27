@@ -9,10 +9,9 @@ public sealed record GetAuctionsQuery(
 
     string? SearchTerm = null, // search by item title or description
     CategoryId? CategoryId = null, // filter by category
-    CategoryId? SubCategoryId = null, // filter by subcategory
 
     CurrentBidAmountRange? CurrentBidAmount = null, // filter auctions with Current bid amount greater than or equal to this value
-    string Status = "active", // filter by auction status: "active", "Pending", "Ended", "all", 
+    string? Status = "active", // filter by auction status: "active", "Pending", "Ended", "all", 
 
     string SortBy = "CreationDate", // "CreationDate","StartTime", "EndTime", "StartAmount" , "CurrentBidAmount"
     string SortDirection = "desc", // "asc" or "desc" 
@@ -25,7 +24,6 @@ public sealed record GetAuctionsQuery(
         $"auctions:p={Page}:ps={PageSize}" +
         $":s={SearchTerm ?? "all"}" +
         $":cat={CategoryId?.ToString() ?? "all"}" +
-        $":subcat={SubCategoryId?.ToString() ?? "all"}" +
         $":CurrentBidAmount={CurrentBidAmount?.ToString() ?? "any"}" +
         $":status={Status}" +
         $":sort={SortBy}:{SortDirection}";

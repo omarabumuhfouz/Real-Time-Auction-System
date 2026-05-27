@@ -4,6 +4,7 @@
  */
 
 import { parseUtcDate } from "@/utils/date.utils";
+import { useAuthStore } from "@/stores/auth.store";
 import type {
   AuctionFilters,
   AuctionSummary,
@@ -72,7 +73,9 @@ export function mapAuctionsListDtoToSummary(
     imageUrl: dto.imageUrl,
     category: "Tech and Electronics",
     subcategory: "Others",
-    condition: "New",
+    condition: (dto.itemStatus as any) || "New",
+    description: "",
+    conditionDescription: dto.condtion || "",
     status: mapBackendStatusToAuctionStatus(dto.status),
     pricing: {
       startingPrice: dto.currentBidAmount,
@@ -101,7 +104,9 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
     imageUrl: dto.imageUrls?.[0] ?? "",
     category: "Tech and Electronics",
     subcategory: "Others",
-    condition: "New",
+    condition: (dto.status as any) || "New",
+    description: dto.itemDescription || "",
+    conditionDescription: dto.condition || "",
     status: mapBackendStatusToAuctionStatus(dto.auctionStatus),
     pricing: {
       startingPrice: dto.startBidAmount,
@@ -123,9 +128,12 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
       amount: b.amount,
       timeAgo: new Date(b.timestamp).toLocaleDateString(),
       isHighest: idx === 0,
+      bidderId: b.bidderId,
     })),
     seller: {
-      id: "seller-id-placeholder",
+      id: dto.sellerEmail === useAuthStore.getState().user?.email
+        ? useAuthStore.getState().user?.id || "seller-id-placeholder"
+        : "seller-id-placeholder",
       email: dto.sellerEmail,
       fullName: dto.sellerName,
       role: "seller",
@@ -164,5 +172,7 @@ export function mapCreateAuctionInputToRequest(
       isMain: idx === 0,
     })),
     catigoryId: "cat-1", // Maps dynamically or falls back to 'cat-1' to satisfy schema constraints.
+    status: input.condition,
+    condition: input.conditionDescription,
   };
 }

@@ -2,6 +2,7 @@ using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
 using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
+using MazadZone.Application.Features.ChatAgent.DTOs;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Domain.Shared.Interfaces;
@@ -10,6 +11,7 @@ using MzadZone.Domain.Payments;
 namespace MazadZone.Application.Services;
 public interface IAuctionQueries : IScopedService
 {
+    Task<IReadOnlyList<ActiveAuctionContextDto>> GetActiveAuctionContextAsync(CancellationToken ct);
     Task<AuctionDto?> GetAuctionByIdAsync(Guid auctionId, CancellationToken ct);
     Task<PagedList<AuctionsListDto>> SearchAuctionsAsync(AuctionQueryParameters queryParameters, CancellationToken ct);
     Task<IReadOnlyList<AuctionBiddersDto>> GetActiveAuctionsWithBiddersBySellerIdAsync(UserId sellerId, CancellationToken ct);

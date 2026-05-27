@@ -18,7 +18,6 @@ internal sealed class SellerConfiguration : IEntityTypeConfiguration<Seller>
                .HasConversion(new UserIdIdConverter()) 
                .ValueGeneratedNever();
 
-        builder.Property(s => s.BankAccountNumber).HasMaxLength(100).IsRequired();
         builder.Property(s => s.ListedAuctionsCount).HasDefaultValue(0);
 
         

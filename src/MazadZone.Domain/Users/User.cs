@@ -3,6 +3,8 @@ using MazadZone.Domain.Users.Errors;
 using MazadZone.Domain.Users.Events;
 using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Domain.ValueObjects;
+using MazadZone.Domain.Users.Entities;
+using MazadZone.Domain.Users.Enums;
 
 namespace MazadZone.Domain.Users;
 
@@ -16,9 +18,9 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         UserId id,
         Email email,
         PasswordHash passwordHash,
-        PhoneNumber phoneNumber,
+    PhoneNumber phoneNumber,
         FullName fullName,
-        HashSet<UserRole> roles
+        UserRole roles
         ) : base(id)
     {
         Email = email;
@@ -33,7 +35,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public Email Email { get; private set; }
     public PasswordHash PasswordHash { get; private set; }
     public UserStatus Status { get; private set; } = UserStatus.Active; // Default status
-    public HashSet<UserRole> Roles { get; private set; }
+    public UserRole Roles { get; private set; }
     public Reason EnforcementReason { get; private set; } = Reason.Empty;
     public DateTime? SuspensionUntil { get; private set; }
     public DateTime LastLogin { get; private set; } = DateTime.UtcNow;
@@ -42,10 +44,13 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public DateTime? ModifiedOnUtc { get; set; }
 
     private readonly List<HashedRefreshToken> _hashedRefreshTokens = new();
+    private readonly List<PaymentMethod> _paymentMethods = new();
 
-    public bool IsSeller => Roles.Contains(UserRole.Seller);
-    public bool IsBidder => Roles.Contains(UserRole.Bidder);
-    
+    public IReadOnlyCollection<PaymentMethod> PaymentMethods => _paymentMethods.AsReadOnly();
+
+    public bool IsSeller => Roles.HasFlag(UserRole.Seller);
+    public bool IsBidder => Roles.HasFlag(UserRole.Bidder);
+    public bool IsAdmin => Roles.HasFlag(UserRole.Admin);
 
     public static Result<User> Create(
         string email,
@@ -55,7 +60,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         string secondName,
         string thirdName,
         string lastName,
-        HashSet<UserRole> roles
+        UserRole roles
     )
     {
         var emailResult = Email.Create(email);
@@ -255,34 +260,70 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
 
     public void AddRole(UserRole role)
     {
-        if (Roles.Contains(role)) return;
-
-        Roles.Add(role);
+        Roles |= role; // Bitwise OR: Adds the flag
+        ModifiedOnUtc = DateTime.UtcNow; // Forces EF Core to recognize the entity is dirty
     }
 
     public void AddSellerRole()
     {
-        if (Roles.Contains(UserRole.Seller)) return;
-
-        Roles.Add(UserRole.Seller);
+        Roles |= UserRole.Seller;
+        ModifiedOnUtc = DateTime.UtcNow;
     }
 
     public void AddBidderRole()
     {
-        if (Roles.Contains(UserRole.Bidder)) return;
-
-        Roles.Add(UserRole.Bidder);
+        Roles |= UserRole.Bidder;
+        ModifiedOnUtc = DateTime.UtcNow;
     }
 
     public void RemoveRole(UserRole role)
     {
-        if (!Roles.Contains(role)) return;
-
-        Roles.Remove(role);
+        Roles &= ~role; // Bitwise AND NOT: Removes the flag
+        ModifiedOnUtc = DateTime.UtcNow;
     }
 public bool HasActiveRefreshToken(string hashedToken)
 {
     return _hashedRefreshTokens.Any(t => t.Token == hashedToken && t.IsActive);
 }
 
+    public Result<PaymentMethod> AddPaymentMethod(
+        string last4Digits,
+        int expiryMonth,
+        int expiryYear,
+        string cardholderName,
+        CardBrand brand,
+        string gatewayToken,
+        bool isDefault)
+    {
+        if (_paymentMethods.Count >= PaymentMethodConstants.MaxPerUser)
+            return PaymentMethodErrors.MaxPaymentMethodsReached;
+
+        // Force first payment method to be default
+        bool shouldBeDefault = isDefault || _paymentMethods.Count == 0;
+
+        var methodResult = PaymentMethod.Create(
+            Id,
+            last4Digits,
+            expiryMonth,
+            expiryYear,
+            cardholderName,
+            brand,
+            gatewayToken,
+            shouldBeDefault);
+
+        if (methodResult.IsFailure) return methodResult.TopError;
+
+        if (shouldBeDefault)
+        {
+            foreach (var existing in _paymentMethods)
+            {
+                existing.UnsetDefault();
+            }
+        }
+
+        _paymentMethods.Add(methodResult.Value);
+        ModifiedOnUtc = DateTime.UtcNow; // Force parent modification for concurrency check
+
+        return methodResult.Value;
+    }
 }

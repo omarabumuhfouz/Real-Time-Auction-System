@@ -28,6 +28,13 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
              .FindByIdAsync(id, ct);
     }
 
+    public Task<User?> GetByIdWithPaymentMethodsAsync(UserId id, CancellationToken ct)
+    {
+        return _context.Users
+             .Include(u => u.PaymentMethods)
+             .FindByIdAsync(id, ct);
+    }
+
     public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken ct)
     {
         return _context.Users
@@ -53,4 +60,14 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
             .AsNoTracking()
             .AnyAsync(u => u.Id == userId && u.IsSeller);
     }
+
+public async Task<IReadOnlyList<User>> GetByIdsAsync(IEnumerable<UserId> ids, CancellationToken ct = default)
+    {
+        if (ids == null || !ids.Any()) return new List<User>().AsReadOnly();
+
+        return (await _context.Set<User>()
+                .Where(u => ids.Contains(u.Id))
+                .ToListAsync(ct)).AsReadOnly();
+    }
+
 }

@@ -20,7 +20,7 @@ public sealed class RestoreCategoryCommandHandler : ICommandHandler<RestoreCateg
 
     public async Task<Result<Unit>> Handle(RestoreCategoryCommand request, CancellationToken ct)
     {
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId, ct);
+        var category = await _categoryRepository.GetByIdForRestoreAsync(request.CategoryId, ct);
 
         if (category is null)
         {

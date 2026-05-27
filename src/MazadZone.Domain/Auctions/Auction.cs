@@ -35,7 +35,7 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
         Status = AuctionStatus.Pending; // Default State
 
 
-        RaiseDomainEvent(new AuctionCreatedDomainEvent(id));
+        RaiseDomainEvent(new AuctionCreatedDomainEvent(id, SellerId));
     }
 
     public Item Item { get; private set; }
@@ -287,7 +287,7 @@ public sealed class Auction : AggregateRoot<AuctionId>, IAuditableEntity
         newBid.MarkAsLeading();
         _bids.Add(newBid);
 
-        RaiseDomainEvent(new BidPlacedDomainEvent(Id, newBid.Id));
+        RaiseDomainEvent(new BidPlacedDomainEvent(Id, newBid.Id, bidderId));
 
         return Result.Success(newBid);
     }
