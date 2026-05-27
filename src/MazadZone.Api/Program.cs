@@ -15,6 +15,7 @@ using MazadZone.Api.Endpoints.Categories;
 using MazadZone.Api.Endpoints.Payments;
 using MazadZone.Api.Endpoints.Users;
 using MazadZone.Api.Endpoints.Sellers;
+using MazadZone.Api.Endpoints.SellerDashboard;
 using MazadZone.Api.Endpoints.Auth;
 using MazadZone.Infrastructure.RealTime.Hubs;
 using Hangfire;
@@ -82,6 +83,7 @@ try
     app.MapCategoryEndpoints();
     app.MapUserEndpoints();
     app.MapSellerEndpoints();
+    app.MapSellerDashboardEndpoints();
     app.MapAuctionEndpoints();
     app.MapDisputeEndpoints();
     app.MapDisputeTypeEndpoints();
