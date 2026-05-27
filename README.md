@@ -92,6 +92,105 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 > 💡 **Dependency Rule**: Dependencies only point inward. The Domain layer has zero knowledge of databases, HTTP, or any external framework.
 
 ---
+## ✨ Features
+
+### 🏛️ Auction Management
+- Create, activate, cancel, and end auctions
+- Admin-level force cancellation
+- Automated lifecycle management via Hangfire scheduled jobs
+- Hierarchical category system (tree structure with breadcrumbs)
+- Advanced search with filters (status, price range, category, keyword)
+- Pagination, sorting, and similar auction recommendations
+- Trending categories with auction counts
+
+### 💰 Real-Time Bidding
+- Live bid placement with instant SignalR WebSocket broadcast
+- Minimum bid increment enforcement (configurable per auction)
+- Automatic outbid notifications to previous leading bidder
+- Deposit hold system (percentage-based: `BidDepositPercentage`)
+- Bid history tracking with status (Leading, Outbid)
+- Bid removal with automatic leader recalculation
+
+### 🤖 AI Sales Agent (RAG)
+- **Google Gemini 2.0 Flash** powered conversational chatbot
+- Retrieval-Augmented Generation: fetches live auction data as JSON context
+- Strict scope enforcement — refuses to answer anything outside MazadZone auctions
+- Bilingual support (English/Arabic)
+- Prompt injection defense via `SystemInstruction` isolation
+- Graceful fallback when API key is not configured
+
+### 👤 User Management
+- Bidder registration with profile creation
+- Bidder identity verification (admin workflow)
+- Role-based access control (Bidder, Seller, Admin)
+- Profile settings management
+- Email change and password change
+- Account activation, suspension, and banning with cascade effects
+- Admin user creation
+- Payment method management
+
+### 🏪 Seller Management
+- "Become a Seller" upgrade flow
+- Seller verification by admin
+- Seller public profile
+- Seller dashboard with auction/order stats
+- Unverified seller listing for admin review
+
+### 🔐 Authentication & Security
+- JWT Bearer tokens with RSA-256 signing
+- Automatic RSA key rotation (`KeyRotationService` background service)
+- Refresh token rotation with secure BCrypt hashing
+- Login / Logout / Token Refresh flow
+- Correlation ID middleware for distributed tracing
+
+### 📋 Order Management
+- Automatic order creation when auction ends (winner flow)
+- Full lifecycle: `Created → Confirmed → Shipped → Delivered`
+- Order cancellation
+- Order search with filters
+- Order details with buyer/seller information
+- Lookup order by winning bid
+- Seller-specific and global order statistics
+- **Feedback system**: buyers leave reviews, sellers can reply
+- Remaining payment processing after deposit
+
+### 💳 Payment Processing
+- Deposit hold/capture flow at bid time
+- Remaining balance payment after auction win
+- Payment status tracking
+
+### ⚖️ Dispute Resolution
+- Dispute filing with typed categories
+- Status workflow: `Open → UnderReview → Resolved`
+- Admin review and resolution
+- Filtered dispute listing (by status, type, date)
+- Configurable dispute types (CRUD by admin with soft-delete and restore)
+
+### 📁 Category Management (Hierarchical)
+- Full tree structure with parent/child relationships
+- CRUD operations (create, update, soft-delete, restore)
+- Add/remove sub-categories
+- Move category to new parent
+- Make category a root
+- Category search
+- Breadcrumb navigation
+- Category statistics
+- Trending categories & trending with auction counts
+
+### 🔔 Notifications
+- Real-time in-app notifications via SignalR `NotificationsHub`
+- Domain event-driven notification generation
+- Create, read, mark-as-read, and delete notifications
+- Per-notification detail view
+
+### 📊 Observability
+- Structured logging with Serilog (enriched with environment, process, thread, exceptions)
+- Centralized log aggregation via Seq
+- OpenTelemetry sink support
+- Performance monitoring via `PerformanceBehaviour` (flags slow queries)
+- Request correlation tracking via `CorrelationIdMiddleware`
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -381,105 +480,7 @@ stateDiagram-v2
 
 ---
 
-## ✨ Features
 
-### 🏛️ Auction Management
-- Create, activate, cancel, and end auctions
-- Admin-level force cancellation
-- Automated lifecycle management via Hangfire scheduled jobs
-- Hierarchical category system (tree structure with breadcrumbs)
-- Advanced search with filters (status, price range, category, keyword)
-- Pagination, sorting, and similar auction recommendations
-- Trending categories with auction counts
-
-### 💰 Real-Time Bidding
-- Live bid placement with instant SignalR WebSocket broadcast
-- Minimum bid increment enforcement (configurable per auction)
-- Automatic outbid notifications to previous leading bidder
-- Deposit hold system (percentage-based: `BidDepositPercentage`)
-- Bid history tracking with status (Leading, Outbid)
-- Bid removal with automatic leader recalculation
-
-### 🤖 AI Sales Agent (RAG)
-- **Google Gemini 2.0 Flash** powered conversational chatbot
-- Retrieval-Augmented Generation: fetches live auction data as JSON context
-- Strict scope enforcement — refuses to answer anything outside MazadZone auctions
-- Bilingual support (English/Arabic)
-- Prompt injection defense via `SystemInstruction` isolation
-- Graceful fallback when API key is not configured
-
-### 👤 User Management
-- Bidder registration with profile creation
-- Bidder identity verification (admin workflow)
-- Role-based access control (Bidder, Seller, Admin)
-- Profile settings management
-- Email change and password change
-- Account activation, suspension, and banning with cascade effects
-- Admin user creation
-- Payment method management
-
-### 🏪 Seller Management
-- "Become a Seller" upgrade flow
-- Seller verification by admin
-- Seller public profile
-- Seller dashboard with auction/order stats
-- Unverified seller listing for admin review
-
-### 🔐 Authentication & Security
-- JWT Bearer tokens with RSA-256 signing
-- Automatic RSA key rotation (`KeyRotationService` background service)
-- Refresh token rotation with secure BCrypt hashing
-- Login / Logout / Token Refresh flow
-- Correlation ID middleware for distributed tracing
-
-### 📋 Order Management
-- Automatic order creation when auction ends (winner flow)
-- Full lifecycle: `Created → Confirmed → Shipped → Delivered`
-- Order cancellation
-- Order search with filters
-- Order details with buyer/seller information
-- Lookup order by winning bid
-- Seller-specific and global order statistics
-- **Feedback system**: buyers leave reviews, sellers can reply
-- Remaining payment processing after deposit
-
-### 💳 Payment Processing
-- Deposit hold/capture flow at bid time
-- Remaining balance payment after auction win
-- Payment status tracking
-
-### ⚖️ Dispute Resolution
-- Dispute filing with typed categories
-- Status workflow: `Open → UnderReview → Resolved`
-- Admin review and resolution
-- Filtered dispute listing (by status, type, date)
-- Configurable dispute types (CRUD by admin with soft-delete and restore)
-
-### 📁 Category Management (Hierarchical)
-- Full tree structure with parent/child relationships
-- CRUD operations (create, update, soft-delete, restore)
-- Add/remove sub-categories
-- Move category to new parent
-- Make category a root
-- Category search
-- Breadcrumb navigation
-- Category statistics
-- Trending categories & trending with auction counts
-
-### 🔔 Notifications
-- Real-time in-app notifications via SignalR `NotificationsHub`
-- Domain event-driven notification generation
-- Create, read, mark-as-read, and delete notifications
-- Per-notification detail view
-
-### 📊 Observability
-- Structured logging with Serilog (enriched with environment, process, thread, exceptions)
-- Centralized log aggregation via Seq
-- OpenTelemetry sink support
-- Performance monitoring via `PerformanceBehaviour` (flags slow queries)
-- Request correlation tracking via `CorrelationIdMiddleware`
-
----
 
 ## 🖥️ Frontend Client (`mazadzone-client`)
 
