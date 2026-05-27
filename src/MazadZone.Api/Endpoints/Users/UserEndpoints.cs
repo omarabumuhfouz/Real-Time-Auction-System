@@ -26,6 +26,8 @@ public static class UserEndpoints
         CreateAdmin.MapEndpoint(userGroup);
         AddPaymentMethod.MapEndpoint(userGroup);
         BulkActivate.MapEndpoint(userGroup);
+        BulkBan.MapEndpoint(userGroup);
+        BulkSuspend.MapEndpoint(userGroup);
         ExportUsers.MapEndpoint(userGroup);
         GetUsers.MapEndpoint(userGroup);
         ExportSelectedUsers.MapEndpoint(userGroup);

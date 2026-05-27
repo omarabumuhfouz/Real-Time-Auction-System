@@ -1,5 +1,4 @@
 using MazadZone.Application.Common.Interfaces;
-using MazadZone.Application.Features.Auctions.Queries.GetActivityTrends;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Repositories;
 using MediatR;

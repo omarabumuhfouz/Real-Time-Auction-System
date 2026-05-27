@@ -1,5 +1,3 @@
-using MediatR;
-using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users.Errors;
 using MazadZone.Application.Features.Users.Commands.Activate;

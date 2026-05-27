@@ -1,6 +1,5 @@
 using MazadZone.Application.Features.Users.Commands.AddPaymentMethod;
 using MazadZone.Domain.Users.Enums;
-using MazadZone.Api.Extensions;
 
 namespace MazadZone.Api.Endpoints.Users;
 
