@@ -2,11 +2,12 @@ namespace MazadZone.Application.Features.Users.DTOs;
 
 public record UserDto
 (
+    Guid Id,
+    string FullName,
     string Email,
-    string Password,
     string PhoneNumber,
-    string FirstName,
-    string SecondName,
-    string ThirdName,
-    string LastName
+    string Role,
+    string Status,
+    DateTime JoinedAt,
+    DateTime LastLogin
 );

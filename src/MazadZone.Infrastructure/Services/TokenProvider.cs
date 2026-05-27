@@ -55,11 +55,15 @@ public class TokenProvider(IConfiguration configuration, AppDbContext context) :
             };
 
         
-        // Iterate through the user's roles and add each as a Role claim
-        foreach (var role in user.Roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
-        }
+        // Iterate through all possible enum values and check if the user has that flag
+foreach (UserRole role in Enum.GetValues<UserRole>())
+{
+    // Skip 'None' and verify if the user's Roles contains this specific flag
+    if (role != UserRole.None && user.Roles.HasFlag(role))
+    {
+        claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+    }
+}
 
         // Define the JWT token's properties
         var tokenDescriptor = new JwtSecurityToken(
