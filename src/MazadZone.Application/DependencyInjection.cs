@@ -23,7 +23,7 @@ public static class DependencyInjection
         });
 
         // Register AutoMapper
-        services.AddAutoMapper(assembly);
+        services.AddAutoMapper(config => { }, assembly);
 
         // Register FluentValidation
         services.AddValidatorsFromAssembly(assembly);
