@@ -1,8 +1,6 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Services;
-using MazadZone.Domain.Bidders;
-using Microsoft.Extensions.Logging;
 
 namespace MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 

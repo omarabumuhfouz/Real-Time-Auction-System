@@ -1,6 +1,4 @@
-using System;
 using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Orders;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users.ValueObjects;
@@ -9,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MazadZone.Infrastructure.Repositories;
 
-public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuctionRepository
+public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctionRepository
 {
     private readonly AppDbContext _context;
 
@@ -73,6 +71,8 @@ public class AuctionRepository : GenericRepository<Auction, AuctionId>, IAuction
             .SelectMany(a => a.Bids)
             .AnyAsync(b => b.BidderId == bidderId && b.Id != excludeBidId, cancellationToken);
     }
+
+
 
     public Task<int> RemoveActiveBidsByBidderIdAsync(UserId bidderId, CancellationToken ct)
     {

@@ -1,4 +1,4 @@
-using MazadZone.Domain.Users;
+using MazadZone.Api.Endpoints.Dashboard;
 
 namespace MazadZone.Api.Endpoints.Users;
 

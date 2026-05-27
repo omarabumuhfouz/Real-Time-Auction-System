@@ -5,9 +5,12 @@ using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Features.Users.Queries.GetProfileSettings;
+using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
+using MazadZone.Application.Features.Users.Queries.GetUserTrustStats;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Primitives.Results;
 using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.Users;
 using MazadZone.Domain.Users.ValueObjects;
 using Polly;
 
@@ -181,9 +184,9 @@ WHERE u.Id = @UserId;
         });
     }
 
-public async Task<IReadOnlyList<UserDto>> ExportSelectedUsersAsync(IEnumerable<Guid> userIds, CancellationToken ct)
-{
-    var sql = @"
+    public async Task<IReadOnlyList<UserDto>> ExportSelectedUsersAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var sql = @"
     SELECT 
         Id,
         (FirstName + ' ' + LastName) AS FullName,
@@ -207,13 +210,106 @@ public async Task<IReadOnlyList<UserDto>> ExportSelectedUsersAsync(IEnumerable<G
     WHERE Id IN @UserIds
     ORDER BY CreatedOnUtc DESC"; // Default safe sorting for exports
 
-    return await ExecuteResilientAsync(async connection =>
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var command = new CommandDefinition(sql, new { UserIds = userIds }, cancellationToken: ct);
+            var result = await connection.QueryAsync<UserDto>(command);
+
+            return result.ToList().AsReadOnly();
+        });
+    }
+
+    public async Task<RawUserTrustMetrics> GetUserTrustMetricsAsync(
+        DateTime currStart, DateTime currEnd,
+        DateTime prevStart, DateTime prevEnd,
+        CancellationToken ct)
     {
-        var command = new CommandDefinition(sql, new { UserIds = userIds }, cancellationToken: ct);
-        var result = await connection.QueryAsync<UserDto>(command);
-        
-        return result.ToList().AsReadOnly();
-    });
-}
+        // (Roles & 4) = 0 ensures no Admin users are included in ANY metric
+        // CreatedOnUtc <= @CurrEnd ensures our "Total" counts don't accidentally include data beyond the requested end date
+        var sql = @"
+        SELECT 
+            COUNT(1) AS TotalUsers,
+            SUM(CASE WHEN (Roles & 2) = 2 THEN 1 ELSE 0 END) AS TotalSellers,
+            SUM(CASE WHEN Status = 1 THEN 1 ELSE 0 END) AS ActiveAccounts,
+            SUM(CASE WHEN Status = 2 THEN 1 ELSE 0 END) AS SuspendedAccounts,
+            SUM(CASE WHEN Status = 3 THEN 1 ELSE 0 END) AS BannedAccounts,
+            
+            -- Metrics for the dynamic period Trust Score calculation
+            SUM(CASE WHEN CreatedOnUtc >= @CurrStart AND CreatedOnUtc < @CurrEnd AND Status != 3 THEN 1 ELSE 0 END) AS CurrentPeriodGoodAccounts,
+            SUM(CASE WHEN CreatedOnUtc >= @CurrStart AND CreatedOnUtc < @CurrEnd THEN 1 ELSE 0 END) AS CurrentPeriodTotalAccounts,
+            
+            SUM(CASE WHEN CreatedOnUtc >= @PrevStart AND CreatedOnUtc < @PrevEnd AND Status != 3 THEN 1 ELSE 0 END) AS PreviousPeriodGoodAccounts,
+            SUM(CASE WHEN CreatedOnUtc >= @PrevStart AND CreatedOnUtc < @PrevEnd THEN 1 ELSE 0 END) AS PreviousPeriodTotalAccounts
+        FROM Users
+        WHERE (Roles & 4) = 0 
+        AND CreatedOnUtc <= @CurrEnd;
+    ";
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var parameters = new
+            {
+                CurrStart = currStart,
+                CurrEnd = currEnd,
+                PrevStart = prevStart,
+                PrevEnd = prevEnd
+            };
+
+            var command = new CommandDefinition(sql, parameters, cancellationToken: ct);
+
+            return await connection.QuerySingleAsync<RawUserTrustMetrics>(command);
+        });
+    }
+
+    public async Task<UserGrowthDataResult> GetUserGrowthTrendsAsync(
+        DateTime currStart, DateTime currEnd,
+        DateTime prevStart, DateTime prevEnd,
+        CancellationToken ct)
+    {
+        var sql = @"
+        -- 1. Get the Overall Totals for Percentage Calculation
+        SELECT 
+            SUM(CASE WHEN CreatedOnUtc >= @CurrStart AND CreatedOnUtc < @CurrEnd THEN 1 ELSE 0 END) AS CurrTotalUsers,
+            SUM(CASE WHEN CreatedOnUtc >= @CurrStart AND CreatedOnUtc < @CurrEnd AND (Roles & @SellerRole) = @SellerRole THEN 1 ELSE 0 END) AS CurrTotalSellers,
+            
+            SUM(CASE WHEN CreatedOnUtc >= @PrevStart AND CreatedOnUtc < @PrevEnd THEN 1 ELSE 0 END) AS PrevTotalUsers,
+            SUM(CASE WHEN CreatedOnUtc >= @PrevStart AND CreatedOnUtc < @PrevEnd AND (Roles & @SellerRole) = @SellerRole THEN 1 ELSE 0 END) AS PrevTotalSellers
+        FROM Users
+        WHERE (Roles & @AdminRole) = 0; -- Exclude Admins
+
+        -- 2. Get the Daily Grouped Data for the requested period
+        SELECT 
+            CAST(CreatedOnUtc AS DATE) AS DatePoint,
+            COUNT(1) AS NewUsers,
+            SUM(CASE WHEN (Roles & @SellerRole) = @SellerRole THEN 1 ELSE 0 END) AS NewSellers
+        FROM Users
+        WHERE (Roles & @AdminRole) = 0
+          AND CreatedOnUtc >= @CurrStart AND CreatedOnUtc < @CurrEnd
+        GROUP BY CAST(CreatedOnUtc AS DATE)
+        ORDER BY DatePoint ASC;
+    ";
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var parameters = new
+            {
+                CurrStart = currStart,
+                CurrEnd = currEnd,
+                PrevStart = prevStart,
+                PrevEnd = prevEnd,
+
+                // Cast the enums to integers so Dapper binds them safely to the SQL query
+                SellerRole = (int)UserRole.Seller,
+                AdminRole = (int)UserRole.Admin
+            };
+
+            using var multi = await connection.QueryMultipleAsync(new CommandDefinition(sql, parameters, cancellationToken: ct));
+
+            var totals = await multi.ReadSingleAsync<RawUserGrowthTotals>();
+            var dailyData = (await multi.ReadAsync<RawDailyUserGrowth>()).ToList();
+
+            return new UserGrowthDataResult(totals, dailyData.AsReadOnly());
+        });
+    }
 
 }

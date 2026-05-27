@@ -1,12 +1,10 @@
-
+#region  Usings
 using MazadZone.Api;
-using MazadZone.Api.Endpoints;
 using MazadZone.Api.Endpoints.Auctions;
 using MazadZone.Api.Endpoints.Bidders;
 using MazadZone.Api.Endpoints.Notifications;
 using MazadZone.Api.Middlewares;
 using MazadZone.Infrastructure.Persistence;
-using MazadZone.Infrastructure.Persistence.Seeding;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -22,6 +20,8 @@ using Hangfire;
 using MazadZone.Api.Endpoints.ChatAgent;
 using MazadZone.Api.Endpoints.Disputes;
 using MazadZone.Api.Endpoints.DisputeTypes;
+using MazadZone.Api.Endpoints.Dashboard;
+#endregion
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -76,6 +76,7 @@ try
     }
     app.UseCors("AllowAll");
     //Map Endpoints
+    app.MapDashboardEndpoints();
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();
     app.MapOrderEndpoints();

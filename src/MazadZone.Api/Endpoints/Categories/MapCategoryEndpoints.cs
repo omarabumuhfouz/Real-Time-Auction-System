@@ -21,7 +21,6 @@ public static class CategoryEndpoints
         GetTree.MapEndpoint(categoryGroup);
         GetSub.MapEndpoint(categoryGroup);        
         GetBreadcrumbs.MapEndpoint(categoryGroup);
-        GetStatistics.MapEndpoint(categoryGroup);
         GetTrending.MapEndpoint(categoryGroup);
         Search.MapEndpoint(categoryGroup); 
 
