@@ -35,12 +35,12 @@ try
 
     builder.Services.AddCors(options =>
     {
-        // Define a custom policy named "AllowAll"
         options.AddPolicy("AllowAll", policy =>
         {
-            policy.AllowAnyOrigin()    // Allows access from any domain
-                  .AllowAnyHeader()    // Allows any headers (e.g., Content-Type, Authorization)
-                  .AllowAnyMethod();   // Allows any HTTP method (GET, POST, PUT, DELETE, etc.)
+            policy.WithOrigins("http://localhost:3000") // Explicitly permit the frontend origin
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();// Mandated for SignalR auth handshakes
         });
     });
 
@@ -74,7 +74,7 @@ try
         // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
         // await seeder.SeedAsync();
     }
-    app.UseCors("AllowAll");
+
     //Map Endpoints
     app.MapDashboardEndpoints();
     app.MapNotificationEndpoints();
