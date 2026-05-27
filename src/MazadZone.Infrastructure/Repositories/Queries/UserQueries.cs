@@ -1,6 +1,7 @@
 using System.Text;
 using Dapper;
 using MazadZone.Application.Common.Interfaces;
+using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Features.Users.Queries.GetProfileSettings;
@@ -76,13 +77,43 @@ WHERE u.Id = @UserId;
         );
     }
 
-    public async Task<IReadOnlyList<UserDto>> GetUsersAsync(UserFilterParams filter, CancellationToken ct)
-{
-    // 1. Base Query
-    var sqlBuilder = new StringBuilder(@"
+    public async Task<PagedList<UserDto>> GetUsersAsync(UserFilterParams filter, CancellationToken ct)
+    {
+        var parameters = new DynamicParameters();
+
+        // 1. Build the shared WHERE clause filters
+        var filterConditions = new StringBuilder(" WHERE 1 = 1 ");
+
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        {
+            filterConditions.Append(@" 
+        AND (FirstName LIKE @Search 
+             OR LastName LIKE @Search 
+             OR Email LIKE @Search 
+             OR PhoneNumber LIKE @Search)");
+            parameters.Add("Search", $"%{filter.SearchTerm}%");
+        }
+
+        // 💡 Change filter.JoinedDate to filter.ValidJoinedDate
+        if (filter.ValidJoinedDate.HasValue)
+        {
+            // 💡 Access the DateTime value from ValidJoinedDate instead
+            var startDate = filter.ValidJoinedDate.Value.Date;
+            var endDate = startDate.AddDays(1);
+
+            filterConditions.Append(" AND CreatedOnUtc >= @StartDate AND CreatedOnUtc < @EndDate");
+            parameters.Add("StartDate", startDate);
+            parameters.Add("EndDate", endDate);
+        }
+
+        // 2. Build Count Query String
+        var countSql = $"SELECT COUNT(1) FROM Users {filterConditions}";
+
+        // 3. Build Data Query String
+        var dataSqlBuilder = new StringBuilder($@"
     SELECT 
         Id,
-        FirstName + ' ' + LastName AS FullName,
+        (FirstName + ' ' + LastName) AS FullName,
         Email,
         PhoneNumber,
         CASE 
@@ -100,76 +131,89 @@ WHERE u.Id = @UserId;
         CreatedOnUtc AS JoinedAt,
         LastLogin
     FROM Users
-    WHERE 1 = 1 ");
+    {filterConditions}");
 
-    var parameters = new DynamicParameters();
-
-    // 2. Apply Filtering
-    // IF Specific IDs are provided, ignore all other text/date filters
-    if (filter.SelectedUserIds != null && filter.SelectedUserIds.Any())
-    {
-        sqlBuilder.Append(" AND Id IN @Ids ");
-        parameters.Add("Ids", filter.SelectedUserIds);
-    }
-    else 
-    {
-        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        // Apply Sorting Rules
+        var sortColumn = filter.SortBy?.ToLower() switch
         {
-            sqlBuilder.Append(@" 
-            AND (FirstName LIKE @Search 
-                 OR LastName LIKE @Search 
-                 OR Email LIKE @Search 
-                 OR PhoneNumber LIKE @Search)");
+            "fullname" => "(FirstName + ' ' + LastName)",
+            "joineddate" => "CreatedOnUtc",
+            "lastlogin" => "LastLogin",
+            "role" => "Roles",
+            "status" => "Status",
+            _ => "CreatedOnUtc"
+        };
+        var sortDirection = filter.IsAsc ? "ASC" : "DESC";
+        dataSqlBuilder.Append($" ORDER BY {sortColumn} {sortDirection}");
 
-            parameters.Add("Search", $"%{filter.SearchTerm}%");
+        // Apply Pagination Limits if not exporting
+        if (!filter.IsExport)
+        {
+            dataSqlBuilder.Append(" OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY");
+            parameters.Add("Offset", (filter.PageNumber - 1) * filter.PageSize);
+            parameters.Add("PageSize", filter.PageSize);
         }
 
-        if (filter.JoinedDate.HasValue)
+        // 4. Combine commands or stream multi-results
+        return await ExecuteResilientAsync(async connection =>
         {
-            // PRO TIP: This is SARGable (Index-friendly) instead of using CAST()
-            var startDate = filter.JoinedDate.Value.Date;
-            var endDate = startDate.AddDays(1);
-            
-            sqlBuilder.Append(" AND CreatedOnUtc >= @StartDate AND CreatedOnUtc < @EndDate");
-            parameters.Add("StartDate", startDate);
-            parameters.Add("EndDate", endDate);
-        }
+            if (!filter.IsExport)
+            {
+                var combinedSql = $"{countSql}; {dataSqlBuilder}";
+
+                var command = new CommandDefinition(combinedSql, parameters, cancellationToken: ct);
+                using var multi = await connection.QueryMultipleAsync(command);
+
+                int totalCount = await multi.ReadFirstAsync<int>();
+                var items = (await multi.ReadAsync<UserDto>()).ToList();
+
+                // 💡 Instantiates your exact class constructor logic flawlessly
+                return new PagedList<UserDto>(items, filter.PageNumber, filter.PageSize, totalCount);
+            }
+            else
+            {
+                // If exporting, skip pagination metrics entirely to maximize performance
+                var command = new CommandDefinition(dataSqlBuilder.ToString(), parameters, cancellationToken: ct);
+                var items = (await connection.QueryAsync<UserDto>(command)).ToList();
+
+                return new PagedList<UserDto>(items, 1, items.Count, items.Count);
+            }
+        });
     }
 
-    // 3. Apply Safe Sorting (Prevent SQL Injection)
-    var sortColumn = filter.SortBy?.ToLower() switch
-    {
-        "fullname" => "FullName",
-        "joineddate" => "JoinedAt",
-        "lastlogin" => "LastLogin",
-        "role" => "Role",
-        "status" => "Status",
-        _ => "JoinedAt"
-    };
+public async Task<IReadOnlyList<UserDto>> ExportSelectedUsersAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+{
+    var sql = @"
+    SELECT 
+        Id,
+        (FirstName + ' ' + LastName) AS FullName,
+        Email,
+        PhoneNumber,
+        CASE 
+            WHEN (Roles & 4) = 4 THEN 'Admin'
+            WHEN (Roles & 2) = 2 THEN 'Seller'
+            WHEN (Roles & 1) = 1 THEN 'Bidder'
+            ELSE 'None'
+        END AS Role,
+        CASE Status
+            WHEN 1 THEN 'Active'
+            WHEN 2 THEN 'Suspended'
+            WHEN 3 THEN 'Banned'
+            ELSE 'Unknown'
+        END AS Status,
+        CreatedOnUtc AS JoinedAt,
+        LastLogin
+    FROM Users
+    WHERE Id IN @UserIds
+    ORDER BY CreatedOnUtc DESC"; // Default safe sorting for exports
 
-    var sortDirection = filter.IsAsc ? "ASC" : "DESC";
-    sqlBuilder.Append($" ORDER BY {sortColumn} {sortDirection}");
-
-    // 4. Apply Pagination (Skip if Exporting)
-    if (!filter.IsExport)
-    {
-        sqlBuilder.Append(" OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY");
-        parameters.Add("Offset", (filter.PageNumber - 1) * filter.PageSize);
-        parameters.Add("PageSize", filter.PageSize);
-    }
-
-    // 5. Execute
     return await ExecuteResilientAsync(async connection =>
     {
-        // Wrap the query in CommandDefinition to support CancellationToken
-        var command = new CommandDefinition(
-            commandText: sqlBuilder.ToString(),
-            parameters: parameters,
-            cancellationToken: ct);
-
+        var command = new CommandDefinition(sql, new { UserIds = userIds }, cancellationToken: ct);
         var result = await connection.QueryAsync<UserDto>(command);
-
+        
         return result.ToList().AsReadOnly();
     });
 }
+
 }

@@ -1,3 +1,4 @@
+using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Features.Users.Queries.GetProfileSettings;
 using MazadZone.Domain.Shared.Interfaces;
@@ -12,6 +13,7 @@ public interface IUserQueries : IScopedService
     Task<Result<Address>> GetAddressByIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<Result<Email>> GetEmailByIdAsync(Guid userId, CancellationToken cancellationToken); 
     Task<ProfileSettingsResponse> GetProfileSettings(UserId userId, CancellationToken cancellationToken);
-    Task<IReadOnlyList<UserDto>> GetUsersAsync(UserFilterParams filter, CancellationToken ct);
+    Task<PagedList<UserDto>> GetUsersAsync(UserFilterParams filter, CancellationToken ct);
+    Task<IReadOnlyList<UserDto>> ExportSelectedUsersAsync(IEnumerable<Guid> userIds, CancellationToken ct);
 
 }
