@@ -45,6 +45,8 @@ public class DeleteNotificationHandler : ICommandHandler<DeleteNotificationComma
 
         _logger.LogInformation("Notification {NotificationId} deleted", request.NotificationId);
 
+        await _unitOfWork.SaveChangesAsync();
+
         return Unit.Value;
     }
 }
