@@ -93,7 +93,7 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
             secondName: request.SecondName,
             thirdName: request.ThirdName,
             lastName: request.LastName,
-            roles: new HashSet<UserRole> { UserRole.Bidder }
+            roles:  UserRole.Bidder 
             );
 
     }

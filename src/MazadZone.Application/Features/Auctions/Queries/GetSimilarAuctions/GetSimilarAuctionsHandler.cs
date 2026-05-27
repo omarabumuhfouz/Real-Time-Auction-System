@@ -1,7 +1,5 @@
-
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
-
 
 namespace MazadZone.Application.Features.Auctions.Queries.GetSimilarAuctions;
 

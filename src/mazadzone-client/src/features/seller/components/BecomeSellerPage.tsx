@@ -28,6 +28,9 @@ import { PaymentMethodDrawer, type PayoutDetails } from "@/features/payment";
 
 // Import backend registration mutation
 import { useBecomeSeller } from "../api/seller.mutations";
+import { getRefreshToken } from "@/lib/auth/token";
+import { refreshToken } from "@/features/auth/api/auth.api";
+import { decodeJwtToken } from "@/features/auth/api/auth.mappers";
 
 export function BecomeSellerPage() {
   const router = useRouter();
@@ -41,7 +44,7 @@ export function BecomeSellerPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, login: loginStore } = useAuthStore();
 
   // API mutation hook for backend integration
   const { mutateAsync: registerSeller } = useBecomeSeller();
@@ -88,16 +91,43 @@ export function BecomeSellerPage() {
       });
 
       // Execute the real API request hitting our configured HTTP client
-      await registerSeller({
+      const tokenData = await registerSeller({
         payoutDetails: payoutDetails
       });
 
-      // Upgrade client role dynamically to seller if user is logged in
-      if (user) {
-        setUser({
-          ...user,
-          role: "seller",
-        });
+      // If the backend returns a new token, use it instantly to update the store and local storage
+      if (tokenData && tokenData.token) {
+        const decodedUser = decodeJwtToken(tokenData.token);
+        loginStore(decodedUser, tokenData.token, tokenData.refreshToken);
+      } else {
+        // Try to fetch a fresh JWT token with the new role from the backend
+        const refreshTok = getRefreshToken();
+        if (refreshTok) {
+          try {
+            const newTokens = await refreshToken({ refreshToken: refreshTok });
+            const decodedUser = decodeJwtToken(newTokens.token);
+            
+            // Fully update the store and local storage with the new JWT
+            loginStore(decodedUser, newTokens.token, newTokens.refreshToken);
+          } catch (refreshErr) {
+            console.error("Auto token refresh failed after becoming seller:", refreshErr);
+            // Fallback to local role upgrade
+            if (user) {
+              setUser({
+                ...user,
+                role: "seller",
+              });
+            }
+          }
+        } else {
+          // Fallback to local role upgrade if refresh token is unavailable
+          if (user) {
+            setUser({
+              ...user,
+              role: "seller",
+            });
+          }
+        }
       }
 
       setIsSuccess(true);

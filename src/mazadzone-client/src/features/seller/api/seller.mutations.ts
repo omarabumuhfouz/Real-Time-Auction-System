@@ -8,10 +8,8 @@ export interface BecomeSellerInput {
 }
 
 export interface BecomeSellerResponse {
-  success: boolean;
-  message: string;
-  sellerProfileId?: string;
-  role: string;
+  token: string;
+  refreshToken: string;
 }
 
 /**
@@ -21,7 +19,7 @@ export interface BecomeSellerResponse {
 export function useBecomeSeller() {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, BecomeSellerInput>({
+  return useMutation<BecomeSellerResponse, Error, BecomeSellerInput>({
     mutationFn: async (input: BecomeSellerInput) => {
       const userId = useAuthStore.getState().user?.id;
       if (!userId) {
@@ -31,9 +29,10 @@ export function useBecomeSeller() {
       // Map Stripe credit card inputs to the backend's expected bankAccountNumber property
       const bankAccountNumber = input.payoutDetails.cardNumber?.replace(/\s/g, "") || "123456789";
 
-      await api.post(`/api/v1/sellers/${userId}/become-seller`, {
+      const response = await api.post<BecomeSellerResponse>(`/api/v1/sellers/${userId}/become-seller`, {
         bankAccountNumber,
       });
+      return response.data;
     },
     onSuccess: () => {
       // Invalidate core auth/profile queries on success

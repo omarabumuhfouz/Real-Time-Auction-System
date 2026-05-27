@@ -32,13 +32,11 @@ public class CreateAdminUserCommandHandler : ICommandHandler<CreateAdminUserComm
             return EmailErrors.AlreadyInUse;
         }
 
-        // 2. Hash the raw password
+        //  Hash the raw password
         string hashedPassword = _passwordService.HashPassword(request.Password);
 
-        // 3. Prepare roles (Explicitly provisioning Admin)
-        var roles = new HashSet<UserRole> { UserRole.Admin }; // Ensure UserRole.Admin exists in your enum/smart enum
 
-        // 4. Invoke Domain Factory Method
+        // Invoke Domain Factory Method
         var userResult = User.Create(
             request.Email,
             hashedPassword,
@@ -47,7 +45,7 @@ public class CreateAdminUserCommandHandler : ICommandHandler<CreateAdminUserComm
             request.SecondName,
             request.ThirdName,
             request.LastName,
-            roles
+            UserRole.Admin
         );
 
         if (userResult.IsFailure)
@@ -60,7 +58,7 @@ public class CreateAdminUserCommandHandler : ICommandHandler<CreateAdminUserComm
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // 6. Return the strongly-typed aggregate root ID value
+        // Return the strongly-typed aggregate root ID value
         return user.Id.Value;
     }
 }

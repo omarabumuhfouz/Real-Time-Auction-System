@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Dapper;
 using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Features.Disputes.Queries;
+using MazadZone.Application.Features.Disputes.Queries.GetOpenDisputesBreakdown;
 using MazadZone.Domain.Orders;
 using Polly;
 
@@ -77,24 +78,24 @@ public class DisputeQueries : ResilientRepository, IDisputeQueries
 
             // STEP 3: Manually map the dynamic row directly into your strict records
             // STEP 3: Manually map the dynamic row directly into your strict records
-return new DisputeDetailsDto(
-    Id: (Guid?)row.Id ?? Guid.Empty,
-    Status: row.Status is null ? "Unknown" : ((object)row.Status).ToString()!,
-    DisputeType: (string?)row.DisputeType ?? "Unknown",
-    Title: (string?)row.Title ?? string.Empty,
-    Description: (string?)row.Description ?? string.Empty,
+            return new DisputeDetailsDto(
+                Id: (Guid?)row.Id ?? Guid.Empty,
+                Status: row.Status is null ? "Unknown" : ((object)row.Status).ToString()!,
+                DisputeType: (string?)row.DisputeType ?? "Unknown",
+                Title: (string?)row.Title ?? string.Empty,
+                Description: (string?)row.Description ?? string.Empty,
 
-    AuctionDetails: new AuctionDisputeInfo
-    {
-        Id = (Guid?)row.AuctionId ?? Guid.Empty,
-        Title = (string?)row.AuctionTitle ?? string.Empty,
-        FinalPrice = (decimal?)row.FinalPrice ?? 0m,
-        EndTime = (DateTime?)row.EndTime ?? DateTime.MinValue,
-        MainImageUrl = (string?)row.MainImageUrl ?? string.Empty
-    },
+                AuctionDetails: new AuctionDisputeInfo
+                {
+                    Id = (Guid?)row.AuctionId ?? Guid.Empty,
+                    Title = (string?)row.AuctionTitle ?? string.Empty,
+                    FinalPrice = (decimal?)row.FinalPrice ?? 0m,
+                    EndTime = (DateTime?)row.EndTime ?? DateTime.MinValue,
+                    MainImageUrl = (string?)row.MainImageUrl ?? string.Empty
+                },
 
-    Parties: new List<DisputeParties>
-    {
+                Parties: new List<DisputeParties>
+                {
         new DisputeParties
         {
             Bidder = new DisputeUserDto
@@ -110,10 +111,10 @@ return new DisputeDetailsDto(
                 Email = (string?)row.SellerEmail ?? string.Empty
             }
         }
-    },
+                },
 
-    Attachments: attachments?.ToList() ?? new List<DisputeAttachmentDto>()
-);
+                Attachments: attachments?.ToList() ?? new List<DisputeAttachmentDto>()
+            );
         });
     }
 
@@ -160,17 +161,17 @@ return new DisputeDetailsDto(
         }
 
         if (!string.IsNullOrWhiteSpace(filters.Status))
-{
-    // Check if the string matches an actual defined name in the enum (case-insensitively)
-    bool isDefinedName = Enum.GetNames<DisputeStatus>()
-        .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
+        {
+            // Check if the string matches an actual defined name in the enum (case-insensitively)
+            bool isDefinedName = Enum.GetNames<DisputeStatus>()
+                .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
 
-    if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
-    {
-        sqlBuilder.Append(" AND d.Status = @Status ");
-        parameters.Add("Status", (int)statusEnum);
-    }
-}
+            if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
+            {
+                sqlBuilder.Append(" AND d.Status = @Status ");
+                parameters.Add("Status", (int)statusEnum);
+            }
+        }
 
         if (filters.CategoryId.HasValue)
         {
@@ -211,5 +212,45 @@ return new DisputeDetailsDto(
             return result.ToList().AsReadOnly();
         });
 
+    }
+
+    public async Task<IReadOnlyList<RawDisputeBreakdown>> GetOpenDisputesBreakdownAsync(
+    DateTime currStart, DateTime currEnd,
+    DateTime prevStart, DateTime prevEnd,
+    CancellationToken ct)
+    {
+        var sql = @"
+        SELECT 
+            dt.Name AS DisputeTypeName,
+            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) AS CurrentCases,
+            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) AS PreviousCases
+        FROM DisputeTypes dt
+        -- Replaced the hardcoded '1' with the @OpenStatus parameter
+        LEFT JOIN Disputes d ON dt.Id = d.DisputeTypeId AND d.Status = @OpenStatus
+        GROUP BY dt.Name
+        HAVING 
+            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) > 0
+            OR 
+            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) > 0
+        ORDER BY CurrentCases DESC;
+    ";
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var parameters = new
+            {
+                CurrStart = currStart,
+                CurrEnd = currEnd,
+                PrevStart = prevStart,
+                PrevEnd = prevEnd,
+                // Cast the enum to int so Dapper injects it perfectly into the SQL
+                OpenStatus = (int)DisputeStatus.Open
+            };
+
+            var command = new CommandDefinition(sql, parameters, cancellationToken: ct);
+            var result = await connection.QueryAsync<RawDisputeBreakdown>(command);
+
+            return result.ToList().AsReadOnly();
+        });
     }
 }

@@ -33,6 +33,7 @@ export function useCreateAuction() {
     mutationFn: async (input: CreateAuctionInput) => {
       const sellerId = user?.id || "seller-id-placeholder";
       const requestDto = mapCreateAuctionInputToRequest(input, sellerId);
+      console.log("Create Auction Request DTO payload being sent to API:", requestDto);
       return createAuction(requestDto);
     },
     onSuccess: () => {

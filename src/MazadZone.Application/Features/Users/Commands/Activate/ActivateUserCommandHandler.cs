@@ -36,7 +36,6 @@ public class ActivateUserCommandHandler : ICommandHandler<ActivateUserCommand, U
             return result.TopError;
         }
 
-        _userRepo.Update(user);
         await _unitOfWork.SaveChangesAsync(ct);
 
         ActivateUserLogs.LogSuccess(_logger, request.UserId);   

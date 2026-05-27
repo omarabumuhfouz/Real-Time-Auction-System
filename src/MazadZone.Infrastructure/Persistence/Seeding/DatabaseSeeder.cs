@@ -109,11 +109,7 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         for (int i = 1; i <= 15; i++)
         {
-            var roles = new HashSet<UserRole> { UserRole.Bidder };
-            if (i >= 9) // Users 9 to 15 will also be sellers
-            {
-                roles.Add(UserRole.Seller);
-            }
+            var roles =  UserRole.Bidder ;
 
             var user = User.Create(
                 email: $"user{i}@mazadzone.com",
@@ -143,12 +139,6 @@ public class DatabaseSeeder : IDatabaseSeeder
             bidder.Verify();
             bidders.Add(bidder);
 
-            if (roles.Contains(UserRole.Seller))
-            {
-                var seller = Seller.BecomeSeller(user.Id,  f.Random.Replace("##########")).Value;
-                seller.Verify();
-                sellers.Add(seller);
-            }
         }
 
         foreach (var u in users) ClearDomainEvents(u);

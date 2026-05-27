@@ -21,6 +21,9 @@ public interface IAuctionQueries : IScopedService
     Task<Money> GetRemainingBalanceAsync(Payment payment, CancellationToken ct);
     Task<IReadOnlyList<AuctionsListDto>?> GetSimilarAuctionsAsync(Guid auctionId, int Limit, CancellationToken ct);
 
+
+
+
 }
 
 // public async Task<IEnumerable<AuctionBiddersDto>> GetBiddersForActiveAuctionsAsync(UserId sellerId, CancellationToken ct)

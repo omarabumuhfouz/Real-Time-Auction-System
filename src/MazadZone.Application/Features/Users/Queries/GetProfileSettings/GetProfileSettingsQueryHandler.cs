@@ -1,3 +1,4 @@
+using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Users.Errors;
 

@@ -37,6 +37,8 @@ export function mapMyBidAuctionDtoToBidActivity(
       category: "Tech and Electronics",
       subcategory: "Others",
       condition: "New",
+      description: "",
+      conditionDescription: "",
       status:
         dto.auctionStatus === 1
           ? "Upcoming"

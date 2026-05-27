@@ -25,9 +25,10 @@ const STATUS_FILTER_OPTIONS = [
 ] as const;
 
 const SORT_OPTIONS = [
-  { value: "EndDate", label: "End Date" },
-  { value: "CurrentBid", label: "Last Bid" },
-  { value: "DateCreated", label: "Date Created" },
+  { value: "CreationDate", label: "Date Created" },
+  { value: "StartTime", label: "Start Time" },
+  { value: "EndTime", label: "End Date" },
+  { value: "CurrentBidAmount", label: "Last Bid" },
 ] as const;
 
 const TABLE_HEADERS = [

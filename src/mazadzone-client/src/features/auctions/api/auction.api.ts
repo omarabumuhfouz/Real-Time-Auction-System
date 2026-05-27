@@ -10,6 +10,7 @@ import type {
   CreateAuctionRequest,
   GetAuctionsQueryParams,
   PagedListOfAuctionsListDto,
+  CategoryDto,
 } from "./auction.contracts";
 
 /**
@@ -75,4 +76,20 @@ export async function endAuction(id: string): Promise<void> {
  */
 export async function cancelAuction(id: string, reason: string): Promise<void> {
   await api.post<void>(`/api/v1/auctions/${id}/cancel`, { reason });
+}
+
+/**
+ * Fetch root level categories from the backend.
+ */
+export async function getRootCategories(): Promise<CategoryDto[]> {
+  const response = await api.get<CategoryDto[]>("/api/v1/categories/roots");
+  return response.data;
+}
+
+/**
+ * Fetch full category tree (with subcategories) from the backend.
+ */
+export async function getCategoryTree(): Promise<CategoryDto[]> {
+  const response = await api.get<CategoryDto[]>("/api/v1/categories/tree");
+  return response.data;
 }

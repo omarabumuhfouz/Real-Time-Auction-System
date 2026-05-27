@@ -3,11 +3,11 @@ using MazadZone.Application.Features.Categories.Queries.GetCategoryStatistics;
 
 namespace MazadZone.Api.Endpoints.Categories;
 
-public static class GetStatistics
+public static class GetCategoryStatistics
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/statistics", HandleAsync)
+        app.MapGet("/category-statistics", HandleAsync)
             // .RequireAuthorization("AdminPolicy")
             .WithSummary("Retrieve category statistics")
             .WithDescription("Retrieves aggregated analytical data across all categories, such as the total number of active auctions, total items sold, or engagement metrics. Useful for building dashboards and reporting features.")

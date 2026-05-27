@@ -155,7 +155,7 @@ export const DesktopBottomRow = ({
         {mounted && isSeller && (
           <Button
             variant="outline"
-            onClick={() => router.push(ROUTES.SELLER.DASHBOARD)}
+            onClick={() => router.push(ROUTES.SELLER.AUCTIONS)}
             className="bg-transparent border-white/20 text-white  text-lg hover:bg-primary/20 hover:text-primary hover:border-primary gap-2 h-12 rounded-xl"
           >
             <LayoutDashboard className="h-5 w-5" />

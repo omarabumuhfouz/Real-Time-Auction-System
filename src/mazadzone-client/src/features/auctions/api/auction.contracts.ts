@@ -28,6 +28,8 @@ export interface AuctionDto {
   endTime: string;
   auctionStatus: string;
   bids: BidDto[];
+  status?: string;
+  condition?: string;
 }
 
 export interface AuctionsListDto {
@@ -37,7 +39,9 @@ export interface AuctionsListDto {
   currentBidAmount: number;
   startTime: string;
   endTime: string;
-  status: string;
+  itemStatus?: string;
+  condtion?: string;
+  status?: string;
   bidsCount: number;
 }
 
@@ -65,6 +69,8 @@ export interface CreateAuctionRequest {
   description: string;
   images: ImageModelDto[];
   catigoryId: string; // Note: respecting the backend 'catigoryId' typo exactly.
+  status?: string;
+  condition?: string;
 }
 
 export interface GetAuctionsQueryParams {
@@ -88,4 +94,11 @@ export interface PagedListOfAuctionsListDto {
   items: AuctionsListDto[];
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
+}
+
+export interface CategoryDto {
+  id: string;
+  name: string;
+  subCategories?: CategoryDto[];
+  subcategories?: CategoryDto[];
 }

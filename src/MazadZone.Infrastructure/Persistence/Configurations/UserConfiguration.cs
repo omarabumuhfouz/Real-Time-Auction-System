@@ -80,11 +80,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.Property(u => u.Roles)
-            .HasConversion(new UserRolesBitmaskConverter())
-            .HasColumnName("Roles")
-            .HasColumnType("int")
-           .IsRequired()
-           .UsePropertyAccessMode(PropertyAccessMode.Field);
+    .HasConversion<int>() // Automatically handles the bitwise operations natively
+    .HasColumnName("Roles")
+    .HasColumnType("int")
+    .IsRequired();
 
         builder.HasMany(u => u.HashedRefreshTokens)
             .WithOne()

@@ -3,7 +3,7 @@
  * Fully aligned with the real backend DTO contracts.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AuctionSummary,
   AuctionCategory,
@@ -16,7 +16,10 @@ import {
   getAuctions,
   getAuctionById,
   getSimilarAuctions,
+  getRootCategories,
+  getCategoryTree,
 } from "./auction.api";
+import type { CategoryDto } from "./auction.contracts";
 
 import { auctionKeys } from "./auction.keys";
 import {
@@ -56,11 +59,45 @@ export function useGetAuctions(filters?: AuctionFilters) {
  * Fetches detailed information about a single auction by ID.
  */
 export function useGetAuctionById(id: string) {
+  const queryClient = useQueryClient();
+
   return useQuery<AuctionSummary | null>({
     queryKey: auctionKeys.detail(id),
     queryFn: async () => {
       const raw = await getAuctionById(id);
-      return mapAuctionDtoToSummary(raw);
+      const summary = mapAuctionDtoToSummary(raw);
+
+      // Try to find the item in the list cache to retrieve backend-specific ItemStatus and Condtion details
+      const listsData = queryClient.getQueriesData<PaginatedResponse<AuctionSummary>>({
+        queryKey: auctionKeys.lists(),
+      });
+
+      let cachedItem: AuctionSummary | undefined;
+      for (const [_, data] of listsData) {
+        if (data?.items) {
+          cachedItem = data.items.find((item) => item.id === id);
+          if (cachedItem) break;
+        }
+      }
+
+      if (cachedItem) {
+        summary.condition = cachedItem.condition;
+        summary.conditionDescription = cachedItem.conditionDescription;
+      } else {
+        // Fallback: Query the list endpoint directly (since backend's detailed AuctionDto misses ItemStatus and Condtion)
+        try {
+          const listResponse = await getAuctions({ SearchTerm: raw.itemTitle, PageSize: 5, Page: 1 });
+          const matchedDto = listResponse.items.find((item) => item.id === id);
+          if (matchedDto) {
+            summary.condition = (matchedDto.itemStatus as any) || "New";
+            summary.conditionDescription = matchedDto.condtion || "";
+          }
+        } catch (err) {
+          console.warn("Failed to retrieve condition details from fallback query:", err);
+        }
+      }
+
+      return summary;
     },
     enabled: !!id,
   });
@@ -206,5 +243,27 @@ export function useGetSellerAuctions(filters?: {
         hasPreviousPage: raw.hasPreviousPage ?? false,
       };
     },
+  });
+}
+
+/**
+ * Hook to retrieve root categories from the API.
+ */
+export function useGetRootCategories() {
+  return useQuery<CategoryDto[]>({
+    queryKey: ["categories", "roots"],
+    queryFn: getRootCategories,
+    staleTime: 60 * 60 * 1000, // Keep cached for 1 hour since category structure rarely changes
+  });
+}
+
+/**
+ * Hook to retrieve the complete categories and subcategories tree from the API.
+ */
+export function useGetCategoryTree() {
+  return useQuery<CategoryDto[]>({
+    queryKey: ["categories", "tree"],
+    queryFn: getCategoryTree,
+    staleTime: 60 * 60 * 1000,
   });
 }

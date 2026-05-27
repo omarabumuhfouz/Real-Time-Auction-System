@@ -23,12 +23,12 @@ export function SellerDashboardPage() {
   const { isAuthorized, isLoading: isAuthLoading } = useRequireRole(["seller"], {
     loginMessage: "Please log in to access the Seller Dashboard.",
     unauthorizedMessage: "You must activate your seller privileges to view this page.",
-    bypassTesting: true, // Bypass checking while in testing/development mode
+    bypassTesting: false, // Strict seller-only authorization check enforced
   });
 
   // Table Filtering, Sorting, Pagination from URL
   const activeStatus = searchParams.get("status") || "All";
-  const sortBy = searchParams.get("sortBy") || "EndDate";
+  const sortBy = searchParams.get("sortBy") || "EndTime";
   const tablePage = parseInt(searchParams.get("page") || "1", 10);
 
   // 1. Fetch ALL seller auctions to calculate overall dashboard summary statistics
