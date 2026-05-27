@@ -1092,9 +1092,7 @@ Push to main / PR → Checkout → Setup .NET 9 → Restore → Build (Release) 
 - [ ] 📝 **API Documentation** — Auto-generated SDK clients (C#, TypeScript) from OpenAPI spec
 
 ### Phase 5 — Frontend
-- [ ] 🎨 **Web Client** — React / Next.js frontend with real-time bidding UI
 - [ ] 📱 **Mobile App** — React Native / Flutter cross-platform mobile application
-- [ ] 🖥️ **Admin Panel** — Dedicated admin dashboard for user management, disputes, and analytics
 
 ---
 
