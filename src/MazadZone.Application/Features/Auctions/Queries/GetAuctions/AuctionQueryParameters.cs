@@ -8,7 +8,7 @@ public record AuctionQueryParameters
     public int PageSize { get; init; }
     public string? SearchTerm { get; init; }
     public CategoryId? CategoryId { get; init; }
-    public CategoryId? SubCategoryId { get; init; }
+
     public CurrentBidAmountRange? CurrentBidAmount { get; init; }
     public string Status { get; init; }
     public string SortBy { get; init; }

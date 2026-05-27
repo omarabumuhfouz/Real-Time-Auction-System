@@ -32,7 +32,6 @@ public static class GetAuctions
             parameters.PageSize == 0 ? 12 : parameters.PageSize,
             parameters.SearchTerm,
             parameters.CategoryId,
-            parameters.SubCategoryId,
             parameters.MinCurrentBid is null && parameters.MaxCurrentBid is null
                 ? null
                 : new CurrentBidAmountRange { Min = parameters.MinCurrentBid, Max = parameters.MaxCurrentBid },
@@ -52,7 +51,6 @@ public static class GetAuctions
         public int PageSize { get; set; }
         public string? SearchTerm { get; set; }
         public CategoryId? CategoryId { get; set; }
-        public CategoryId? SubCategoryId { get; set; }
         public decimal? MinCurrentBid { get; set; }
         public decimal? MaxCurrentBid { get; set; }
         public string? Status { get; set; }

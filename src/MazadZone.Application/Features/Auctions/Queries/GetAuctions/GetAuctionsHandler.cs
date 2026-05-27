@@ -22,7 +22,6 @@ public class GetAuctionsHandler
             PageSize = query.PageSize,
             SearchTerm = query.SearchTerm,
             CategoryId = query.CategoryId,
-            SubCategoryId = query.SubCategoryId,
             CurrentBidAmount = query.CurrentBidAmount,
             Status = query.Status,
             SortBy = query.SortBy,

@@ -9,6 +9,7 @@ public record AuctionDto(
     string ItemTitle,
     string ItemDescription,
     IReadOnlyList<string> ImageUrls,
+    Guid SellerId,
     string SellerName,
     string SellerEmail,
     decimal SellerRating,
