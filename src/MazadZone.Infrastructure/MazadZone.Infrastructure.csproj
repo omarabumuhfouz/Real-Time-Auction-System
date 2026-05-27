@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\MazadZone.Application\MazadZone.Application.csproj" />
@@ -28,6 +28,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Polly" Version="8.6.6" />
     <PackageReference Include="Scrutor" Version="7.0.0" />
+    <PackageReference Include="Google.GenAI" Version="1.7.0" />
   </ItemGroup>
 
   <PropertyGroup>

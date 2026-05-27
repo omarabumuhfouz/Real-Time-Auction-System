@@ -18,6 +18,7 @@ using MazadZone.Api.Endpoints.Sellers;
 using MazadZone.Api.Endpoints.Auth;
 using MazadZone.Infrastructure.RealTime.Hubs;
 using Hangfire;
+using MazadZone.Api.Endpoints.ChatAgent;
 using MazadZone.Api.Endpoints.Disputes;
 using MazadZone.Api.Endpoints.DisputeTypes;
 
@@ -85,6 +86,7 @@ try
     app.MapDisputeEndpoints();
     app.MapDisputeTypeEndpoints();
     app.MapAuthenticationEndpoints();
+    app.MapChatAgentEndpoints();
 
     if (app.Environment.IsDevelopment())
     {
@@ -111,11 +113,11 @@ try
     //         // 2. Execute your MasterDataSeeder
     //         await seeder.SeedAsync();
 
-    //         Console.WriteLine("✅ Database seeded successfully!");
+    //         Console.WriteLine(" Database seeded successfully!");
     //     }
     //     catch (Exception ex)
     //     {
-    //         Console.WriteLine($"❌ Error during database seeding: {ex}");
+    //         Console.WriteLine($" Error during database seeding: {ex}");
     //     }
     // }
 

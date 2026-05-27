@@ -2,6 +2,7 @@ using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Auctions.Queries;
 using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
+using MazadZone.Application.Features.ChatAgent.DTOs;
 using MazadZone.Application.Features.Users.Commands.Ban.Models;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Services;
@@ -24,6 +25,41 @@ public partial class AuctionQueries(
     AppDbContext _context
 ) : IAuctionQueries
 {
+    public async Task<IReadOnlyList<ActiveAuctionContextDto>> GetActiveAuctionContextAsync(CancellationToken ct)
+    {
+        // Fetch category names separately — Category.Name is a value object with a ValueConverter,
+        // so EF.Property<string> can't be used inside a correlated subquery.
+        var categoryLookup = (await _context.Categories
+            .Select(c => new { c.Id, Name = EF.Property<string>(c, "Name") })
+            .ToListAsync(ct))
+            .ToDictionary(c => c.Id, c => c.Name);
+
+        var rawAuctions = await _context.Auctions
+            .Include(a => a.Item)
+            .AsNoTracking()
+            .Where(a => a.Status == AuctionStatus.Active)
+            .Select(a => new
+            {
+                Id = a.Id.Value,
+                Title = a.Item.Title,
+                CurrentBidAmount = a.Bids
+                    .Where(b => b.Status == BidStatus.Leading)
+                    .Select(b => (decimal?)b.Amount.Amount)
+                    .FirstOrDefault() ?? a.StartBidAmount.Amount,
+                a.EndTime,
+                a.Item.CategoryId
+            })
+            .ToListAsync(ct);
+
+        return rawAuctions.Select(a => new ActiveAuctionContextDto(
+            a.Id,
+            a.Title,
+            a.CurrentBidAmount,
+            a.EndTime,
+            categoryLookup.TryGetValue(a.CategoryId, out var name) ? name : "Uncategorized"
+        )).ToList();
+    }
+
     public async Task<IReadOnlyList<AuctionBiddersDto>> GetActiveAuctionsWithBiddersBySellerIdAsync(UserId sellerId, CancellationToken ct)
     {
         var auctions = _context.Auctions
