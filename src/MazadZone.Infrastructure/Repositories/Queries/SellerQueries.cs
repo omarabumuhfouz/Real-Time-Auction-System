@@ -147,7 +147,7 @@ ORDER BY f.CreatedAtUtc DESC;
                       "(SELECT COUNT(1) FROM Bids b WHERE b.AuctionId = a.Id) AS BidsCount, " +
                       "(SELECT TOP(1) b.Amount FROM Bids b WHERE b.AuctionId = a.Id ORDER BY b.PlacedAtUtc DESC) AS LastBidAmount, " +
                       "a.EndTime AS EndDateUtc, " +
-                      "(SELECT TOP(1) img.ImageUrl FROM Images img WHERE img.ItemId = it.Id AND img.isMain = 1) AS ThumbnailUrl " +
+                      "(SELECT TOP(1) img.ImageUrl FROM ItemImages img WHERE img.ItemId = it.Id AND img.isMain = 1) AS ThumbnailUrl " +
                       "FROM Auctions a " +
                       "INNER JOIN Items it ON it.AuctionId = a.Id " +
                       "LEFT JOIN Categories c ON c.Id = it.CategoryId " +
@@ -170,20 +170,20 @@ ORDER BY f.CreatedAtUtc DESC;
     }
 
 
-private record ProfileBaseResult(
-    Guid Id,
-    string FullName,
-    string Email,
-    string PhoneNumber,
-    bool IsVerified,
-    DateTime MemberSince,
-    DateTime LastLogin,
-    decimal Rating,
-    int ReviewsCount,
-    int ListedAuctionsCount,
-    int TotalBidsPlaced,
-    int AuctionParticipatedCount,
-    int AuctionsWonCount,
-    int CompletedPurchasesCount
-    );
+    private record ProfileBaseResult(
+        Guid Id,
+        string FullName,
+        string Email,
+        string PhoneNumber,
+        bool IsVerified,
+        DateTime MemberSince,
+        DateTime LastLogin,
+        decimal Rating,
+        int ReviewsCount,
+        int ListedAuctionsCount,
+        int TotalBidsPlaced,
+        int AuctionParticipatedCount,
+        int AuctionsWonCount,
+        int CompletedPurchasesCount
+        );
 }

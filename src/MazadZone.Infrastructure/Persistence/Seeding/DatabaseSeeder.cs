@@ -385,7 +385,7 @@ public class DatabaseSeeder : IDatabaseSeeder
             ).Value;
 
             // Generate Payment matching the flow
-            var payment = Payment.Create(order.Id, winner.Id, leadingBid.Amount).Value;
+            var payment = Payment.Create(order.Id, winner.Id, leadingBid.DepositAmount, leadingBid.Amount, MazadZone.Domain.Payments.PaymentConstants.DefaultPlatformFeePercentage).Value;
 
             if (item.TargetStatus >= OrderStatus.Confirmed)
             {

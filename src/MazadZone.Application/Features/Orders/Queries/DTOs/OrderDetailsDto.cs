@@ -10,4 +10,7 @@ public record OrderDetailsDto(
     string Status,
     bool HasActiveDispute,
     bool IsDisputable,
-    bool CanLeaveFeedback);
+    bool CanLeaveFeedback,
+    decimal GrossAmount = 0,
+    decimal PlatformFee = 0,
+    decimal NetAmount = 0);
