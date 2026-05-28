@@ -1,6 +1,5 @@
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Users.DTOs;
-using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 using MazadZone.Application.Services; 
 
 namespace MazadZone.Application.Features.Users.Queries.GetUsers;

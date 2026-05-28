@@ -1,5 +1,3 @@
-using FluentValidation;
-
 namespace MazadZone.Application.Features.Users.Queries.GetUsers;
 
 public class GetUsersQueryValidator : AbstractValidator<GetUsersQuery>
@@ -22,7 +20,7 @@ public class GetUsersQueryValidator : AbstractValidator<GetUsersQuery>
             .WithMessage("Search term is too long.");
 
 RuleFor(x => x.FilterParams.JoinedDate)
-            .Must(date => string.IsNullOrEmpty(date) || DateTime.TryParse(date, out _))
+            .Must(date => string.IsNullOrWhiteSpace(date) || DateTime.TryParse(date, out _))
             .WithMessage("JoinedDate must be a valid date format.");
     }
 }

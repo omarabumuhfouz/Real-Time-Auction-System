@@ -14,8 +14,8 @@ public interface IUserQueries : IScopedService
 
     Task<Result<Address>> GetAddressByIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<Result<Email>> GetEmailByIdAsync(Guid userId, CancellationToken cancellationToken); 
-    Task<ProfileSettingsResponse> GetProfileSettings(UserId userId, CancellationToken cancellationToken);
-    Task<PagedList<UserDto>> GetUsersAsync(UserFilterParams filter, CancellationToken ct);
+    Task<ProfileSettingsResponse?> GetProfileSettings(UserId userId, CancellationToken cancellationToken);
+    Task<PagedList<UserDto>?> GetUsersAsync(UserFilterParams filter, CancellationToken ct);
     Task<IReadOnlyList<UserDto>> ExportSelectedUsersAsync(IEnumerable<Guid> userIds, CancellationToken ct);
     Task<RawUserTrustMetrics> GetUserTrustMetricsAsync(
         DateTime currStart, DateTime currEnd,
