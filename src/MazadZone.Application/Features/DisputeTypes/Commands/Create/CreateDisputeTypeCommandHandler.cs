@@ -1,10 +1,9 @@
 namespace MazadZone.Features.DisputeTypes.Commands.Create;
 
 using Microsoft.Extensions.Logging;
-using MazadZone.Domain.Orders;
 using MazadZone.Domain.Disputes;
 
-internal sealed class CreateDisputeTypeCommandHandler : ICommandHandler<CreateDisputeTypeCommand, Guid>
+public sealed class CreateDisputeTypeCommandHandler : ICommandHandler<CreateDisputeTypeCommand, Guid>
 {
     private readonly IDisputeTypeRepository _repository;
     private readonly IUnitOfWork _unitOfWork;

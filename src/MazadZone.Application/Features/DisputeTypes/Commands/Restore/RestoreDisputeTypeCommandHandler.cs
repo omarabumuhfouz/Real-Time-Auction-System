@@ -3,7 +3,7 @@ namespace MazadZone.Features.DisputeTypes.Commands.Restore;
 using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Disputes;
 
-internal sealed class RestoreDisputeTypeCommandHandler : ICommandHandler<RestoreDisputeTypeCommand, Unit>
+public sealed class RestoreDisputeTypeCommandHandler : ICommandHandler<RestoreDisputeTypeCommand, Unit>
 {
     private readonly IDisputeTypeRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
@@ -28,6 +28,8 @@ internal sealed class RestoreDisputeTypeCommandHandler : ICommandHandler<Restore
             return DisputeTypeErrors.NotFound;
         }
 
+        if (disputeType.IsActive) return Unit.Value;
+
         var result = disputeType.Restore();
         if (result.IsFailure)
         {
@@ -38,6 +40,6 @@ internal sealed class RestoreDisputeTypeCommandHandler : ICommandHandler<Restore
         await _unitOfWork.SaveChangesAsync(ct);
 
         DisputeTypeLogs.LogRestoreSuccess(_logger, request.DisputeTypeId);
-        return Result.Success(Unit.Value);
+        return Unit.Value;
     }
 }

@@ -10,7 +10,7 @@ public class DisputeTypeQueries : ResilientRepository ,IDisputeTypeQueries
     public DisputeTypeQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy)
         : base(sqlFactory, resiliencePolicy) { }
 
-    public async Task<IReadOnlyList<DisputeTypeDto>> GetAllAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<DisputeTypeDto>?> GetAllAsync(CancellationToken ct)
     {
         var sql = @"
         SELECT 
@@ -26,7 +26,7 @@ public class DisputeTypeQueries : ResilientRepository ,IDisputeTypeQueries
             connection.QueryAsync<DisputeTypeDto>(sql))).AsList();
     }
 
-    public async Task<DisputeTypeDto> GetByIdAsync(DisputeTypeId id, CancellationToken ct)
+    public async Task<DisputeTypeDto?> GetByIdAsync(DisputeTypeId id, CancellationToken ct)
     {
         var sql = @"
         SELECT 
