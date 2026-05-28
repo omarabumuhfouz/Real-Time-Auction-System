@@ -126,8 +126,14 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 - Profile settings management
 - Email change and password change
 - Account activation, suspension, and banning with cascade effects
+- Bulk account suspension and banning
 - Admin user creation
 - Payment method management
+
+### 🛡️ Admin Dashboard
+- Comprehensive admin dashboard for platform overview
+- Centralized management of Users, Disputes, Auctions, Bids, and Categories
+- Statistics and metrics for platform performance
 
 ### 🏪 Seller Management
 - "Become a Seller" upgrade flow
@@ -135,6 +141,7 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 - Seller public profile
 - Seller dashboard with auction/order stats
 - Unverified seller listing for admin review
+- Configurable platform fees for sellers
 
 ### 🔐 Authentication & Security
 - JWT Bearer tokens with RSA-256 signing
@@ -590,6 +597,10 @@ All endpoints are versioned under `/api/v1/` and documented via **Scalar UI** at
 
 > **Total: 75+ endpoints** across 12 modules.
 
+<details>
+<summary><b>Click to expand all API Endpoints</b></summary>
+<br/>
+
 ### 🏛️ Auctions (`/api/v1/auctions`)
 
 | Method | Route | Auth | Description |
@@ -727,6 +738,8 @@ All endpoints are versioned under `/api/v1/` and documented via **Scalar UI** at
 
 > 🛡️ = Admin-only endpoint
 
+</details>
+
 ---
 
 ## 📡 Real-Time (SignalR)
@@ -748,7 +761,11 @@ Two SignalR hubs provide real-time communication:
 
 ## 📁 Project Structure
 
-```
+<details>
+<summary><b>Click to expand full project structure</b></summary>
+<br/>
+
+```text
 Real-Time-Auction-System/
 ├── 📂 src/
 │   ├── 📂 MazadZone.Domain/                 # Core business logic (zero dependencies)
@@ -903,6 +920,7 @@ Real-Time-Auction-System/
 ├── .github/workflows/ci.yml                 # GitHub Actions CI pipeline
 └── .editorconfig                             # Code style configuration
 ```
+</details>
 
 ---
 

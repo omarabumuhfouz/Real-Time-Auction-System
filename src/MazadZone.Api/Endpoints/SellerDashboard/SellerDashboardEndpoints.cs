@@ -1,3 +1,4 @@
+using MazadZone.Api.Constants;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -9,7 +10,7 @@ public static class SellerDashboardEndpoints
     {
         var group = app.MapGroup("api/seller-dashboard")
             .WithTags("Seller Dashboard")
-            .RequireAuthorization("SellerPolicy");
+            .RequireAuthorization(Policies.SellerOnly);
 
         group.MapGetAuctions();
         group.MapGetOrders();
