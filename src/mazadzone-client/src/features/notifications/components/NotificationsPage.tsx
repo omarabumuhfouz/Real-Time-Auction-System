@@ -34,17 +34,17 @@ export function NotificationsPage() {
   );
 
   const notifications = useNotificationStore((state) => state.notifications);
-  const setNotifications = useNotificationStore((state) => state.setNotifications);
-  const unreadCount = useNotificationStore((state) => state.getUnreadCount());
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const localMarkAsRead = useNotificationStore((state) => state.markAsRead);
   const localMarkAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+  const syncFromServer = useNotificationStore((state) => state.syncFromServer);
 
-  // Sync API items to Zustand store
+  // Sync API items to Zustand store (optimistic-aware)
   useEffect(() => {
     if (data?.items) {
-      setNotifications(data.items);
+      syncFromServer(data.items);
     }
-  }, [data?.items, setNotifications]);
+  }, [data?.items, syncFromServer]);
 
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();

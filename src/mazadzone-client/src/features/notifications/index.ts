@@ -11,6 +11,7 @@ export { NotificationsPage } from "./components/NotificationsPage";
 
 // -- Hooks --
 export { useRealtimeNotifications } from "./hooks/useRealtimeNotifications";
+export { useNotificationSync } from "./hooks/useNotificationSync";
 
 // -- Store --
 export { useNotificationStore } from "./store/notification.store";

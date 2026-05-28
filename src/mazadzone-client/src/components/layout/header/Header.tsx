@@ -7,7 +7,7 @@ import { ROUTES } from "@/config/routes.config";
 import { useAuthStore } from "@/stores/auth.store";
 import { DesktopHeader, DesktopBottomRow } from "./DesktopHeader";
 import { MobileHeader } from "./MobileHeader";
-import { useRealtimeNotifications } from "@/features/notifications";
+import { useRealtimeNotifications, useNotificationSync } from "@/features/notifications";
 import { useRealtimeAuctions } from "@/features/auctions";
 
 /**
@@ -27,6 +27,11 @@ export function Header() {
   // Listen for real-time notifications and auctions
   useRealtimeNotifications(user?.id);
   useRealtimeAuctions();
+
+  // Keep Zustand notification store in sync with server data.
+  // When auction events trigger notification query refetch, this detects
+  // new unread notifications and fires toasts even with the popover closed.
+  useNotificationSync();
 
 
 

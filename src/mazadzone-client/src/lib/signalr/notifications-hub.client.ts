@@ -42,8 +42,8 @@ export function createNotificationsHubClient(accessTokenFactory?: () => string |
 
     // -- Subscribe to server events -------------------------
     onNotificationReceived: (callback: (event: NotificationReceivedEvent) => void) => {
-      connection.on("NotificationReceived", callback);
-      return () => connection.off("NotificationReceived", callback);
+      connection.on("ReceiveNotification", callback);
+      return () => connection.off("ReceiveNotification", callback);
     },
   };
 }

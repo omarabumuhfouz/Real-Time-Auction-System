@@ -39,7 +39,42 @@ export function useGetAuctions(filters?: AuctionFilters) {
   return useQuery<PaginatedResponse<AuctionSummary>>({
     queryKey: auctionKeys.list(filters || {}),
     queryFn: async () => {
+      let resolvedCategoryId: string | undefined = undefined;
+
+      if (filters?.category && (filters.category as string) !== "all") {
+        try {
+          const tree = await getCategoryTree();
+          const matchedCat = tree.find(
+            (c) => c.name.toLowerCase() === filters.category?.toLowerCase()
+          );
+          if (matchedCat) {
+            resolvedCategoryId = matchedCat.id;
+
+            if (filters.subcategory && (filters.subcategory as string) !== "all") {
+              const subList = matchedCat.subCategories || matchedCat.subcategories || [];
+              const matchedSub = subList.find(
+                (s) => s.name.toLowerCase() === filters.subcategory?.toLowerCase()
+              );
+              if (matchedSub) {
+                resolvedCategoryId = matchedSub.id;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to fetch category tree for GUID mapping:", err);
+        }
+      }
+
       const queryParams = mapFiltersToQueryParams(filters);
+      if (resolvedCategoryId) {
+        queryParams.CategoryId = resolvedCategoryId;
+      } else {
+        queryParams.CategoryId = undefined;
+      }
+      
+      // Clear SubCategoryId to ensure backend queries only use the mapped CategoryId
+      queryParams.SubCategoryId = undefined;
+
       const raw = await getAuctions(queryParams);
       
       return {
@@ -110,10 +145,26 @@ export function useGetAuctionsByCategory(category: AuctionCategory) {
   return useQuery<PaginatedResponse<AuctionSummary>>({
     queryKey: [...auctionKeys.all, "category", category],
     queryFn: async () => {
+      let resolvedCategoryId: string | undefined = undefined;
+
+      if (category && (category as string) !== "all") {
+        try {
+          const tree = await getCategoryTree();
+          const matchedCat = tree.find(
+            (c) => c.name.toLowerCase() === category.toLowerCase()
+          );
+          if (matchedCat) {
+            resolvedCategoryId = matchedCat.id;
+          }
+        } catch (err) {
+          console.warn("Failed to fetch category tree for GUID mapping in useGetAuctionsByCategory:", err);
+        }
+      }
+
       const raw = await getAuctions({
         Page: 1,
         PageSize: 12,
-        CategoryId: category,
+        CategoryId: resolvedCategoryId,
       });
 
       return {

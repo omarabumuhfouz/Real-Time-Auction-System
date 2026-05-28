@@ -8,6 +8,7 @@ import { APP_CONFIG } from "@/config/app.config";
 import { auctionKeys } from "../api/auction.keys";
 import { AuctionStatus } from "../types/auction.types";
 import type { AuctionSummary } from "../types/auction.types";
+import { NOTIFICATION_KEYS } from "@/features/notifications/api/notifications.queries";
 
 /**
  * Maps standard backend status string values to front-end AuctionStatus enum values.
@@ -44,8 +45,26 @@ export function useRealtimeAuctions(): void {
     let unsubscribeStatusChanged: (() => void) | undefined;
     let unsubscribeAuctionCreated: (() => void) | undefined;
     let retryTimeoutId: NodeJS.Timeout | undefined;
+    let notificationRefetchTimer: NodeJS.Timeout | undefined;
     let currentRetry = 0;
     const maxRetries = 3;
+
+    /**
+     * Schedule a delayed notification query refetch.
+     * The backend creates DB notifications in the same transaction as auction events,
+     * so we wait 2s to let the write commit before refetching.
+     * Debounced: rapid events (e.g., create → cancel → active) only trigger one refetch.
+     */
+    const scheduleNotificationRefetch = () => {
+      if (notificationRefetchTimer) {
+        clearTimeout(notificationRefetchTimer);
+      }
+      notificationRefetchTimer = setTimeout(() => {
+        if (isMounted) {
+          void queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
+        }
+      }, 2000);
+    };
 
     const startHub = async () => {
       try {
@@ -99,6 +118,9 @@ export function useRealtimeAuctions(): void {
           void queryClient.invalidateQueries({
             queryKey: auctionKeys.lists(),
           });
+
+          // The backend may create notifications for affected bidders (outbid, etc.)
+          scheduleNotificationRefetch();
         });
 
         // 2. Subscribe to Live Status Changed events
@@ -130,6 +152,9 @@ export function useRealtimeAuctions(): void {
           void queryClient.invalidateQueries({
             queryKey: auctionKeys.lists(),
           });
+
+          // The backend creates notifications for owners/participants on status changes
+          scheduleNotificationRefetch();
         });
 
         // 3. Subscribe to Live Auction Created events
@@ -141,6 +166,9 @@ export function useRealtimeAuctions(): void {
           void queryClient.invalidateQueries({
             queryKey: auctionKeys.lists(),
           });
+
+          // The backend creates a notification for the seller on auction creation
+          scheduleNotificationRefetch();
         });
 
       } catch (err) {
@@ -171,6 +199,7 @@ export function useRealtimeAuctions(): void {
       if (unsubscribeStatusChanged) unsubscribeStatusChanged();
       if (unsubscribeAuctionCreated) unsubscribeAuctionCreated();
       if (retryTimeoutId) clearTimeout(retryTimeoutId);
+      if (notificationRefetchTimer) clearTimeout(notificationRefetchTimer);
       
       if (isConnected) {
         hub.stop();

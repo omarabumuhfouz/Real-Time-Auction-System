@@ -8,12 +8,12 @@ import type { PublicSellerProfileResponse } from "@/features/seller/api/seller.c
  * Fetches the public user profile details for a given userId.
  */
 export async function getPublicUserProfile(userId: string): Promise<PublicUserProfile> {
-  const bidderRes = await api.get<BidderProfileDto>(`/api/v1/bidders/${userId}`);
+  const bidderRes = await api.get<BidderProfileDto>(`/bidders/${userId}`);
   const bidder = bidderRes.data;
 
   let seller: PublicSellerProfileResponse | null = null;
   try {
-    const sellerRes = await api.get<PublicSellerProfileResponse>(`/api/v1/sellers/${userId}/public`);
+    const sellerRes = await api.get<PublicSellerProfileResponse>(`/sellers/${userId}/public`);
     seller = sellerRes.data;
   } catch {
     // If the seller API returns 404, it means the user is not a seller, which is fine.

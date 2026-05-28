@@ -22,7 +22,7 @@ export async function fetchMyBids(
   } = {},
 ): Promise<PagedListOfMyBidAuctionDto> {
   const response = await api.get<PagedListOfMyBidAuctionDto>(
-    "/api/v1/bidders/my-bids",
+    "/bidders/my-bids",
     {
       params: {
         bidderId,
@@ -43,5 +43,5 @@ export async function placeBid(
   auctionId: string,
   request: PlaceBidRequestDto,
 ): Promise<void> {
-  await api.post<void>(`/api/v1/auctions/${auctionId}/bids`, request);
+  await api.post<void>(`/auctions/${auctionId}/bids`, request);
 }

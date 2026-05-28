@@ -117,7 +117,9 @@ export function EditAuctionForm({ auction }: EditAuctionFormProps) {
         condition: auction.condition,
         conditionDescription: defaultCondDetails, // Mock fallback
         startingPrice: auction.pricing.startingPrice.toFixed(2),
-        minimumIncrement: (auction.pricing.startingPrice * 0.05).toFixed(2), // 5% default increment
+        minimumIncrement: auction.pricing.minimumIncrement !== undefined && auction.pricing.minimumIncrement > 0
+          ? auction.pricing.minimumIncrement.toFixed(2)
+          : (auction.pricing.startingPrice * 0.05).toFixed(2), // 5% default increment
         shippingLocation: "Amman, Jordan",
         startDate: formatToDateTimeLocal(auction.timing.startDate),
         endDate: formatToDateTimeLocal(auction.timing.endDate),

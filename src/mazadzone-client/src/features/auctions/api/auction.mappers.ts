@@ -112,7 +112,7 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
       startingPrice: dto.startBidAmount,
       currentBid: dto.currentBidAmount > 0 ? dto.currentBidAmount : null,
       bidCount: dto.bids?.length ?? 0,
-      minimumIncrement: dto.minBidAmount && dto.startBidAmount ? dto.minBidAmount - dto.startBidAmount : 10,
+      minimumIncrement: dto.minBidAmount ?? 10,
     },
     timing: {
       startDate: parseUtcDate(dto.startTime),
@@ -180,7 +180,7 @@ export function mapCreateAuctionInputToRequest(
       landmark: "Registered Location",
     },
     startBidAmount: input.startingPrice,
-    minBidAmount: input.startingPrice + (input.minimumIncrement || 1),
+    minBidAmount: input.minimumIncrement || 1,
     startTime: convertLocalToUtcIsoString(input.startDate),
     endTime: convertLocalToUtcIsoString(input.endDate),
     title: input.title,
