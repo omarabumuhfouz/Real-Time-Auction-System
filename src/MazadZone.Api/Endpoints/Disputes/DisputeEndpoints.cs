@@ -20,6 +20,8 @@ public static class DisputeEndpoints
                               .WithTags("Dispute Management");
 
         // Map sub-slice query endpoints
+        ExportDisputes.MapEndpoint(disputeGroup);
+        ExportSelectedDisputes.MapEndpoint(disputeGroup);
         GetById.MapEndpoint(disputeGroup);
         GetFiltered.MapEndpoint(disputeGroup);
         OpenDispute.MapEndpoint(disputeGroup);
