@@ -57,7 +57,7 @@ public class UserQueries : ResilientRepository, IUserQueries
         return Email.Create(email);
     }
 
-    public async Task<ProfileSettingsResponse> GetProfileSettings(UserId userId, CancellationToken cancellationToken)
+    public async Task<ProfileSettingsResponse?> GetProfileSettings(UserId userId, CancellationToken cancellationToken)
     {
         const string sql = @"
             SELECT 
@@ -80,7 +80,7 @@ WHERE u.Id = @UserId;
         );
     }
 
-    public async Task<PagedList<UserDto>> GetUsersAsync(UserFilterParams filter, CancellationToken ct)
+    public async Task<PagedList<UserDto>?> GetUsersAsync(UserFilterParams filter, CancellationToken ct)
     {
         var parameters = new DynamicParameters();
 

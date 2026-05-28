@@ -5,6 +5,7 @@ public class ExportSelectedUsersQueryValidator : AbstractValidator<ExportSelecte
     public ExportSelectedUsersQueryValidator()
     {
         RuleFor(x => x.SelectedUserIds)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
             .WithMessage("At least one user ID must be provided for export.");
     }
