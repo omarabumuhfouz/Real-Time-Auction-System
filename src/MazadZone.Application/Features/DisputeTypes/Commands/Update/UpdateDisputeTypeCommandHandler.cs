@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Disputes;
 
-internal sealed class UpdateDisputeTypeCommandHandler : ICommandHandler<UpdateDisputeTypeCommand, Unit>
+public sealed class UpdateDisputeTypeCommandHandler : ICommandHandler<UpdateDisputeTypeCommand, Unit>
 {
     private readonly IDisputeTypeRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
