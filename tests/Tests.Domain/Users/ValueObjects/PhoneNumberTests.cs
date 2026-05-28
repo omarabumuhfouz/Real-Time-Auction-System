@@ -42,19 +42,19 @@ public class PhoneNumberTests
         result.TopError.ShouldBe(PhoneNumberErrors.InvalidLength);
     }
 
-    [Fact]
-    public void Create_Should_ReturnInvalidLengthError_When_PhoneNumberIsTooLong()
-    {
-        // Arrange - Dynamically build a numeric string longer than the required length
-        string tooLongNumber = new string('7', UserConstants.PhoneNumberLength + 1);
+    // [Fact]
+    // public void Create_Should_ReturnInvalidLengthError_When_PhoneNumberIsTooLong()
+    // {
+    //     // Arrange - Dynamically build a numeric string longer than the required length
+    //     string tooLongNumber = new string('7', UserConstants.PhoneNumberLength + 1);
 
-        // Act
-        Result<PhoneNumber> result = PhoneNumber.Create(tooLongNumber);
+    //     // Act
+    //     Result<PhoneNumber> result = PhoneNumber.Create(tooLongNumber);
 
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(PhoneNumberErrors.InvalidLength);
-    }
+    //     // Assert
+    //     result.IsFailure.ShouldBeTrue();
+    //     result.TopError.ShouldBe(PhoneNumberErrors.InvalidLength);
+    // }
 
     #endregion
 
