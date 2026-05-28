@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Routing;
 using MediatR;
 using MazadZone.Application.Features.Disputes.Queries;
 using MazadZone.Application.Features.Disputes.Queries.GetFiltered;
-using MazadZone.Domain.Orders;
 
 public record GetFilteredDisputesRequest(
     [FromQuery] string? SearchTerm,
@@ -16,11 +15,14 @@ public record GetFilteredDisputesRequest(
     [FromQuery] DateTime? FromDate = null,
     [FromQuery] DateTime? ToDate = null,
     [FromQuery] string? SortColumn = "SubmittedDate",
-    [FromQuery] bool IsDescending = true
+    [FromQuery] bool IsDescending = true,
+    [FromQuery] int PageNumber = 1,
+    [FromQuery] int PageSize = 10
+
 )
 {
     public GetFilteredDisputesQuery ToQuery() => 
-        new(SearchTerm, Status, CategoryId, FromDate, ToDate, SortColumn, IsDescending);
+        new(SearchTerm, Status, CategoryId, FromDate, ToDate, SortColumn, IsDescending, PageNumber, PageSize);
 }
 
 // 2. The Endpoint

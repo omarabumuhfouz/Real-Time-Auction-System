@@ -14,6 +14,13 @@ public record DisputeFilterParams
     public DateTime? ToDate { get; init; }
 
     // Sorting
-    public string? SortColumn { get; init; } = "SubmittedDate"; 
+    public string? SortColumn { get; init; } = "SubmittedDate";
     public bool IsDescending { get; init; } = true;
+
+    public int PageNumber { get; init; } = 1;
+    public int PageSize { get; init; } = 10;
+
+
+    public bool IsExport { get; init; } = false;
+
 }

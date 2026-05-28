@@ -1,7 +1,7 @@
 namespace MazadZone.Application.Features.Disputes.Queries.GetFiltered;
 
 using System;
-using System.Collections.Generic;
+using MazadZone.Application.Common.Paging;
 
 public record GetFilteredDisputesQuery(
     string? SearchTerm,
@@ -10,5 +10,7 @@ public record GetFilteredDisputesQuery(
     DateTime? FromDate,
     DateTime? ToDate,
     string? SortColumn,
-    bool IsDescending
-) : IQuery<IReadOnlyList<DisputeListItemDto>>;
+    bool IsDescending,
+    int PageNumber,
+    int PageSize
+) : IQuery<PagedList<DisputeListItemDto>>;

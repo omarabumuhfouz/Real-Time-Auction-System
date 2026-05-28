@@ -3,8 +3,9 @@ namespace MazadZone.Application.Features.Disputes.Queries.GetFiltered;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MazadZone.Application.Common.Paging;
 
-public class GetFilteredDisputesQueryHandler : IQueryHandler<GetFilteredDisputesQuery, IReadOnlyList<DisputeListItemDto>>
+public class GetFilteredDisputesQueryHandler : IQueryHandler<GetFilteredDisputesQuery, PagedList<DisputeListItemDto>>
 {
     private readonly IDisputeQueries _repository;
 
@@ -13,7 +14,7 @@ public class GetFilteredDisputesQueryHandler : IQueryHandler<GetFilteredDisputes
         _repository = repository;
     }
 
-    public async Task<Result<IReadOnlyList<DisputeListItemDto>>> Handle(GetFilteredDisputesQuery request, CancellationToken ct)
+    public async Task<Result<PagedList<DisputeListItemDto>>> Handle(GetFilteredDisputesQuery request, CancellationToken ct)
     {
         // Map the MediatR query to the Dapper filter params we created earlier
         var filterParams = new DisputeFilterParams
@@ -24,11 +25,13 @@ public class GetFilteredDisputesQueryHandler : IQueryHandler<GetFilteredDisputes
             FromDate = request.FromDate,
             ToDate = request.ToDate,
             SortColumn = request.SortColumn ?? "SubmittedDate", // Default fallback
-            IsDescending = request.IsDescending
+            IsDescending = request.IsDescending,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
         };
 
         var disputes = await _repository.GetFilteredDisputesAsync(filterParams, ct);
         
-        return Result.Success(disputes ?? new List<DisputeListItemDto>().AsReadOnly());
+        return Result.Success(disputes ?? PagedList<DisputeListItemDto>.Empty());
     }
 }

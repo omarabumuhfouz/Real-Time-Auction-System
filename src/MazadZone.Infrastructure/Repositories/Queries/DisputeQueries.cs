@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using MazadZone.Application.Common.Interfaces;
+using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Disputes.Queries;
 using MazadZone.Application.Features.Disputes.Queries.GetOpenDisputesBreakdown;
 using MazadZone.Domain.Orders;
@@ -118,101 +119,130 @@ public class DisputeQueries : ResilientRepository, IDisputeQueries
         });
     }
 
-    public async Task<IReadOnlyList<DisputeListItemDto>> GetFilteredDisputesAsync(DisputeFilterParams filters, CancellationToken ct)
+    public async Task<PagedList<DisputeListItemDto>> GetFilteredDisputesAsync(DisputeFilterParams filters, CancellationToken ct)
+{
+    var parameters = new DynamicParameters();
+
+    // 1. Build the shared FROM and WHERE clauses to be used by both COUNT and SELECT
+    var filterConditions = new StringBuilder(@"
+    FROM Disputes d
+    JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
+    JOIN Orders o ON d.OrderId = o.Id
+    JOIN Auctions a ON o.AuctionId = a.Id
+    JOIN Users bidder ON o.BidderId = bidder.Id
+    JOIN Users seller ON a.SellerId = seller.Id
+    WHERE 1 = 1 ");
+
+    // 2. Conditionally append filters
+    if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
     {
-        // 1. Base Query with "WHERE 1=1" to make appending AND clauses easy
-        var sqlBuilder = new StringBuilder(@"
-        SELECT 
-            d.Id,
-            bidder.FirstName + ' ' + bidder.LastName AS BidderName,
-            seller.FirstName + ' ' + seller.LastName AS SellerName,
-            dt.Name AS Category,
+        // Searches across Bidder Name, Seller Name, and Category
+        filterConditions.Append(@" AND (
+        bidder.FirstName LIKE @Search OR 
+        bidder.LastName LIKE @Search OR 
+        seller.FirstName LIKE @Search OR 
+        seller.LastName LIKE @Search OR
+        dt.Name LIKE @Search)");
 
-            CASE d.Status
-                WHEN 1 THEN 'Open'
-                WHEN 2 THEN 'UnderReview'
-                WHEN 3 THEN 'Resolved'
-                ELSE 'Unknown'
-            END AS Status,
-
-            d.CreatedAtUtc AS SubmittedDate
-        FROM Disputes d
-        JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
-        JOIN Orders o ON d.OrderId = o.Id
-        JOIN Auctions a ON o.AuctionId = a.Id
-        JOIN Users bidder ON o.BidderId = bidder.Id
-        JOIN Users seller ON a.SellerId = seller.Id
-        WHERE 1=1 ");
-
-        var parameters = new DynamicParameters();
-
-        // 2. Conditionally append filters
-        if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
-        {
-            // Searches across Bidder Name, Seller Name, and Category
-            sqlBuilder.Append(@" AND (
-            bidder.FirstName LIKE @Search OR 
-            bidder.LastName LIKE @Search OR 
-            seller.FirstName LIKE @Search OR 
-            seller.LastName LIKE @Search OR
-            dt.Name LIKE @Search)");
-
-            parameters.Add("Search", $"%{filters.SearchTerm}%");
-        }
-
-        if (!string.IsNullOrWhiteSpace(filters.Status))
-        {
-            // Check if the string matches an actual defined name in the enum (case-insensitively)
-            bool isDefinedName = Enum.GetNames<DisputeStatus>()
-                .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
-
-            if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
-            {
-                sqlBuilder.Append(" AND d.Status = @Status ");
-                parameters.Add("Status", (int)statusEnum);
-            }
-        }
-
-        if (filters.CategoryId.HasValue)
-        {
-            sqlBuilder.Append(" AND d.DisputeTypeId = @CategoryId ");
-            parameters.Add("CategoryId", filters.CategoryId.Value);
-        }
-
-        if (filters.FromDate.HasValue)
-        {
-            sqlBuilder.Append(" AND d.CreatedAtUtc >= @FromDate ");
-            parameters.Add("FromDate", filters.FromDate.Value);
-        }
-
-        if (filters.ToDate.HasValue)
-        {
-            sqlBuilder.Append(" AND d.CreatedAtUtc <= @ToDate ");
-            parameters.Add("ToDate", filters.ToDate.Value);
-        }
-
-        // 3. Apply Safe Sorting
-        // WARNING: Never inject filters.SortColumn directly to avoid SQL Injection. Map it safely.
-        var sortString = filters.SortColumn?.ToLower() switch
-        {
-            "category" => "dt.Name",
-            "status" => "d.Status",
-            "biddername" => "BidderName",
-            "sellername" => "SellerName",
-            _ => "d.CreatedAtUtc" // Default sort
-        };
-
-        var direction = filters.IsDescending ? "DESC" : "ASC";
-        sqlBuilder.Append($" ORDER BY {sortString} {direction}");
-
-        // 4. Execute
-        return await ExecuteResilientAsync(async connection =>
-        {
-            var result = await connection.QueryAsync<DisputeListItemDto>(sqlBuilder.ToString(), parameters);
-            return result.ToList().AsReadOnly();
-        });
-
+        parameters.Add("Search", $"%{filters.SearchTerm}%");
     }
+
+    if (!string.IsNullOrWhiteSpace(filters.Status))
+    {
+        // Check if the string matches an actual defined name in the enum (case-insensitively)
+        bool isDefinedName = Enum.GetNames<DisputeStatus>()
+            .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
+
+        if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
+        {
+            filterConditions.Append(" AND d.Status = @Status ");
+            parameters.Add("Status", (int)statusEnum);
+        }
+    }
+
+    if (filters.CategoryId.HasValue)
+    {
+        filterConditions.Append(" AND d.DisputeTypeId = @CategoryId ");
+        parameters.Add("CategoryId", filters.CategoryId.Value);
+    }
+
+    if (filters.FromDate.HasValue)
+    {
+        filterConditions.Append(" AND d.CreatedAtUtc >= @FromDate ");
+        parameters.Add("FromDate", filters.FromDate.Value);
+    }
+
+    if (filters.ToDate.HasValue)
+    {
+        filterConditions.Append(" AND d.CreatedAtUtc <= @ToDate ");
+        parameters.Add("ToDate", filters.ToDate.Value);
+    }
+
+    // 3. Build Count Query String
+    var countSql = $"SELECT COUNT(1) {filterConditions}";
+
+    // 4. Build Data Query String
+    var dataSqlBuilder = new StringBuilder($@"
+    SELECT 
+        d.Id,
+        (bidder.FirstName + ' ' + bidder.LastName) AS BidderName,
+        (seller.FirstName + ' ' + seller.LastName) AS SellerName,
+        dt.Name AS Category,
+        CASE d.Status
+            WHEN 1 THEN 'Open'
+            WHEN 2 THEN 'UnderReview'
+            WHEN 3 THEN 'Resolved'
+            ELSE 'Unknown'
+        END AS Status,
+        d.CreatedAtUtc AS SubmittedDate
+    {filterConditions}");
+
+    // Apply Safe Sorting
+    var sortString = filters.SortColumn?.ToLower() switch
+    {
+        "category" => "dt.Name",
+        "status" => "d.Status",
+        "biddername" => "BidderName",
+        "sellername" => "SellerName",
+        _ => "d.CreatedAtUtc" // Default sort
+    };
+
+    var direction = filters.IsDescending ? "DESC" : "ASC";
+    dataSqlBuilder.Append($" ORDER BY {sortString} {direction}");
+
+    // Apply Pagination Limits if not exporting
+    if (!filters.IsExport)
+    {
+        dataSqlBuilder.Append(" OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY");
+        parameters.Add("Offset", (filters.PageNumber - 1) * filters.PageSize);
+        parameters.Add("PageSize", filters.PageSize);
+    }
+
+    // 5. Combine commands or stream multi-results
+    return await ExecuteResilientAsync(async connection =>
+    {
+        if (!filters.IsExport)
+        {
+            var combinedSql = $"{countSql}; {dataSqlBuilder}";
+
+            var command = new CommandDefinition(combinedSql, parameters, cancellationToken: ct);
+            using var multi = await connection.QueryMultipleAsync(command);
+
+            int totalCount = await multi.ReadFirstAsync<int>();
+            var items = (await multi.ReadAsync<DisputeListItemDto>()).ToList();
+
+            return new PagedList<DisputeListItemDto>(items, filters.PageNumber, filters.PageSize, totalCount);
+        }
+        else
+        {
+            // If exporting, skip pagination metrics entirely to maximize performance
+            var command = new CommandDefinition(dataSqlBuilder.ToString(), parameters, cancellationToken: ct);
+            var items = (await connection.QueryAsync<DisputeListItemDto>(command)).ToList();
+
+            return new PagedList<DisputeListItemDto>(items, 1, items.Count, items.Count);
+        }
+    });
+}
 
     public async Task<IReadOnlyList<RawDisputeBreakdown>> GetOpenDisputesBreakdownAsync(
     DateTime currStart, DateTime currEnd,
@@ -253,4 +283,38 @@ public class DisputeQueries : ResilientRepository, IDisputeQueries
             return result.ToList().AsReadOnly();
         });
     }
+
+    public async Task<IReadOnlyList<DisputeListItemDto>> ExportSelectedDisputesAsync(IEnumerable<Guid> disputeIds, CancellationToken ct)
+    {
+        var sql = @"
+    SELECT 
+        d.Id,
+        bidder.FirstName + ' ' + bidder.LastName AS BidderName,
+        seller.FirstName + ' ' + seller.LastName AS SellerName,
+        dt.Name AS Category,
+        CASE d.Status
+            WHEN 1 THEN 'Open'
+            WHEN 2 THEN 'UnderReview'
+            WHEN 3 THEN 'Resolved'
+            ELSE 'Unknown'
+        END AS Status,
+        d.CreatedAtUtc AS SubmittedDate
+    FROM Disputes d
+    JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
+    JOIN Orders o ON d.OrderId = o.Id
+    JOIN Auctions a ON o.AuctionId = a.Id
+    JOIN Users bidder ON o.BidderId = bidder.Id
+    JOIN Users seller ON a.SellerId = seller.Id
+    WHERE d.Id IN @DisputeIds
+    ORDER BY d.CreatedAtUtc DESC"; // Default safe sorting for exports
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var command = new CommandDefinition(sql, new { DisputeIds = disputeIds }, cancellationToken: ct);
+            var result = await connection.QueryAsync<DisputeListItemDto>(command);
+
+            return result.ToList().AsReadOnly();
+        });
+    }
+
 }

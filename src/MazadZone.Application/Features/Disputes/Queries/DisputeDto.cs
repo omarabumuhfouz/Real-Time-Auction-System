@@ -14,4 +14,5 @@ public record DisputeListItemDto
     public string Category { get; init; }
     public string Status { get; init; }
     public DateTime SubmittedDate { get; init; }
+
 }
