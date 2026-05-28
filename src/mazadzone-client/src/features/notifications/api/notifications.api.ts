@@ -9,8 +9,18 @@ export const notificationsApi = {
     page: number,
     pageSize: number
   ): Promise<NotificationResponse> => {
-    const response = await api.get<NotificationsListDto>("/api/notifications", {
-      params: { UserId: userId, PageNumber: page, PageSize: pageSize },
+    const response = await api.get<NotificationsListDto>("/notifications", {
+      params: { 
+        UserId: userId, 
+        PageNumber: page, 
+        PageSize: pageSize,
+        t: Date.now(), // Prevent browser caching
+      },
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
     });
 
     const pagedList = response.data.notifications;
@@ -26,20 +36,30 @@ export const notificationsApi = {
   },
 
   markAsRead: async (id: string): Promise<void> => {
-    await api.post(`/api/notifications/${id}/mark-as-read`);
+    await api.post(`/notifications/${id}/mark-as-read`);
   },
 
   markAllAsRead: async (ids: string[]): Promise<void> => {
     if (ids.length === 0) return;
     await Promise.all(
-      ids.map((id) => api.post(`/api/notifications/${id}/mark-as-read`))
+      ids.map((id) => api.post(`/notifications/${id}/mark-as-read`))
     );
   },
 
   getUnreadCount: async (userId: string): Promise<number> => {
     // Retrieve the first page of notifications and compute count locally
-    const response = await api.get<NotificationsListDto>("/api/notifications", {
-      params: { UserId: userId, PageNumber: 1, PageSize: 100 },
+    const response = await api.get<NotificationsListDto>("/notifications", {
+      params: { 
+        UserId: userId, 
+        PageNumber: 1, 
+        PageSize: 100,
+        t: Date.now(), // Prevent browser caching
+      },
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
     });
 
     const items = response.data.notifications?.items || [];

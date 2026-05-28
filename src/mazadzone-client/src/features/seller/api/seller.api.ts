@@ -19,8 +19,8 @@ interface BidderProfileDto {
  */
 export async function fetchSellerProfile(id: string): Promise<SellerProfile> {
   const [sellerRes, bidderRes] = await Promise.all([
-    api.get<PublicSellerProfileResponse>(`/api/v1/sellers/${id}/public`),
-    api.get<BidderProfileDto>(`/api/v1/bidders/${id}`),
+    api.get<PublicSellerProfileResponse>(`/sellers/${id}/public`),
+    api.get<BidderProfileDto>(`/bidders/${id}`),
   ]);
 
   const seller = sellerRes.data;
@@ -75,7 +75,7 @@ export async function fetchSellerAuctions(
   page: number,
   pageSize: number
 ): Promise<PaginatedResult<AuctionSummary>> {
-  const response = await api.get<any>("/api/v1/auctions", {
+  const response = await api.get<any>("/auctions", {
     params: { SellerId: id, PageNumber: page, PageSize: pageSize },
   });
 
@@ -113,7 +113,7 @@ export async function submitReviewReply(
   comment: string
 ): Promise<ReviewReply> {
   // Fire real POST request to reply to the order's feedback
-  await api.post(`/api/v1/orders/api/orders/${reviewId}/feedback/reply`, {
+  await api.post(`/orders/api/orders/${reviewId}/feedback/reply`, {
     replyText: comment,
   });
 

@@ -59,8 +59,17 @@ export function mapNotificationDtoToViewModel(dto: NotificationDto): Notificatio
     }
   }
 
+  let resolvedId: string | undefined = undefined;
+  if (dto.id) {
+    if (typeof dto.id === "object") {
+      resolvedId = dto.id.value || (dto.id as any).Value;
+    } else if (typeof dto.id === "string") {
+      resolvedId = dto.id;
+    }
+  }
+
   return {
-    id: dto.id?.value || Math.random().toString(),
+    id: resolvedId || Math.random().toString(),
     title: dto.title,
     message: dto.message,
     type,

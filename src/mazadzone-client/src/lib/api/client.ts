@@ -78,9 +78,31 @@ apiClient.interceptors.response.use(
 
 // --- Typed Helper Methods ---------------------------------------
 
+// --- URL Formatting Helper --------------------------------------
+const formatUrl = (url: string): string => {
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  // Exclude admin endpoints since they are mock/handled separately
+  if (url.startsWith("/admin") || url.startsWith("admin")) {
+    return url.startsWith("/") ? url : `/${url}`;
+  }
+  // If already prefixed with /api/v1, leave as is
+  if (url.startsWith("/api/v1")) {
+    return url;
+  }
+  if (url.startsWith("api/v1")) {
+    return `/${url}`;
+  }
+  
+  // Format as /api/v1/endpoint
+  const cleanUrl = url.startsWith("/") ? url.slice(1) : url;
+  return `/api/v1/${cleanUrl}`;
+};
+
 export const api = {
   get: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    apiClient.get<T>(url, config).then((r) => ({
+    apiClient.get<T>(formatUrl(url), config).then((r) => ({
       data: r.data,
       success: true,
       message: "",
@@ -88,7 +110,7 @@ export const api = {
     })),
 
   post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    apiClient.post<T>(url, data, config).then((r) => ({
+    apiClient.post<T>(formatUrl(url), data, config).then((r) => ({
       data: r.data,
       success: true,
       message: "",
@@ -96,7 +118,7 @@ export const api = {
     })),
 
   put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    apiClient.put<T>(url, data, config).then((r) => ({
+    apiClient.put<T>(formatUrl(url), data, config).then((r) => ({
       data: r.data,
       success: true,
       message: "",
@@ -104,7 +126,7 @@ export const api = {
     })),
 
   patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    apiClient.patch<T>(url, data, config).then((r) => ({
+    apiClient.patch<T>(formatUrl(url), data, config).then((r) => ({
       data: r.data,
       success: true,
       message: "",
@@ -112,7 +134,7 @@ export const api = {
     })),
 
   delete: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    apiClient.delete<T>(url, config).then((r) => ({
+    apiClient.delete<T>(formatUrl(url), config).then((r) => ({
       data: r.data,
       success: true,
       message: "",
