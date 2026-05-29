@@ -76,8 +76,6 @@ export function AdminDisputesTable({
             <TableHead className="w-12 text-center">
               <Checkbox className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
             </TableHead>
-            <TableHead className="font-bold text-foreground">Dispute ID</TableHead>
-            <TableHead className="font-bold text-foreground">Order / Auction</TableHead>
             <TableHead className="font-bold text-foreground">Parties</TableHead>
             <TableHead className="font-bold text-foreground">Category</TableHead>
             <TableHead className="font-bold text-foreground">Status</TableHead>
@@ -90,15 +88,6 @@ export function AdminDisputesTable({
             <TableRow key={dispute.id} className="group">
               <TableCell className="text-center align-middle">
                 <Checkbox className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
-              </TableCell>
-              <TableCell className="font-bold whitespace-nowrap">
-                {dispute.id}
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold">{dispute.orderOrAuctionId}</span>
-                  <span className="text-sm text-muted-foreground">{dispute.orderOrAuctionName}</span>
-                </div>
               </TableCell>
               <TableCell>
                 <div className="flex flex-col">

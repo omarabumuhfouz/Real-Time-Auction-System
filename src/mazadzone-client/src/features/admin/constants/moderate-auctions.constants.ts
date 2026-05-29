@@ -1,11 +1,11 @@
-import type { TableColumn, DropdownItem } from "./moderate-users.constants";
+import type { TableColumn } from "./moderate-users.constants";
 
 export const MODERATE_AUCTION_COLUMNS: TableColumn[] = [
   { key: "auction", label: "Auction" },
   { key: "seller", label: "Seller" },
   { key: "category", label: "Category" },
   { key: "status", label: "Status" },
-  { key: "currentBid", label: "Current Bid", sortable: true },
+  { key: "currentBid", label: "Current Price", sortable: true },
   { key: "bidCount", label: "Bid Count", sortable: true },
   { key: "startDate", label: "Start Date", sortable: true },
   { key: "endDate", label: "End Date", sortable: true },
@@ -13,15 +13,6 @@ export const MODERATE_AUCTION_COLUMNS: TableColumn[] = [
 ];
 
 export const AUCTION_PAGE_SIZE_OPTIONS: number[] = [10, 15, 25, 50];
-
-export const AUCTION_DROPDOWN_ITEMS: DropdownItem[] = [
-  { label: "View Details", className: "" },
-  { label: "Edit Auction", className: "" },
-  {
-    label: "Delete Auction",
-    className: "text-destructive focus:text-destructive",
-  },
-];
 
 export const AUCTION_CATEGORIES = [
   "All Categories",
