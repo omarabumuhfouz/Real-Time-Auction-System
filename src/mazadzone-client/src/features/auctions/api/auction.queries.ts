@@ -18,8 +18,17 @@ import {
   getSimilarAuctions,
   getRootCategories,
   getCategoryTree,
+  getSellerDashboardAuctions,
+  getSellerDashboardOrders,
+  getSellerDashboardFinancials,
 } from "./auction.api";
-import type { CategoryDto } from "./auction.contracts";
+import type {
+  CategoryDto,
+  SellerAuctionsResponse,
+  SellerOrdersResponse,
+  SellerFinancialsResponse,
+  SellerDashboardQueryParams,
+} from "./auction.contracts";
 
 import { auctionKeys } from "./auction.keys";
 import {
@@ -316,5 +325,39 @@ export function useGetCategoryTree() {
     queryKey: ["categories", "tree"],
     queryFn: getCategoryTree,
     staleTime: 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook to retrieve seller dashboard auctions.
+ */
+export function useGetSellerDashboardAuctions(filters: SellerDashboardQueryParams) {
+  return useQuery<SellerAuctionsResponse>({
+    queryKey: ["seller-dashboard", "auctions", filters],
+    queryFn: () => getSellerDashboardAuctions(filters),
+  });
+}
+
+/**
+ * Hook to retrieve seller dashboard orders.
+ */
+export function useGetSellerDashboardOrders(filters: SellerDashboardQueryParams) {
+  return useQuery<SellerOrdersResponse>({
+    queryKey: ["seller-dashboard", "orders", filters],
+    queryFn: () => getSellerDashboardOrders(filters),
+  });
+}
+
+/**
+ * Hook to retrieve seller dashboard financials.
+ */
+export function useGetSellerDashboardFinancials(filters?: Partial<SellerDashboardQueryParams>) {
+  return useQuery<SellerFinancialsResponse>({
+    queryKey: ["seller-dashboard", "financials", filters || {}],
+    queryFn: () => getSellerDashboardFinancials({
+      Page: filters?.Page ?? 1,
+      PageSize: filters?.PageSize ?? 10,
+      ...filters
+    }),
   });
 }
