@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
@@ -67,6 +68,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: ROUTES.ADMIN.AUCTIONS ?? "/admin/auctions", icon: Gavel, label: "Moderate Auctions" },
     { href: ROUTES.ADMIN.DISPUTES ?? "/admin/disputes", icon: ShieldAlert, label: "Resolve Disputes" },
     { href: "/admin/categories", icon: FolderOpen, label: "Manage Categories" },
+    { href: ROUTES.ADMIN.ACCESS, icon: KeyRound, label: "Access Management" },
   ];
 
   const handleLogout = () => {
