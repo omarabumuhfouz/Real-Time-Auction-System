@@ -90,6 +90,7 @@ private static IServiceCollection AddApiDocumentation(this IServiceCollection se
         {
             options.AddPolicy(Policies.AdminOnly, policy => policy.RequireRole(Roles.Admin));
             options.AddPolicy(Policies.BidderOnly, policy => policy.RequireRole(Roles.Bidder));
+            options.AddPolicy(Policies.SellerOnly, policy => policy.RequireRole(Roles.Seller));
             options.AddPolicy(Policies.BidderAndSeller, policy => policy.RequireRole(Roles.Bidder, Roles.Seller));
             options.AddPolicy(Policies.Shared, policy => policy.RequireRole(Roles.Admin, Roles.Bidder, Roles.Seller));
         });

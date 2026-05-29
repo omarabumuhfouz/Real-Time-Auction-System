@@ -30,7 +30,6 @@ try
 {
     Log.Information("Starting MazadZone Application.");
 
-
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddCors(options =>
@@ -40,10 +39,9 @@ try
             policy.WithOrigins("http://localhost:3000") // Explicitly permit the frontend origin
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials();// Mandated for SignalR auth handshakes
+                .AllowCredentials(); // Mandated for SignalR auth handshakes
         });
     });
-
 
     builder.Services.AddSerilog((services, lc) => lc
         .ReadFrom.Configuration(builder.Configuration)
@@ -55,27 +53,63 @@ try
 
     builder.Services.AddOpenApi();
 
-
-
     var app = builder.Build();
 
-    // Apply pending migrations automatically on startup
+    // Auto apply migrations
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        // This will create the DB and apply all migrations if they don't exist
         dbContext.Database.Migrate();
-
-        // Fix any items with Status = 0 (due to migration default values)
-        dbContext.Database.ExecuteSqlRaw("UPDATE Items SET Status = 1 WHERE Status = 0");
-
-        // Optional: You can also call a DatabaseSeeder here to insert dummy data!
-        // var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-        // await seeder.SeedAsync();
     }
 
-    //Map Endpoints
+    // ==========================================
+    // Middlewares Configuration
+    // ==========================================
+
+    // Https Redirection
+    app.UseHttpsRedirection();
+
+    // Correlation ID Configuration
+    app.UseMiddleware<CorrelationIdMiddleware>();
+
+    // Serilog Request Logging Configuration
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+        };
+
+        options.GetLevel = (httpContext, elapsed, ex) =>
+        {
+            if (httpContext.Request.Path.StartsWithSegments("/health"))
+                return Serilog.Events.LogEventLevel.Verbose;
+
+            return elapsed > 500
+                ? Serilog.Events.LogEventLevel.Warning
+                : Serilog.Events.LogEventLevel.Information;
+        };
+    });
+
+    // CORS Configuration
+    app.UseCors("AllowAll");
+
+    // Auth Configuration
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    // Scalar Dashboard
+    app.MapScalarApiReference();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+    }
+
+    // ==========================================
+    // EndPoints and Hubs registration
+    // ==========================================
     app.MapDashboardEndpoints();
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();
@@ -91,73 +125,14 @@ try
     app.MapAuthenticationEndpoints();
     app.MapChatAgentEndpoints();
 
-    if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-
-    }
-
-    // #region  Seed database
-    // if (app.Environment.IsDevelopment())
-    // {
-    //     // Create a temporary DI scope
-    //     using var scope = app.Services.CreateScope();
-
-    //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    //     var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
-
-    //     try
-    //     {
-    //         Console.WriteLine("Applying database migrations...");
-    //         // 1. Ensure the database exists and schema is up to date
-    //         await dbContext.Database.MigrateAsync();
-
-    //         Console.WriteLine("Seeding mock data for MazadZone...");
-    //         // 2. Execute your MasterDataSeeder
-    //         await seeder.SeedAsync();
-
-    //         Console.WriteLine(" Database seeded successfully!");
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine($" Error during database seeding: {ex}");
-    //     }
-    // }
-
-    // #endregion
-    app.UseMiddleware<CorrelationIdMiddleware>();
-    app.UseSerilogRequestLogging(options =>
-    {
-        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-        {
-            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
-        };
-
-        // Exclude health check endpoints from request logs
-        options.GetLevel = (httpContext, elapsed, ex) =>
-        {
-            if (httpContext.Request.Path.StartsWithSegments("/health"))
-                return Serilog.Events.LogEventLevel.Verbose;
-
-            return elapsed > 500
-                ? Serilog.Events.LogEventLevel.Warning
-                : Serilog.Events.LogEventLevel.Information;
-        };
-    });
-    app.MapScalarApiReference();
-    app.UseSerilogRequestLogging();
-    app.UseHttpsRedirection();
-
-    //Map Hubs
+    // الـ Hubs الخاصة بـ SignalR (ستعمل الآن المصادقة عليها بنجاح)
     app.MapHub<AuctionsHub>("/hubs/auctions");
     app.MapHub<NotificationsHub>("/hubs/notifications");
 
-    //Hangfire Dashboard
+    // لوحة تحكم Hangfire
     app.UseHangfireDashboard("/hangfire");
 
     app.Run();
-
 }
 catch (Exception ex)
 {
