@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ModerateUser } from "../../types/admin.types";
-import { useBanUser } from "../../api/user-mutations";
+import { useBanUser } from "../../api";
 
 const banSchema = z.object({
   reason: z
