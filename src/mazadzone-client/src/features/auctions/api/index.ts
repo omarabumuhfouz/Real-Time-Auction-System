@@ -11,9 +11,6 @@ export {
   useGetSellerAuctions,
   useGetRootCategories,
   useGetCategoryTree,
-  useGetSellerDashboardAuctions,
-  useGetSellerDashboardOrders,
-  useGetSellerDashboardFinancials,
 } from "./auction.queries";
 
 // Mutations
@@ -37,9 +34,6 @@ export {
   cancelAuction,
   getRootCategories,
   getCategoryTree,
-  getSellerDashboardAuctions,
-  getSellerDashboardOrders,
-  getSellerDashboardFinancials,
 } from "./auction.api";
 
 // Pure Mappers
@@ -49,8 +43,3 @@ export {
   mapAuctionDtoToSummary,
   mapCreateAuctionInputToRequest,
 } from "./auction.mappers";
-
-export type {
-  SellerAuctionSummaryDto,
-  SellerOrderSummaryDto,
-} from "./auction.contracts";

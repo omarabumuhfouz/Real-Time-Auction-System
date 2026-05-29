@@ -27,9 +27,6 @@ export {
   useGetSellerAuctions,
   useGetRootCategories,
   useGetCategoryTree,
-  useGetSellerDashboardAuctions,
-  useGetSellerDashboardOrders,
-  useGetSellerDashboardFinancials,
 } from "./api";
 
 // Mutations
@@ -57,10 +54,6 @@ export type {
   CreateAuctionInput,
   UpdateAuctionInput,
 } from "./types/auction.types";
-export type {
-  SellerAuctionSummaryDto,
-  SellerOrderSummaryDto,
-} from "./api";
 export {
   AuctionStatus,
   AuctionCategory,

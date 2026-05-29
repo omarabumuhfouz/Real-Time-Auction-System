@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency.utils";
 import { ROUTES } from "@/config/routes.config";
-import type { SellerAuctionSummaryDto } from "@/features/auctions";
+import type { SellerAuctionSummaryDto } from "@/features/seller";
 
 interface SellerAuctionsTableRowProps {
   auction: SellerAuctionSummaryDto;

@@ -2,7 +2,7 @@
 
 import { Inbox, Download, DollarSign, Percent, ShieldCheck, Box } from "lucide-react";
 import { AuctionPagination } from "@/features/auctions";
-import type { SellerOrderSummaryDto } from "@/features/auctions";
+import type { SellerOrderSummaryDto } from "@/features/seller";
 import { SellerFinancialsTableRow } from "./SellerFinancialsTableRow";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

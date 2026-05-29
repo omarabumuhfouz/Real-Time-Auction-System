@@ -10,10 +10,12 @@ import { ROUTES } from "@/config/routes.config";
 import { useRequireRole } from "@/hooks/use-require-role";
 import {
   useDeleteAuction,
+} from "@/features/auctions";
+import {
   useGetSellerDashboardAuctions,
   useGetSellerDashboardFinancials,
   useGetSellerDashboardOrders,
-} from "@/features/auctions";
+} from "@/features/seller";
 import { SellerDashboardStats } from "./SellerDashboardStats";
 import { SellerAuctionsTable } from "./auctions/SellerAuctionsTable";
 import { SellerOrdersTable } from "./orders/SellerOrdersTable";
