@@ -2,7 +2,7 @@
 
 import { Inbox, Filter, ArrowUpDown, Download } from "lucide-react";
 import { AuctionPagination } from "@/features/auctions";
-import type { SellerOrderSummaryDto } from "@/features/auctions";
+import type { SellerOrderSummaryDto } from "@/features/seller";
 import { SellerOrdersTableRow } from "./SellerOrdersTableRow";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

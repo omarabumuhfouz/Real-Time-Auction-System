@@ -19,10 +19,21 @@ export {
   useGetSellerReviews,
   useGetSellerProfileAuctions,
   useCreateReviewReply,
+  useGetSellerDashboardAuctions,
+  useGetSellerDashboardOrders,
+  useGetSellerDashboardFinancials,
 } from "./api";
 
 // Types
 export type { BecomeSellerInput, BecomeSellerResponse, SubmitSellerReviewInput } from "./api";
+export type {
+  SellerDashboardQueryParams,
+  SellerAuctionSummaryDto,
+  SellerAuctionsResponse,
+  SellerOrderSummaryDto,
+  SellerOrdersResponse,
+  SellerFinancialsResponse,
+} from "./api";
 export type { SellerProfile, SellerReview, ReviewReply } from "./types/seller.types";
 
 // Testing

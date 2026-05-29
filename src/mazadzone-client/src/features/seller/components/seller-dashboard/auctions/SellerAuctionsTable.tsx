@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Inbox, Filter, ArrowUpDown, Download } from "lucide-react";
 import { AuctionPagination } from "@/features/auctions";
-import type { SellerAuctionSummaryDto } from "@/features/auctions";
+import type { SellerAuctionSummaryDto } from "@/features/seller";
 import { SellerAuctionsTableRow } from "./SellerAuctionsTableRow";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 import { cn } from "@/lib/utils";

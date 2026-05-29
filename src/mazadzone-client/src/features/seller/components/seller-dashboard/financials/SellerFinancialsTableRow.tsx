@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/currency.utils";
-import type { SellerOrderSummaryDto } from "@/features/auctions";
+import type { SellerOrderSummaryDto } from "@/features/seller";
 
 interface SellerFinancialsTableRowProps {
   order: SellerOrderSummaryDto;
