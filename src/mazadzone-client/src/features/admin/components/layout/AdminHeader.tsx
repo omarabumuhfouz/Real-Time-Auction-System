@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Search, Calendar, Bell, ChevronDown, RefreshCw, User, LogOut } from "lucide-react";
+import React, { useEffect } from "react";
+import { Calendar, Bell, ChevronDown, RefreshCw, User, LogOut } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/config/routes.config";
@@ -14,7 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { GlobalHeaderSearch } from "@/components/layout/header/GlobalHeaderSearch";
+import {
+  NotificationPopover,
+  useGetUnreadCount,
+  useRealtimeNotifications,
+  useNotificationSync,
+  useNotificationStore,
+} from "@/features/notifications";
 
 export interface AdminHeaderProps {
   title?: string;
@@ -34,7 +41,30 @@ export function AdminHeader({
   showRefresh = false,
 }: AdminHeaderProps) {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
+
+  // Hook up real-time SignalR notifications and sound/toast synchronizations
+  useRealtimeNotifications(user?.id);
+  useNotificationSync();
+
+  // Fetch server count once on mount — used to hydrate the Zustand store
+  const { data: serverUnreadCount } = useGetUnreadCount(user?.id || "", {
+    enabled: isAuthenticated,
+  });
+
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const consumeOptimistic = useNotificationStore((state) => state._consumeOptimistic);
+
+  // Hydrate the Zustand badge from server data on initial load and after background refetches.
+  useEffect(() => {
+    if (serverUnreadCount !== undefined) {
+      const wasOptimistic = consumeOptimistic();
+      if (!wasOptimistic) {
+        setUnreadCount(serverUnreadCount);
+      }
+    }
+  }, [serverUnreadCount, setUnreadCount, consumeOptimistic]);
 
   const handleLogout = () => {
     logout();
@@ -50,15 +80,15 @@ export function AdminHeader({
         </h1>
       </div>
 
-      {/* Central Search bar (long and responsive) */}
-      <div className="relative hidden md:block flex-1 max-w-xl mx-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search users, auctions, categories..."
-          className="pl-9 h-10 w-full bg-background/50 border-input hover:border-muted-foreground/30 focus-visible:ring-ring"
-        />
-      </div>
+      {/* Central Search bar (reusable GlobalHeaderSearch) */}
+      <GlobalHeaderSearch
+        isAdmin={true}
+        placeholder="Search users, auctions, categories..."
+        containerClassName="relative hidden md:block flex-1 max-w-xl mx-6"
+        inputClassName="pl-9 h-10 w-full bg-background/50 border-input hover:border-muted-foreground/30 focus-visible:ring-ring"
+        iconClassName="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+        iconPosition="left"
+      />
 
       {/* Header Controls */}
       <div className="flex items-center gap-4 shrink-0 justify-end">
@@ -76,7 +106,13 @@ export function AdminHeader({
                     ? "Last 7 days"
                     : timeRange === "30"
                     ? "Last 30 days"
-                    : "Last 90 days"}
+                    : timeRange === "90"
+                    ? "Last 90 days"
+                    : timeRange === "year"
+                    ? "Last year"
+                    : timeRange === "5years"
+                    ? "Last 5 years"
+                    : "Last 30 days"}
                 </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
@@ -85,6 +121,8 @@ export function AdminHeader({
               <DropdownMenuItem onClick={() => onTimeRangeChange("7")}>Last 7 days</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onTimeRangeChange("30")}>Last 30 days</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onTimeRangeChange("90")}>Last 90 days</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onTimeRangeChange("year")}>Last year</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onTimeRangeChange("5years")}>Last 5 years</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -103,18 +141,7 @@ export function AdminHeader({
         )}
 
         {/* Notifications */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 text-muted-foreground hover:text-foreground relative rounded-full"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-xs">
-              8
-            </span>
-          </Button>
-        </div>
+        <NotificationPopover unreadCount={unreadCount} />
 
         {/* Divider */}
         <div className="h-6 w-px bg-border hidden sm:block" />

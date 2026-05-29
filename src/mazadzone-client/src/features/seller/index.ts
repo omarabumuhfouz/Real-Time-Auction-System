@@ -9,6 +9,7 @@
 export { BecomeSellerPage } from "./components/BecomeSellerPage";
 export { SellerReviewsTab } from "./components/SellerReviewsTab";
 export { SellerAuctionsTab } from "./components/SellerAuctionsTab";
+export { SellerDashboardPage } from "./components/seller-dashboard/SellerDashboardPage";
 
 // Hooks & API
 export {

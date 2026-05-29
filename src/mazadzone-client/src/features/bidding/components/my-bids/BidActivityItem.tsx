@@ -23,6 +23,16 @@ export function BidActivityItem({ activity }: BidActivityItemProps) {
   const isEnded = activity.status === "Won" || activity.status === "Lost" || (activity.status as string) === "Ended";
   const isOutbid = activity.status === "Outbid";
   const detailHref = ROUTES.AUCTIONS.DETAIL(activity.auction.id);
+  const actionHref =
+    activity.status === "Won" ? ROUTES.ORDERS.LIST : detailHref;
+  const actionLabel =
+    activity.status === "Won"
+      ? "View Orders"
+      : isEnded
+        ? "View Details"
+        : isOutbid
+          ? "Place New Bid"
+          : "View Auction";
   const currentBid = activity.auction.pricing.currentBid || activity.auction.pricing.startingPrice;
 
   return (
@@ -77,9 +87,7 @@ export function BidActivityItem({ activity }: BidActivityItemProps) {
               : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-none"
           )}
         >
-          <Link href={detailHref}>
-            {isEnded ? "View Details" : isOutbid ? "Place New Bid" : "View Auction"}
-          </Link>
+          <Link href={actionHref}>{actionLabel}</Link>
         </Button>
       </ActivityItemActions>
     </ActivityListItem>

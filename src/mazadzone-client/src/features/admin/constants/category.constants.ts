@@ -130,7 +130,24 @@ export const DEFAULT_ICON_STYLE: IconStyle = {
   border: "border-slate-500/20",
 };
 
+export function getCategoryIconByName(name: string): string {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("electronics") || normalized.includes("tech") || normalized.includes("phone") || normalized.includes("computer") || normalized.includes("laptop") || normalized.includes("monitor")) return "Monitor";
+  if (normalized.includes("fashion") || normalized.includes("style") || normalized.includes("apparel") || normalized.includes("cloth") || normalized.includes("shirt")) return "Shirt";
+  if (normalized.includes("home") || normalized.includes("living") || normalized.includes("furniture") || normalized.includes("kitchen") || normalized.includes("decor")) return "Home";
+  if (normalized.includes("art") || normalized.includes("collectible") || normalized.includes("paint") || normalized.includes("coin") || normalized.includes("stamp")) return "Image";
+  if (normalized.includes("hobby") || normalized.includes("leisure") || normalized.includes("sport") || normalized.includes("bike") || normalized.includes("game") || normalized.includes("gaming") || normalized.includes("outdoor")) return "Bike";
+  if (normalized.includes("motor") || normalized.includes("car") || normalized.includes("vehicle") || normalized.includes("motorcycle")) return "Car";
+  if (normalized.includes("gem") || normalized.includes("jewelry") || normalized.includes("gold") || normalized.includes("diamond")) return "Gem";
+  if (normalized.includes("music") || normalized.includes("instrument")) return "Music";
+  if (normalized.includes("tools") || normalized.includes("wrench") || normalized.includes("parts")) return "Wrench";
+  if (normalized.includes("shop") || normalized.includes("bag")) return "ShoppingBag";
+  if (normalized.includes("health") || normalized.includes("heart") || normalized.includes("care")) return "Heart";
+  return "FolderOpen";
+}
+
 export const getCategoryStyles = (iconName: string): IconStyle => {
   const match = CATEGORY_ICONS.find((item) => item.name === iconName);
   return match ? match.styles : DEFAULT_ICON_STYLE;
 };
+

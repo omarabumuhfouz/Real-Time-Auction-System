@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { Subcategory } from "../../types/category.types";
-import { useCreateSubcategory, useUpdateSubcategory } from "../../api/category.api";
+import { useCreateSubcategory, useUpdateSubcategory } from "../../api";
 
 const subcategorySchema = z.object({
   name: z

@@ -9,7 +9,7 @@ import {
   useModerateAuctions,
   exportAuctionsApi,
   type UseModerateAuctionsFilters,
-} from "../../api/queries";
+} from "../../api";
 import { useAppToast } from "@/lib/toast/app-toast";
 import type { AuctionStatus } from "../../types/admin.types";
 

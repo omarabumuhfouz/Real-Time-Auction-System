@@ -1,22 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
-import { useGetAdminOverviewStats } from "../../api/queries";
+import React from "react";
+import { useGetAdminOverviewStats } from "../../api";
 import { DashboardOverview } from "./DashboardOverview";
 import { AdminHeader } from "../layout/AdminHeader";
 import { Button } from "@/components/ui/button";
 import { DashboardOverviewSkeleton } from "./skeletons";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 
 export function AdminDashboardPage() {
-  const { data: stats, isLoading, isError, refetch } = useGetAdminOverviewStats();
-  const [timeRange, setTimeRange] = useState("30");
+  const { searchParams, setFilters } = useUrlFilters<{ period: string }>();
+  const timeRange = searchParams.get("period") || "30";
+
+  const { data: stats, isLoading, isError, refetch } = useGetAdminOverviewStats(timeRange);
 
   return (
     <div className="flex flex-col">
       <AdminHeader
         title="Admin Dashboard Overview"
         timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
+        onTimeRangeChange={(val) => setFilters({ period: val })}
         onRefresh={refetch}
         showTimeRange
         showRefresh

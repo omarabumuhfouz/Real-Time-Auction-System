@@ -13,10 +13,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ModerateUser } from "../../types/admin.types";
-import { useSuspendUser } from "../../api/user-mutations";
+import { useSuspendUser } from "../../api";
 
 const suspendSchema = z.object({
   reason: z
@@ -24,6 +25,17 @@ const suspendSchema = z.object({
     .trim()
     .min(5, { message: "Reason must be at least 5 characters long." })
     .max(500, { message: "Reason cannot exceed 500 characters." }),
+  until: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val) return true;
+        const date = new Date(val);
+        return date > new Date();
+      },
+      { message: "Suspension end date and time must be in the future." }
+    ),
 });
 
 type SuspendFormValues = z.infer<typeof suspendSchema>;
@@ -51,6 +63,7 @@ export function SuspendUserDialog({
     resolver: zodResolver(suspendSchema),
     defaultValues: {
       reason: "",
+      until: "",
     },
   });
 
@@ -60,6 +73,7 @@ export function SuspendUserDialog({
     if (isOpen) {
       reset({
         reason: "",
+        until: "",
       });
     }
   }, [isOpen, reset, user]);
@@ -68,9 +82,11 @@ export function SuspendUserDialog({
 
   const handleFormSubmit = async (values: SuspendFormValues) => {
     try {
+      const formattedUntil = values.until ? new Date(values.until).toISOString() : undefined;
       await suspendMutation.mutateAsync({
         userId: user.id,
         reason: values.reason,
+        until: formattedUntil,
       });
       onClose();
     } catch (err) {
@@ -80,11 +96,11 @@ export function SuspendUserDialog({
 
   const initials = user.fullName
     ? user.fullName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .substring(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
     : "U";
 
   return (
@@ -95,7 +111,7 @@ export function SuspendUserDialog({
             Suspend User
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground mt-1.5 leading-relaxed font-semibold">
-            Provide a reason for suspending{" "}
+            Provide a reason and duration for suspending{" "}
             <span className="font-bold text-foreground">{user.fullName}</span>. This will be
             logged for audit purposes.
           </DialogDescription>
@@ -124,6 +140,7 @@ export function SuspendUserDialog({
 
         {/* Form */}
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
+          {/* Reason Field */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="reason" className="text-sm font-bold text-foreground">
               Reason <span className="text-destructive">*</span>
@@ -135,7 +152,7 @@ export function SuspendUserDialog({
               disabled={suspendMutation.isPending}
               maxLength={500}
               className={cn(
-                "min-h-[100px] max-h-[180px] w-full rounded-lg border bg-card px-3 py-2 text-sm placeholder:text-muted-foreground",
+                "min-h-[100px] max-h-[180px] w-full rounded-lg border bg-card px-3 py-2 text-sm placeholder:text-muted-foreground text-foreground",
                 "focus-visible:outline-hidden focus-visible:ring-1 transition-shadow",
                 "border-warning-foreground/30 focus-visible:ring-warning-foreground focus-visible:border-warning-foreground",
                 errors.reason && "border-destructive focus-visible:ring-destructive"
@@ -153,6 +170,30 @@ export function SuspendUserDialog({
                 {reasonValue.length}/500
               </span>
             </div>
+          </div>
+
+          {/* Until Field (Date & Time Picker) */}
+          <div className="flex flex-col gap-1.5 text-left">
+            <Label htmlFor="until" className="text-sm font-bold text-foreground flex items-center gap-1">
+              Until <span className="text-xs text-muted-foreground font-medium">(Optional - defaults to 30 days)</span>
+            </Label>
+            <Input
+              id="until"
+              type="datetime-local"
+              {...register("until")}
+              disabled={suspendMutation.isPending}
+              className={cn(
+                "h-11 w-full rounded-lg border bg-card px-3 py-2 text-sm text-foreground",
+                "focus-visible:outline-hidden focus-visible:ring-1 transition-shadow",
+                "border-warning-foreground/30 focus-visible:ring-warning-foreground focus-visible:border-warning-foreground",
+                errors.until && "border-destructive focus-visible:ring-destructive"
+              )}
+            />
+            {errors.until && (
+              <span className="text-xs font-semibold text-destructive">
+                {errors.until.message}
+              </span>
+            )}
           </div>
 
           {/* Action Buttons */}

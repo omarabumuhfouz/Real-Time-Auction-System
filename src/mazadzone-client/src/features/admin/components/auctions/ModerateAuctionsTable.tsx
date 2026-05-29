@@ -2,15 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/config/routes.config";
 
-import {
-  MoreHorizontal,
-  ArrowUpDown,
-  Eye,
-  XCircle,
-  Loader2,
-  Gavel,
-  AlertTriangle,
-} from "lucide-react";
+import { Eye, XCircle, Gavel } from "lucide-react";
 import { format } from "date-fns";
 import {
   Table,
@@ -23,17 +15,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { ModerateAuction, AuctionStatus } from "../../types/admin.types";
-import { MODERATE_AUCTION_COLUMNS, AUCTION_DROPDOWN_ITEMS } from "../../constants/moderate-auctions.constants";
+import { MODERATE_AUCTION_COLUMNS } from "../../constants/moderate-auctions.constants";
 import { ModerateUsersPagination } from "../users/ModerateUsersPagination";
 import { CancelAuctionDialog } from "./CancelAuctionDialog";
+import { formatCurrency } from "@/utils/currency.utils";
+import { useGetAuctionById } from "@/features/auctions";
 
 interface ModerateAuctionsTableProps {
   auctions: ModerateAuction[];
@@ -64,14 +52,41 @@ function getStatusBadgeClass(status: AuctionStatus): string {
   }
 }
 
-/** Currency formatter */
-function formatBid(amount: number, currency: string): string {
-  if (amount === 0) return "$0";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency || "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
+function SellerInfoCell({ auctionId }: { auctionId: string }) {
+  const { data: auction, isLoading, isError } = useGetAuctionById(auctionId);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-1.5 py-1">
+        <div className="h-3 w-20 rounded bg-muted/60 animate-pulse" />
+        <div className="h-2.5 w-28 rounded bg-muted/40 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (isError || !auction || !auction.seller) {
+    return (
+      <div className="flex flex-col min-w-0">
+        <span className="text-[13px] font-semibold text-muted-foreground whitespace-nowrap">
+          N/A
+        </span>
+        <span className="text-[11px] text-muted-foreground/60 whitespace-nowrap">
+          Seller details missing
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-w-0">
+      <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
+        {auction.seller.fullName}
+      </span>
+      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+        {auction.seller.email}
+      </span>
+    </div>
+  );
 }
 
 export function ModerateAuctionsTable({
@@ -109,6 +124,7 @@ export function ModerateAuctionsTable({
 
   /** Generate context-aware action buttons per row */
   const getActionButtons = (auction: ModerateAuction) => {
+    const isViewOnly = auction.status === "Ended" || auction.status === "Cancelled";
     const actions: {
       label: string;
       icon: React.ComponentType<{ className?: string }>;
@@ -123,10 +139,14 @@ export function ModerateAuctionsTable({
       icon: Eye,
       variant: "default",
       className:
-        "bg-primary/10 text-primary hover:bg-primary/20 shadow-none border-transparent w-[60px]",
+        cn(
+          "bg-primary/10 text-primary hover:bg-primary/20 shadow-none border-transparent",
+          isViewOnly ? "w-[131px]" : "w-[60px]"
+        ),
       type: "view",
     });
 
+    // Cancel is present for Active/Pending
     if (auction.status === "Active" || auction.status === "Pending") {
       actions.push({
         label: "Cancel",
@@ -162,14 +182,7 @@ export function ModerateAuctionsTable({
                     col.align === "right" && "text-right pr-6"
                   )}
                 >
-                  {col.sortable ? (
-                    <div className="flex items-center gap-1.5 cursor-pointer hover:text-foreground">
-                      {col.label}
-                      <ArrowUpDown className="h-3 w-3" />
-                    </div>
-                  ) : (
-                    col.label
-                  )}
+                  {col.label}
                 </TableHead>
               ))}
             </TableRow>
@@ -249,14 +262,7 @@ export function ModerateAuctionsTable({
 
                   {/* Seller */}
                   <TableCell>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
-                        {auction.sellerName}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                        {auction.sellerEmail}
-                      </span>
-                    </div>
+                    <SellerInfoCell auctionId={auction.id} />
                   </TableCell>
 
                   {/* Category */}
@@ -279,11 +285,11 @@ export function ModerateAuctionsTable({
                     </Badge>
                   </TableCell>
 
-                  {/* Current Bid */}
+                  {/* Current Price */}
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
-                        {formatBid(auction.currentBid, auction.currency)}
+                        {formatCurrency(auction.currentBid)}
                       </span>
                       <span className="text-[11px] text-muted-foreground">
                         {auction.currency}
@@ -349,40 +355,6 @@ export function ModerateAuctionsTable({
                           </Button>
                         );
                       })}
-
-                      {/* Three-dot menu */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-[52px] w-8 rounded-lg text-muted-foreground hover:bg-muted/50 shrink-0"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="w-36 bg-card text-foreground border-border"
-                          sideOffset={5}
-                        >
-                          {AUCTION_DROPDOWN_ITEMS.map((item, idx) => (
-                            <DropdownMenuItem
-                              key={idx}
-                              className={cn("text-xs cursor-pointer", item.className)}
-                              onClick={() => {
-                                if (item.label === "View Details") {
-                                  router.push(ROUTES.AUCTIONS.DETAIL(auction.id));
-                                } else if (item.label === "Edit Auction") {
-                                  router.push(ROUTES.SELLER.EDIT_AUCTION(auction.id));
-                                }
-                              }}
-                            >
-                              {item.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -5,7 +5,14 @@ import { useUrlFilters } from "@/hooks/use-url-filters";
 import { Info } from "lucide-react";
 import { ModerateUsersFilters } from "./ModerateUsersFilters";
 import { ModerateUsersTable } from "./ModerateUsersTable";
-import { useModerateUsers, type UseModerateUsersFilters, exportUsersApi } from "../../api/queries";
+import {
+  useModerateUsers,
+  type UseModerateUsersFilters,
+  exportUsersApi,
+  useBulkActivateUsers,
+  useBulkSuspendUsers,
+  useBulkBanUsers,
+} from "../../api";
 import { useAppToast } from "@/lib/toast/app-toast";
 import type { ModerateUserRole, ModerateUserStatus } from "../../types/admin.types";
 
@@ -28,6 +35,51 @@ export function ModerateUsersPage() {
   const appToast = useAppToast();
 
   const { data, isLoading } = useModerateUsers(filters);
+
+  const bulkActivateMutation = useBulkActivateUsers();
+  const bulkSuspendMutation = useBulkSuspendUsers();
+  const bulkBanMutation = useBulkBanUsers();
+
+  const handleBulkActivate = () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Are you sure you want to activate the ${selectedIds.length} selected user accounts?`)) {
+      bulkActivateMutation.mutate(selectedIds, {
+        onSuccess: () => {
+          setSelectedIds([]);
+        }
+      });
+    }
+  };
+
+  const handleBulkSuspend = () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt(`Enter suspension reason for ${selectedIds.length} selected users:`);
+    if (reason === null) return;
+    if (!reason.trim()) {
+      alert("A reason is required to suspend accounts.");
+      return;
+    }
+    bulkSuspendMutation.mutate({ userIds: selectedIds, reason }, {
+      onSuccess: () => {
+        setSelectedIds([]);
+      }
+    });
+  };
+
+  const handleBulkBan = () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt(`Enter ban reason for ${selectedIds.length} selected users:`);
+    if (reason === null) return;
+    if (!reason.trim()) {
+      alert("A reason is required to ban accounts.");
+      return;
+    }
+    bulkBanMutation.mutate({ userIds: selectedIds, reason }, {
+      onSuccess: () => {
+        setSelectedIds([]);
+      }
+    });
+  };
 
   const handleFilterChange = (newFilters: Partial<UseModerateUsersFilters>) => {
     setFilters(newFilters);
@@ -113,6 +165,9 @@ export function ModerateUsersPage() {
         isExporting={isExporting}
         onExport={handleExport}
         selectedIds={selectedIds}
+        onBulkActivate={handleBulkActivate}
+        onBulkSuspend={handleBulkSuspend}
+        onBulkBan={handleBulkBan}
       />
 
       {/* Data Table */}

@@ -9,6 +9,8 @@ import type {
   PlaceBidRequestDto,
 } from "./bidding.contracts";
 
+const MY_BIDS_SORT_BY = "CreationDate";
+
 /**
  * Fetches the user's active/ended bid activities.
  */
@@ -29,7 +31,8 @@ export async function fetchMyBids(
         page: params.page ?? 1,
         pageSize: params.pageSize ?? 5,
         tab: params.filter === "All" ? undefined : params.filter,
-        sortBy: params.sortBy,
+        // The backend only accepts explicit contract values here.
+        sortBy: MY_BIDS_SORT_BY,
       },
     },
   );
