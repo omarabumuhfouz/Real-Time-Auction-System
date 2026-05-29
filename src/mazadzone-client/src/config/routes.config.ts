@@ -57,5 +57,6 @@ export const ROUTES = {
     AUCTIONS: "/admin/auctions",
     DISPUTES: "/admin/disputes",
     CATEGORIES: "/admin/categories",
+    ACCESS: "/admin/access",
   },
 } as const;
