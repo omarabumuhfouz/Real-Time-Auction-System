@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { Search, Gavel, Package, User, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Gavel, Package, User, ChevronDown, LayoutDashboard } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +18,7 @@ import type { AuthUser } from "@/stores/auth.store";
 import { NotificationPopover, useGetUnreadCount } from "@/features/notifications";
 import { useNotificationStore } from "@/features/notifications/store/notification.store";
 import { useAuthStore } from "@/stores/auth.store";
+import { GlobalHeaderSearch } from "./GlobalHeaderSearch";
 
 export interface DesktopHeaderProps {
   isAuthenticated: boolean;
@@ -59,13 +59,14 @@ export const DesktopHeader = ({
   return (
     <>
       {/* Desktop Search Bar (Part of Top Row) */}
-      <div className="hidden md:flex flex-1 max-w-xl ml-5 mr-7 relative mx-0 pr-0">
-        <Input
-          className="w-full bg-white text-black  text-2xl pl-5  rounded-2xl h-13 border-none focus-visible:ring-2 focus-visible:ring-primary"
-          placeholder="Search..."
-        />
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400" />
-      </div>
+      <GlobalHeaderSearch
+        isAdmin={false}
+        placeholder="Search..."
+        containerClassName="hidden md:flex flex-1 max-w-xl ml-5 mr-7 relative mx-0 pr-0"
+        inputClassName="w-full bg-white text-black text-2xl pl-5 rounded-2xl h-13 border-none focus-visible:ring-2 focus-visible:ring-primary"
+        iconClassName="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 cursor-pointer"
+        iconPosition="right"
+      />
 
       {/* Right Nav (Desktop) */}
       <div className="hidden md:flex items-center gap-6">

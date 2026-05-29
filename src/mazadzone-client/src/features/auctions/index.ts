@@ -13,7 +13,6 @@ export { AuctionFilterBar } from "./components/auction-filter-bar";
 export { ClosingSoonSection, HomeHero, BrowseCategoriesSection, UpcomingAuctionsSection } from "./components/Home-Sections";
 export { CreateAuctionPage } from "./components/create-auction/CreateAuctionPage";
 export { EditAuctionPage } from "./components/edit-auction/EditAuctionPage";
-export { SellerDashboardPage } from "./components/seller-dashboard/SellerDashboardPage";
 export { AuctionPagination } from "./components/auction-pagination";
 
 // TanStack Query hooks
@@ -28,6 +27,9 @@ export {
   useGetSellerAuctions,
   useGetRootCategories,
   useGetCategoryTree,
+  useGetSellerDashboardAuctions,
+  useGetSellerDashboardOrders,
+  useGetSellerDashboardFinancials,
 } from "./api";
 
 // Mutations
@@ -55,6 +57,10 @@ export type {
   CreateAuctionInput,
   UpdateAuctionInput,
 } from "./types/auction.types";
+export type {
+  SellerAuctionSummaryDto,
+  SellerOrderSummaryDto,
+} from "./api";
 export {
   AuctionStatus,
   AuctionCategory,
