@@ -30,6 +30,13 @@ public static class GetAuctions
             return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.TopError);
         })
         .WithName("GetSellerAuctions")
+        .WithSummary("Get Seller Auctions")
+        .WithDescription("Get Seller Auctions")
+        .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .Produces<SellerAuctionsResponse>(StatusCodes.Status200OK);
     }
 }
