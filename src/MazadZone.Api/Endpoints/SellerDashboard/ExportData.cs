@@ -35,6 +35,13 @@ public static class ExportData
             return Results.File(result.Value, "text/csv", $"seller_{type}_{DateTime.UtcNow:yyyyMMdd}.csv");
         })
         .WithName("ExportSellerData")
+        .WithSummary("Export Seller Data")
+        .WithDescription("Export Seller Data")
+        .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .Produces(StatusCodes.Status200OK, contentType: "text/csv");
     }
 }

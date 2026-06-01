@@ -29,6 +29,13 @@ public static class GetFinancials
             return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.TopError);
         })
         .WithName("GetSellerFinancials")
+        .WithSummary("Get Seller Financials")
+        .WithDescription("Get Seller Financials")
+        .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .Produces<SellerFinancialsResponse>(StatusCodes.Status200OK);
     }
 }

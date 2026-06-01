@@ -8,7 +8,7 @@ public static class SellerDashboardEndpoints
 {
     public static void MapSellerDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/seller-dashboard")
+        var group = app.MapGroup("api/v{version:apiVersion}/seller-dashboard")
             .WithTags("Seller Dashboard")
             .RequireAuthorization(Policies.SellerOnly);
 
