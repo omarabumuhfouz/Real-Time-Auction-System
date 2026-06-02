@@ -6,7 +6,7 @@ import { MetricCard } from "./MetricCard";
 import { UserTrust } from "./UserTrust";
 import { CategoryHealth } from "./CategoryHealth";
 import { PaymentProviderStatus } from "./PaymentProviderStatus";
-import { useGetAuctionActivityTrend, useGetUserGrowthTrend } from "../../api/queries";
+import { useGetAuctionActivityTrend, useGetUserGrowthTrend } from "../../api";
 import { formatCurrency } from "@/utils/currency.utils";
 import { METRIC_CARD_DEFINITIONS } from "../../constants/dashboard.constants";
 import {
@@ -39,8 +39,8 @@ interface DashboardOverviewProps {
 }
 
 export function DashboardOverview({ stats }: DashboardOverviewProps) {
-  const [activityTimeframe, setActivityTimeframe] = useState("week");
-  const [growthTimeframe, setGrowthTimeframe] = useState("week");
+  const [activityTimeframe, setActivityTimeframe] = useState("Week");
+  const [growthTimeframe, setGrowthTimeframe] = useState("Week");
 
   const { data: activityData, isLoading: isActivityLoading } = useGetAuctionActivityTrend(activityTimeframe);
   const { data: growthData, isLoading: isGrowthLoading } = useGetUserGrowthTrend(growthTimeframe);

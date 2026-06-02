@@ -1,3 +1,4 @@
+using MazadZone.Api.Constants;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -7,9 +8,9 @@ public static class SellerDashboardEndpoints
 {
     public static void MapSellerDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/seller-dashboard")
+        var group = app.MapGroup("api/v{version:apiVersion}/seller-dashboard")
             .WithTags("Seller Dashboard")
-            .RequireAuthorization("SellerPolicy");
+            .RequireAuthorization(Policies.SellerOnly);
 
         group.MapGetAuctions();
         group.MapGetOrders();

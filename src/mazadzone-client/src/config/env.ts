@@ -50,8 +50,8 @@ function createEnv() {
 
   // Fallback to raw process.env values when validation fails (e.g. during build)
   return (parsed.data ?? {
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000",
-    NEXT_PUBLIC_SIGNALR_HUB_URL: process.env.NEXT_PUBLIC_SIGNALR_HUB_URL ?? "http://localhost:5000/hubs",
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108",
+    NEXT_PUBLIC_SIGNALR_HUB_URL: process.env.NEXT_PUBLIC_SIGNALR_HUB_URL ?? "http://localhost:5108/hubs",
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   }) as z.infer<typeof envSchema>;
 }

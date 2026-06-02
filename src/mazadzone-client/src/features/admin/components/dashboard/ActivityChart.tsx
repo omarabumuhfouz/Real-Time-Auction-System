@@ -66,16 +66,16 @@ export function ActivityChart({ data, isLoading, timeframe, onTimeframeChange }:
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 border-border text-xs gap-1.5">
-              <span>
-                {timeframe === "week" ? "By Week" : timeframe === "month" ? "By Month" : "By Year"}
-              </span>
+              <span>By {timeframe}</span>
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-card text-foreground border-border w-32">
-            <DropdownMenuItem onClick={() => onTimeframeChange("week")}>By Week</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTimeframeChange("month")}>By Month</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTimeframeChange("year")}>By Year</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTimeframeChange("Day")}>By Day</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTimeframeChange("Week")}>By Week</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTimeframeChange("Month")}>By Month</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTimeframeChange("Quarter")}>By Quarter</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTimeframeChange("Year")}>By Year</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

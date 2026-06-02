@@ -43,7 +43,7 @@
 ### Key Highlights
 
 - ⚡ **Real-Time Bidding** — Live bid updates via SignalR WebSockets
-- 🤖 **AI Sales Agent** — Gemini-powered RAG chatbot for auction discovery
+- 🤖 **AI Sales Agent** — Gemini-powerd chatbot for auction discovery
 - 🔒 **Secure by Design** — JWT + RSA key rotation, BCrypt hashing, input validation
 - 📦 **Transactional Outbox** — Guaranteed domain event delivery with reliable processing
 - 🏗️ **Clean Architecture** — Strict 4-layer separation with Domain-Driven Design

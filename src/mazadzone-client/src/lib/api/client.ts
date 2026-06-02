@@ -83,10 +83,6 @@ const formatUrl = (url: string): string => {
   if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }
-  // Exclude admin endpoints since they are mock/handled separately
-  if (url.startsWith("/admin") || url.startsWith("admin")) {
-    return url.startsWith("/") ? url : `/${url}`;
-  }
   // If already prefixed with /api/v1, leave as is
   if (url.startsWith("/api/v1")) {
     return url;

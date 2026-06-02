@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { Category } from "../../types/category.types";
-import { useCreateCategory, useUpdateCategory } from "../../api/category.api";
+import { useCreateCategory, useUpdateCategory } from "../../api";
 import { CATEGORY_ICONS } from "../../constants/category.constants";
 
 

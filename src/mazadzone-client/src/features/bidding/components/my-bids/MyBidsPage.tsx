@@ -38,14 +38,19 @@ export function MyBidsPage() {
   // Retrieve auth context dynamically
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const userId = user?.id || "";
 
   // Client-side authentication redirect
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push(ROUTES.AUTH.LOGIN || "/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isHydrated, router]);
 
   // Construct URL query parameters memoized to prevent infinite fetches
   const queryParams = useMemo(() => ({
@@ -58,7 +63,7 @@ export function MyBidsPage() {
   // Retrieve bidding activities via unified query API, enabled only for authenticated users
   const { data: response, isLoading, isError, refetch } = useGetMyBids(userId, queryParams);
 
-  if (!isAuthenticated) return null;
+  if (!isHydrated || !isAuthenticated) return null;
 
   const bids = response?.items || [];
   const totalCount = response?.totalCount || 0;

@@ -19,7 +19,9 @@ import {
   getRootCategories,
   getCategoryTree,
 } from "./auction.api";
-import type { CategoryDto } from "./auction.contracts";
+import type {
+  CategoryDto,
+} from "./auction.contracts";
 
 import { auctionKeys } from "./auction.keys";
 import {

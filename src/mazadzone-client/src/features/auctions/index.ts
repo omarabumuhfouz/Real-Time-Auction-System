@@ -13,7 +13,6 @@ export { AuctionFilterBar } from "./components/auction-filter-bar";
 export { ClosingSoonSection, HomeHero, BrowseCategoriesSection, UpcomingAuctionsSection } from "./components/Home-Sections";
 export { CreateAuctionPage } from "./components/create-auction/CreateAuctionPage";
 export { EditAuctionPage } from "./components/edit-auction/EditAuctionPage";
-export { SellerDashboardPage } from "./components/seller-dashboard/SellerDashboardPage";
 export { AuctionPagination } from "./components/auction-pagination";
 
 // TanStack Query hooks

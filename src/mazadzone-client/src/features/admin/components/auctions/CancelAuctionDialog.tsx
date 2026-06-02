@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { ModerateAuction } from "../../types/admin.types";
-import { useCancelAuction } from "../../api/auction-mutations";
+import { useCancelAuction } from "../../api";
 
 const CANCELLATION_REASONS = [
   "Fraudulent listing",

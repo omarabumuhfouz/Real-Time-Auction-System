@@ -9,7 +9,7 @@ import {
   useUpdateCategory,
   useDeleteCategory,
   useDeleteSubcategory,
-} from "../../api/category.api";
+} from "../../api";
 import { CategoryFormModal } from "./CategoryFormModal";
 import { SubcategoryFormModal } from "./SubcategoryFormModal";
 import { CategoriesTable } from "./CategoriesTable";
