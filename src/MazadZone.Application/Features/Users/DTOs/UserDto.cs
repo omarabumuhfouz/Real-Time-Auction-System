@@ -9,5 +9,9 @@ public record UserDto
     string Role,
     string Status,
     DateTime JoinedAt,
-    DateTime LastLogin
+    DateTime LastLogin,
+    string VerificationStatus,
+    string? NationalId,
+    string? ExtractedFullName,
+    string? VerificationRejectionReason
 );

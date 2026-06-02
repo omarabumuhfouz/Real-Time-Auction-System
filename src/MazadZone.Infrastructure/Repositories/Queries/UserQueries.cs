@@ -61,18 +61,27 @@ public class UserQueries : ResilientRepository, IUserQueries
     {
         const string sql = @"
             SELECT 
-    u.Id,
-    u.FirstName + ' ' + u.LastName AS FullName,
-    u.Email,
-    u.PhoneNumber,
-    b.NationalId,
-    b.City,
-    b.Street,
-    b.Building,
-    b.Landmark
-FROM Users u
-JOIN Bidders b ON b.Id = u.Id
-WHERE u.Id = @UserId;
+                u.Id,
+                u.FirstName + ' ' + u.LastName AS FullName,
+                u.Email,
+                u.PhoneNumber,
+                bv.NationalId AS NationalId,
+                b.City,
+                b.Street,
+                b.Building,
+                b.Landmark,
+                CASE bv.Status 
+                    WHEN 1 THEN 'Pending' 
+                    WHEN 2 THEN 'Verified' 
+                    WHEN 3 THEN 'Rejected' 
+                    ELSE 'Unverified' 
+                END AS VerificationStatus,
+                bv.ExtractedFullName,
+                bv.RejectionReason AS VerificationRejectionReason
+            FROM Users u
+            LEFT JOIN Bidders b ON b.Id = u.Id
+            LEFT JOIN BidderVerifications bv ON bv.BidderId = b.Id
+            WHERE u.Id = @UserId;
             ";
 
         return await ExecuteResilientAsync(connection =>
@@ -104,7 +113,7 @@ WHERE u.Id = @UserId;
             var startDate = filter.ValidJoinedDate.Value.Date;
             var endDate = startDate.AddDays(1);
 
-            filterConditions.Append(" AND CreatedOnUtc >= @StartDate AND CreatedOnUtc < @EndDate");
+            filterConditions.Append(" AND Users.CreatedOnUtc >= @StartDate AND Users.CreatedOnUtc < @EndDate");
             parameters.Add("StartDate", startDate);
             parameters.Add("EndDate", endDate);
         }
@@ -115,7 +124,7 @@ WHERE u.Id = @UserId;
         // 3. Build Data Query String
         var dataSqlBuilder = new StringBuilder($@"
     SELECT 
-        Id,
+        Users.Id,
         (FirstName + ' ' + LastName) AS FullName,
         Email,
         PhoneNumber,
@@ -131,20 +140,31 @@ WHERE u.Id = @UserId;
             WHEN 3 THEN 'Banned'
             ELSE 'Unknown'
         END AS Status,
-        CreatedOnUtc AS JoinedAt,
-        LastLogin
+        Users.CreatedOnUtc AS JoinedAt,
+        LastLogin,
+        CASE bv.Status 
+            WHEN 1 THEN 'Pending' 
+            WHEN 2 THEN 'Verified' 
+            WHEN 3 THEN 'Rejected' 
+            ELSE 'Unverified' 
+        END AS VerificationStatus,
+        bv.NationalId,
+        bv.ExtractedFullName,
+        bv.RejectionReason AS VerificationRejectionReason
     FROM Users
+    LEFT JOIN Bidders b ON b.Id = Users.Id
+    LEFT JOIN BidderVerifications bv ON bv.BidderId = b.Id
     {filterConditions}");
 
         // Apply Sorting Rules
         var sortColumn = filter.SortBy?.ToLower() switch
         {
             "fullname" => "(FirstName + ' ' + LastName)",
-            "joineddate" => "CreatedOnUtc",
+            "joineddate" => "Users.CreatedOnUtc",
             "lastlogin" => "LastLogin",
             "role" => "Roles",
             "status" => "Status",
-            _ => "CreatedOnUtc"
+            _ => "Users.CreatedOnUtc"
         };
         var sortDirection = filter.IsAsc ? "ASC" : "DESC";
         dataSqlBuilder.Append($" ORDER BY {sortColumn} {sortDirection}");
@@ -188,7 +208,7 @@ WHERE u.Id = @UserId;
     {
         var sql = @"
     SELECT 
-        Id,
+        Users.Id,
         (FirstName + ' ' + LastName) AS FullName,
         Email,
         PhoneNumber,
@@ -204,11 +224,22 @@ WHERE u.Id = @UserId;
             WHEN 3 THEN 'Banned'
             ELSE 'Unknown'
         END AS Status,
-        CreatedOnUtc AS JoinedAt,
-        LastLogin
+        Users.CreatedOnUtc AS JoinedAt,
+        LastLogin,
+        CASE bv.Status 
+            WHEN 1 THEN 'Pending' 
+            WHEN 2 THEN 'Verified' 
+            WHEN 3 THEN 'Rejected' 
+            ELSE 'Unverified' 
+        END AS VerificationStatus,
+        bv.NationalId,
+        bv.ExtractedFullName,
+        bv.RejectionReason AS VerificationRejectionReason
     FROM Users
-    WHERE Id IN @UserIds
-    ORDER BY CreatedOnUtc DESC"; // Default safe sorting for exports
+    LEFT JOIN Bidders b ON b.Id = Users.Id
+    LEFT JOIN BidderVerifications bv ON bv.BidderId = b.Id
+    WHERE Users.Id IN @UserIds
+    ORDER BY Users.CreatedOnUtc DESC"; // Default safe sorting for exports
 
         return await ExecuteResilientAsync(async connection =>
         {

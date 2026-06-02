@@ -40,6 +40,8 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public DateTime? SuspensionUntil { get; private set; }
     public DateTime LastLogin { get; private set; } = DateTime.UtcNow;
 
+
+
     public DateTime CreatedOnUtc { get; set; }
     public DateTime? ModifiedOnUtc { get; set; }
 
@@ -161,6 +163,8 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
 
         return Result.Success();
     }
+
+
 
     public Result AddRefreshToken(string hashedToken)
     {

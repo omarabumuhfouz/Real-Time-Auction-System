@@ -5,6 +5,7 @@ using MazadZone.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MazadZone.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601122331_MoveBidderVerificationToSeparateTable")]
+    partial class MoveBidderVerificationToSeparateTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,6 +128,9 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<Guid>("AuctionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AuctionId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("BidderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -171,6 +177,8 @@ namespace MazadZone.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuctionId");
+
+                    b.HasIndex("AuctionId1");
 
                     b.HasIndex("BidderId");
 
@@ -970,10 +978,14 @@ namespace MazadZone.Infrastructure.Migrations
             modelBuilder.Entity("MazadZone.Domain.Auctions.Bid", b =>
                 {
                     b.HasOne("MazadZone.Domain.Auctions.Auction", null)
-                        .WithMany("Bids")
+                        .WithMany()
                         .HasForeignKey("AuctionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MazadZone.Domain.Auctions.Auction", null)
+                        .WithMany("Bids")
+                        .HasForeignKey("AuctionId1");
 
                     b.HasOne("MazadZone.Domain.Bidders.Bidder", null)
                         .WithMany()

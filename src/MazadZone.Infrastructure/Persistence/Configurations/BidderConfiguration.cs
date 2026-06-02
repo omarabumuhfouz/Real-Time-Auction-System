@@ -1,7 +1,7 @@
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Bidders;
 using MazadZone.Infrastructure.Common.Constants;
-using MazadZone.Infrastructure.Persistence.Converters; 
+using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MazadZone.Infrastructure.Persistence.Extensions;
@@ -22,14 +22,7 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
                .HasConversion(new UserIdConverter()) // Ensure you have this converter
                .ValueGeneratedNever();
 
-
         // Primitives
-        builder.Property(b => b.NationalId).HasMaxLength(50).IsRequired();
-
-        builder.HasIndex(b => b.NationalId)
-       .IsUnique();
-
-        builder.Property(b => b.IsVerified).IsRequired();
         builder.Property(b => b.CreatedOnUtc).IsRequired();
         builder.Property(b => b.ModifiedOnUtc).IsRequired(false);
         builder.Property(b => b.CompletedPurchasesCount).HasDefaultValue(0);
@@ -37,8 +30,10 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
         builder.Property(b => b.TotalPidsPlaced).HasDefaultValue(0);
         builder.Property(b => b.AuctionParticipatedCount).HasDefaultValue(0);
 
-        // Ignored Computed Properties
-        builder.Ignore(b => b.UnpaidAuctions); // We map the backing field below instead
+        builder.Ignore(b => b.IsVerified);
+        builder.Ignore(b => b.NationalId);
+
+        builder.Ignore(b => b.UnpaidAuctions);
 
         builder.Property<HashSet<AuctionId>>("_unpaidAuctions")
                .HasColumnName("UnpaidAuctions")
@@ -46,6 +41,30 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
                .HasConversion(new AuctionIdSetConverter())
                .Metadata.SetValueComparer(new AuctionIdSetComparer());
 
+        builder.OwnsOne(b => b.Verification, verification =>
+        {
+            verification.ToTable(TableNames.BidderVerifications);
+
+            verification.Property(v => v.NationalId)
+                        .HasMaxLength(50)
+                        .IsRequired();
+
+            verification.Property(v => v.IsVerified)
+                        .IsRequired();
+
+            verification.Property(v => v.Status)
+                        .HasConversion<int>()
+                        .HasColumnType("int")
+                        .IsRequired();
+
+            verification.Property(v => v.ExtractedFullName)
+                        .HasMaxLength(200)
+                        .IsRequired(false);
+
+            verification.Property(v => v.RejectionReason)
+                        .HasMaxLength(500)
+                        .IsRequired(false);
+        });
 
         builder.ComplexProperty(b => b.DefaultShippingAddress, addressBuilder =>
            {
@@ -58,7 +77,7 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
-        
-    
+
+
     }
 }

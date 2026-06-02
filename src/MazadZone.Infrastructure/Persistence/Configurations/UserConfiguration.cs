@@ -85,6 +85,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     .HasColumnType("int")
     .IsRequired();
 
+
+
         builder.HasMany(u => u.HashedRefreshTokens)
             .WithOne()
             .HasForeignKey(rt => rt.UserId)

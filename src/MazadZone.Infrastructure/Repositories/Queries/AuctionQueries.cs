@@ -106,6 +106,7 @@ public partial class AuctionQueries(
         var bids = auction.Bids.OrderByDescending(b => b.Amount)
             .Select(b => new BidDto(
                 b.BidderId.Value,
+                _context.Users.Where(u => u.Id == b.BidderId).Select(u => u.FullName.FirstName + " " + u.FullName.LastName).FirstOrDefault(),
                 b.Amount.Amount,
                 (int)b.Status,
                 b.PlacedAtUtc

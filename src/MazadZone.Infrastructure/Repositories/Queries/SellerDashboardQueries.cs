@@ -40,9 +40,22 @@ public class SellerDashboardQueries : ResilientRepository, ISellerDashboardQueri
 
         var whereClause = new StringBuilder("WHERE a.SellerId = @SellerId");
         
-        if (!string.IsNullOrWhiteSpace(filter?.Status) && Enum.TryParse<AuctionStatus>(filter.Status, true, out var s))
+        int? statusValue = null;
+        if (!string.IsNullOrWhiteSpace(filter?.Status))
         {
-            whereClause.Append(" AND a.Status = @Status");
+            if (filter.Status.Equals("Sold", StringComparison.OrdinalIgnoreCase))
+            {
+                whereClause.Append($" AND a.Status = {(int)AuctionStatus.Ended} AND EXISTS (SELECT 1 FROM Bids bs WHERE bs.AuctionId = a.Id)");
+            }
+            else if (filter.Status.Equals("Unsold", StringComparison.OrdinalIgnoreCase))
+            {
+                whereClause.Append($" AND a.Status = {(int)AuctionStatus.Ended} AND NOT EXISTS (SELECT 1 FROM Bids bs WHERE bs.AuctionId = a.Id)");
+            }
+            else if (Enum.TryParse<AuctionStatus>(filter.Status, true, out var s))
+            {
+                statusValue = (int)s;
+                whereClause.Append(" AND a.Status = @Status");
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filter?.SearchTerm))
@@ -71,7 +84,15 @@ public class SellerDashboardQueries : ResilientRepository, ISellerDashboardQueri
         };
         string dir = filter?.SortDirection?.ToUpper() == "ASC" ? "ASC" : "DESC";
 
-        var listSql = $"SELECT a.Id AS AuctionId, it.Title, c.Name AS Category, a.Status, " +
+        var listSql = $"SELECT a.Id AS AuctionId, it.Title, c.Name AS Category, " +
+                      "CASE " +
+                      $"  WHEN a.Status = {(int)AuctionStatus.Pending} THEN 'Pending' " +
+                      $"  WHEN a.Status = {(int)AuctionStatus.Active} THEN 'Active' " +
+                      $"  WHEN a.Status = {(int)AuctionStatus.Ended} AND EXISTS (SELECT 1 FROM Bids b2 WHERE b2.AuctionId = a.Id) THEN 'Sold' " +
+                      $"  WHEN a.Status = {(int)AuctionStatus.Ended} THEN 'Unsold' " +
+                      $"  WHEN a.Status = {(int)AuctionStatus.Cancelled} THEN 'Cancelled' " +
+                      "  ELSE 'Unknown' " +
+                      "END AS Status, " +
                       "(SELECT COUNT(1) FROM Bids b WHERE b.AuctionId = a.Id) AS BidsCount, " +
                       "ISNULL((SELECT TOP(1) b.Amount FROM Bids b WHERE b.AuctionId = a.Id ORDER BY b.PlacedAtUtc DESC), a.StartBidAmount) AS LastBidAmount, " +
                       "a.EndTime AS EndDateUtc, " +
@@ -86,7 +107,7 @@ public class SellerDashboardQueries : ResilientRepository, ISellerDashboardQueri
         var parameters = new 
         { 
             SellerId = sellerId.Value, 
-            Status = filter?.Status != null ? (object)filter.Status : null, 
+            Status = statusValue != null ? (object)statusValue : null, 
             SearchTerm = $"%{filter?.SearchTerm}%",
             DateFrom = filter?.DateFrom,
             DateTo = filter?.DateTo,
