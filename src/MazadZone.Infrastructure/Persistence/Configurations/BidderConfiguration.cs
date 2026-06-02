@@ -25,6 +25,10 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
 
         // Primitives
         builder.Property(b => b.NationalId).HasMaxLength(50).IsRequired();
+
+        builder.HasIndex(b => b.NationalId)
+       .IsUnique();
+
         builder.Property(b => b.IsVerified).IsRequired();
         builder.Property(b => b.CreatedOnUtc).IsRequired();
         builder.Property(b => b.ModifiedOnUtc).IsRequired(false);

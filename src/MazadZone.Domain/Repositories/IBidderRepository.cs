@@ -7,4 +7,5 @@ public interface IBidderRepository : IGenericRepository<Bidder, UserId> , IScope
 {
     Task<string?> GetNationalIdByBidderIdAsync(UserId bidderId, CancellationToken cancellationToken);
 
+    Task<bool> IsNationalIdInUseAsync(string nationalId, CancellationToken cancellationToken);
 }
