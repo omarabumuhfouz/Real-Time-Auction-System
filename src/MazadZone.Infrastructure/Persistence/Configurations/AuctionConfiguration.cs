@@ -26,7 +26,7 @@ class AuctionsConfiguration : IEntityTypeConfiguration<Auction>
 
 
         builder.Property(a => a.SellerId)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .IsRequired();
 
         builder.HasOne<Seller>()
@@ -102,7 +102,7 @@ builder.ComplexProperty(a => a.MinBidAmount, moneyBuilder =>
             .IsRequired(false);
 
         builder.Property(a => a.CancellationReason)
-       .HasConversion(new ReasonConverter())
+       .HasConversion(new ReasonConverterForNull())
        .HasColumnName("CancellationReason")
        .HasMaxLength(SharedConstainst.MaxReasonLength) // Set this to whatever max length your Reason validates against
        .IsRequired(false); // Explicitly mark it as nullable in the DB

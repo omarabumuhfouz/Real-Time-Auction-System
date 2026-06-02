@@ -21,7 +21,7 @@ public sealed class PaymentMethodConfiguration : IEntityTypeConfiguration<Paymen
             .ValueGeneratedNever();
 
         builder.Property(pm => pm.UserId)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .IsRequired();
 
         builder.Property(pm => pm.Last4Digits)

@@ -18,10 +18,13 @@ public static class GetDisputesBreakdown
     private static async Task<IResult> HandleAsync(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
+
         [FromServices] ISender sender,
-        CancellationToken ct)
+        CancellationToken ct,
+        [FromQuery] int limit = 5,
+        [FromQuery] bool includeOther = true)
     {
-        var result = await sender.Send(new GetOpenDisputesBreakdownQuery(startDate, endDate), ct);
+        var result = await sender.Send(new GetOpenDisputesBreakdownQuery(startDate, endDate, limit, includeOther), ct);
 
         return result.Match(
             stats => Results.Ok(stats),

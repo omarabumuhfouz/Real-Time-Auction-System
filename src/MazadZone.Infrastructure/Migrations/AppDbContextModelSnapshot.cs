@@ -125,9 +125,6 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<Guid>("AuctionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AuctionId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("BidderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -174,8 +171,6 @@ namespace MazadZone.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuctionId");
-
-                    b.HasIndex("AuctionId1");
 
                     b.HasIndex("BidderId");
 
@@ -383,6 +378,38 @@ namespace MazadZone.Infrastructure.Migrations
                     b.ToTable("Disputes", (string)null);
                 });
 
+            modelBuilder.Entity("MazadZone.Domain.Disputes.DisputeType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DisputeTypes", (string)null);
+                });
+
             modelBuilder.Entity("MazadZone.Domain.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -425,38 +452,6 @@ namespace MazadZone.Infrastructure.Migrations
                     b.HasIndex("UserId", "IsRead");
 
                     b.ToTable("Notifications", (string)null);
-                });
-
-            modelBuilder.Entity("MazadZone.Domain.Orders.DisputeType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DisputeTypes", (string)null);
                 });
 
             modelBuilder.Entity("MazadZone.Domain.Orders.Feedback", b =>
@@ -983,14 +978,10 @@ namespace MazadZone.Infrastructure.Migrations
             modelBuilder.Entity("MazadZone.Domain.Auctions.Bid", b =>
                 {
                     b.HasOne("MazadZone.Domain.Auctions.Auction", null)
-                        .WithMany()
-                        .HasForeignKey("AuctionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MazadZone.Domain.Auctions.Auction", null)
                         .WithMany("Bids")
-                        .HasForeignKey("AuctionId1");
+                        .HasForeignKey("AuctionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MazadZone.Domain.Bidders.Bidder", null)
                         .WithMany()
@@ -1069,7 +1060,7 @@ namespace MazadZone.Infrastructure.Migrations
 
             modelBuilder.Entity("MazadZone.Domain.Disputes.Dispute", b =>
                 {
-                    b.HasOne("MazadZone.Domain.Orders.DisputeType", null)
+                    b.HasOne("MazadZone.Domain.Disputes.DisputeType", null)
                         .WithMany()
                         .HasForeignKey("DisputeTypeId")
                         .OnDelete(DeleteBehavior.Cascade)

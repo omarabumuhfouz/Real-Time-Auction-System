@@ -20,9 +20,11 @@ public static class GetCategoryStatistics
 
     private static async Task<IResult> HandleAsync(
         [FromServices] ISender sender,
-        CancellationToken ct)
+        CancellationToken ct,
+        [FromQuery] int limit = 10,
+        [FromQuery] bool includeOther = true)
     {
-        var result = await sender.Send(new GetCategoryStatisticsQuery(), ct);
+        var result = await sender.Send(new GetCategoryStatisticsQuery(limit, includeOther), ct);
 
         return result.Match(
             onValue: stats => Results.Ok(stats),

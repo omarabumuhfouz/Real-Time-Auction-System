@@ -19,7 +19,7 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
         builder.HasKey(b => b.Id);
 
         builder.Property(b => b.Id)
-               .HasConversion(new UserIdIdConverter()) // Ensure you have this converter
+               .HasConversion(new UserIdConverter()) // Ensure you have this converter
                .ValueGeneratedNever();
 
 

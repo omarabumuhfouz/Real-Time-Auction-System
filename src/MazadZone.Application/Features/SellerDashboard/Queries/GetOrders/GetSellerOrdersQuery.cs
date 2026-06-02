@@ -1,11 +1,4 @@
-using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Features.SellerDashboard.DTOs;
-using MazadZone.Domain.Primitives.Results;
-using MazadZone.Domain.Users.ValueObjects;
-using System.Threading;
-using System.Threading.Tasks;
-using MediatR;
-using System;
 
 namespace MazadZone.Application.Features.SellerDashboard.Queries.GetOrders;
 

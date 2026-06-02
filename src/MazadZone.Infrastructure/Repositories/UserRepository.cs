@@ -46,7 +46,7 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
     {
         return await _context.Users
             .AsNoTracking()
-            .AnyAsync(u => u.Id == userId && u.IsBidder, ct);
+            .AnyAsync(u => u.Id == userId && (u.Roles & UserRole.Bidder) == UserRole.Bidder, ct);
     }
 
     public Task<bool> IsEmailInUseAsync(Email email, CancellationToken ct)
@@ -58,7 +58,7 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
     {
         return await _context.Users
             .AsNoTracking()
-            .AnyAsync(u => u.Id == userId && u.IsSeller);
+            .AnyAsync(u => u.Id == userId && (u.Roles & UserRole.Seller) == UserRole.Seller);
     }
 
 public async Task<IReadOnlyList<User>> GetByIdsAsync(IEnumerable<UserId> ids, CancellationToken ct = default)

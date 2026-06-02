@@ -19,8 +19,12 @@ class BidConfiguration : IEntityTypeConfiguration<Bid>
             .HasConversion(new BidIdConverter())
             .ValueGeneratedNever();
 
+        builder.Property(b => b.AuctionId)
+        .HasConversion(new AuctionIdConverter())
+        .IsRequired();
+
         builder.Property(b => b.BidderId)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .IsRequired();
 
         
@@ -61,12 +65,6 @@ class BidConfiguration : IEntityTypeConfiguration<Bid>
                 )
                 .IsRequired();
         });
-
-        builder.HasOne<Auction>()
-            .WithMany()
-            .HasForeignKey(b => b.AuctionId)
-            .IsRequired(true)
-            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Bidder>()
            .WithMany()

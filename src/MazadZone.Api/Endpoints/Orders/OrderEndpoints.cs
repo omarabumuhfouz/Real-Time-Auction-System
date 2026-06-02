@@ -25,9 +25,6 @@ public static class OrderEndpoints
         ReplyToFeedback.MapEndpoint(orderGroup);
 
         GetDetails.MapEndpoint(orderGroup);
-        Search.MapEndpoint(orderGroup);
         GetByWinningBid.MapEndpoint(orderGroup);
-        GetSellerStats.MapEndpoint(orderGroup);
-        GetGlobalStats.MapEndpoint(orderGroup);
     }
 }
