@@ -19,7 +19,7 @@ public static class SellerEndpoints
         Verify.MapEndpoint(sellerGroup);
 
         // Query Slices
-
+        GetSellerFeedbacks.MapEndpoint(sellerGroup);
         GetPublicProfile.MapEndpoint(sellerGroup);
         GetUnverified.MapEndpoint(sellerGroup);
     }

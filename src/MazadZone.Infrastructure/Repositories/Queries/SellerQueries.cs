@@ -3,11 +3,10 @@ using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Features.Sellers.Queries;
 using MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 using MazadZone.Application.Features.Sellers.Queries.GetUnverifiedSellers;
-using MazadZone.Application.Features.Sellers.Queries.GetDashboard;
-using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Users.ValueObjects;
 using Polly;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
+using MazadZone.Application.Common.Paging;
 
 namespace MazadZone.Infrastructure.Repositories;
 
@@ -18,76 +17,88 @@ public sealed class SellerQueries : ResilientRepository, ISellerQueries
     }
 
 
-    public async Task<PublicSellerProfileResponse?> GetPublicProfileAsync(UserId sellerId, CancellationToken cancellationToken)
-    {
-
-        const string sql = @"
-            SELECT 
-    u.Id, 
-    u.FirstName + ' ' + u.LastName AS FullName,
-    u.Email,
-    u.PhoneNumber,
-    s.IsVerified,
-    u.CreatedOnUtc AS MemberSince,
-    u.LastLogin,
-    s.Rating, 
-    s.ReviewsCount, 
-    s.ListedAuctionsCount,
-
-
+    public async Task<PublicSellerProfileResponse?> GetSellerProfileSummaryAsync(UserId sellerId, CancellationToken ct)
+{
+    const string sql = @"
+        SELECT 
+            u.Id, 
+            u.FirstName + ' ' + u.LastName AS FullName,
+            u.Email,
+            u.PhoneNumber,
+            s.IsVerified,
+            u.CreatedOnUtc AS MemberSince,
+            u.LastLogin,
+            s.Rating, 
+            s.ReviewsCount, 
+            s.ListedAuctionsCount,
             COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced, 
             COALESCE(b.AuctionParticipatedCount, 0) AS AuctionParticipatedCount,
             COALESCE(b.AuctionsWonCount, 0) AS AuctionsWonCount,
             COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
-FROM Users u 
-JOIN Sellers s ON u.Id = s.Id
-LEFT JOIN Bidders b ON u.Id = b.Id 
-WHERE u.Id = @SellerId;
+        FROM Users u 
+        JOIN Sellers s ON u.Id = s.Id
+        LEFT JOIN Bidders b ON u.Id = b.Id 
+        WHERE u.Id = @SellerId;
+    ";
+
+    return await ExecuteResilientAsync(async connection =>
+    {
+        return await connection.QuerySingleOrDefaultAsync<PublicSellerProfileResponse>(
+            new CommandDefinition(sql, new { SellerId = sellerId.Value }, cancellationToken: ct)
+        );
+    });
+}
 
 
-SELECT 
-    f.Id,
-    u.FirstName + ' ' + u.LastName AS AuthorName,
-    f.Rating,
-    f.Comment,
-    f.Reply,
-    f.CreatedAtUtc AS CreatedAt
-FROM Orders o
-JOIN Feedbacks f ON o.Id = f.OrderId
-JOIN Users u ON o.BidderId = u.Id 
-JOIN Auctions a ON o.AuctionId = a.Id
-WHERE a.SellerId = @SellerId
-ORDER BY f.CreatedAtUtc DESC;
-            ";
+    public async Task<PagedList<FeedbackDto>> GetSellerFeedbacksAsync(
+        UserId sellerId,
+        int page,
+        int pageSize,
+        CancellationToken ct)
+    {
+        const string sql = @"
+        -- 1. Total Feedback Count
+        SELECT COUNT(f.Id)
+        FROM Orders o
+        JOIN Feedbacks f ON o.Id = f.OrderId
+        JOIN Auctions a ON o.AuctionId = a.Id
+        WHERE a.SellerId = @SellerId;
+
+        -- 2. Paginated Data
+        SELECT 
+            f.Id,
+            u.FirstName + ' ' + u.LastName AS AuthorName,
+            f.Rating,
+            f.Comment,
+            f.Reply,
+            f.CreatedAtUtc AS CreatedAt
+        FROM Orders o
+        JOIN Feedbacks f ON o.Id = f.OrderId
+        JOIN Users u ON o.BidderId = u.Id 
+        JOIN Auctions a ON o.AuctionId = a.Id
+        WHERE a.SellerId = @SellerId
+        ORDER BY f.CreatedAtUtc DESC
+        OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+    ";
+
         return await ExecuteResilientAsync(async connection =>
         {
-            using var multi = await connection.QueryMultipleAsync(sql, new { SellerId = sellerId.Value });
+            var parameters = new
+            {
+                SellerId = sellerId.Value,
+                Offset = (page - 1) * pageSize,
+                PageSize = pageSize
+            };
 
-            var baseProfile = await multi.ReadSingleOrDefaultAsync<ProfileBaseResult>();
-            if (baseProfile is null) return null;
-
-            var feedbacks = (await multi.ReadAsync<FeedbackDto>()).ToList();
-
-            return new PublicSellerProfileResponse(
-                Id: baseProfile.Id,
-                FullName: baseProfile.FullName,
-                Email: baseProfile.Email,
-                PhoneNumber: baseProfile.PhoneNumber,
-                IsVerified: baseProfile.IsVerified,
-                MemberSince: baseProfile.MemberSince,
-                LastLogin: baseProfile.LastLogin,
-                Rating: baseProfile.Rating,
-                ReviewsCount: baseProfile.ReviewsCount,
-                ListedAuctionsCount: baseProfile.ListedAuctionsCount,
-                TotalBidsPlaced: baseProfile.TotalBidsPlaced,
-                AuctionParticipatedCount: baseProfile.AuctionParticipatedCount,
-                AuctionsWonCount: baseProfile.AuctionsWonCount,
-                CompletedPurchasesCount: baseProfile.CompletedPurchasesCount,
-                Feedbacks: feedbacks
+            using var multi = await connection.QueryMultipleAsync(
+                new CommandDefinition(sql, parameters, cancellationToken: ct)
             );
+
+            var totalCount = await multi.ReadSingleAsync<int>();
+            var items = (await multi.ReadAsync<FeedbackDto>()).ToList();
+
+            return new PagedList<FeedbackDto>(items.AsReadOnly(), page, pageSize, totalCount);
         });
-
-
     }
 
     public async Task<IReadOnlyList<UnverifiedSellerSummaryResponse>?> GetUnverifiedSellersAsync(CancellationToken cancellationToken)

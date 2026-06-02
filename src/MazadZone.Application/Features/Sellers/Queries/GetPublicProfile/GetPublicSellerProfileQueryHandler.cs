@@ -20,7 +20,7 @@ public sealed class GetPublicSellerProfileQueryHandler
         GetPublicSellerProfileQuery request, 
         CancellationToken cancellationToken)
     {
-        var seller = await _sellerQueries.GetPublicProfileAsync(request.SellerId, cancellationToken);
+        var seller = await _sellerQueries.GetSellerProfileSummaryAsync(request.SellerId, cancellationToken);
 
         if (seller is null)
         {
