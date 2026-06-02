@@ -26,7 +26,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .IsRequired();
 
         builder.Property(p => p.UserId)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .IsRequired();
 
         builder.ComplexProperty(p => p.CapturedHoldedAmount, money =>

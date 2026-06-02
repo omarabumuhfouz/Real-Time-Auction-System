@@ -15,7 +15,7 @@ internal sealed class SellerConfiguration : IEntityTypeConfiguration<Seller>
 
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id)
-               .HasConversion(new UserIdIdConverter()) 
+               .HasConversion(new UserIdConverter()) 
                .ValueGeneratedNever();
 
         builder.Property(s => s.ListedAuctionsCount).HasDefaultValue(0);

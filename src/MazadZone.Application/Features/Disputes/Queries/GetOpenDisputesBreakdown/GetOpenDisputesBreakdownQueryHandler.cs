@@ -18,6 +18,7 @@ public class GetOpenDisputesBreakdownQueryHandler : IQueryHandler<GetOpenDispute
         var rawData = await _disputeQueries.GetOpenDisputesBreakdownAsync(
             request.StartDate, request.EndDate, 
             prevStartDate, prevEndDate, 
+            request.Limit, request.IncludeOther,
             ct);
 
         int totalOpenCases = 0;

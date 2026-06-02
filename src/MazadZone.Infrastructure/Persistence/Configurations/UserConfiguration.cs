@@ -19,7 +19,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         
         builder.Property(u => u.Id)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .ValueGeneratedNever();
 
         // 2. Multi-Property Value Objects (Complex Types)

@@ -12,3 +12,12 @@ public class ReasonConverter : ValueConverter<Reason, string>
     {
     }
 }
+public class ReasonConverterForNull : ValueConverter<Reason?, string>
+{
+    public ReasonConverterForNull()
+        : base(
+            reason => reason == null ? null : reason.Text,
+            value => value == null ? null : Reason.FromDatabase(value))
+    {
+    }
+}

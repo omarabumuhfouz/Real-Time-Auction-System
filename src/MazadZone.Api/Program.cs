@@ -21,6 +21,7 @@ using MazadZone.Api.Endpoints.ChatAgent;
 using MazadZone.Api.Endpoints.Disputes;
 using MazadZone.Api.Endpoints.DisputeTypes;
 using MazadZone.Api.Endpoints.Dashboard;
+using MazadZone.Api.Endpoints.Emails;
 #endregion
 
 Log.Logger = new LoggerConfiguration()
@@ -76,6 +77,7 @@ try
     }
 
     //Map Endpoints
+    app.MapEmailEndpoints();
     app.MapDashboardEndpoints();
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();

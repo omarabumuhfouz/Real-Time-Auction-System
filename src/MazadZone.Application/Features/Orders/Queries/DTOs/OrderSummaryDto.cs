@@ -1,11 +1,13 @@
 namespace MazadZone.Application.Features.Orders.Queries.DTOs;
 
 public record OrderSummaryDto(
-    Guid Id,
-    string Status,
-    decimal TotalAmount,
-    string Currency,
-    DateTime CreatedAt,
-    bool IsDisputable,
-    bool HasActiveDispute,
-    bool CanLeaveFeedback);
+    Guid OrderId,         
+    string AuctionName,   
+    string CategoryName,  
+    string BidderName,    
+    string BidderEmail,   
+    string Status,           
+    DateTime OrderDate,   
+    decimal TotalAmount,  
+    string Currency       
+);
