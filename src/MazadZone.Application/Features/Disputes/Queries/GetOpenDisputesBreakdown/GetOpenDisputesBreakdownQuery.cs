@@ -1,3 +1,3 @@
 namespace MazadZone.Application.Features.Disputes.Queries.GetOpenDisputesBreakdown;
 
-public record GetOpenDisputesBreakdownQuery(DateTime StartDate, DateTime EndDate) : IQuery<OpenDisputesBreakdownDto>;
+public record GetOpenDisputesBreakdownQuery(DateTime StartDate, DateTime EndDate, int Limit, bool IncludeOther) : IQuery<OpenDisputesBreakdownDto>;

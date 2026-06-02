@@ -14,7 +14,7 @@ public static class UserErrorCodes
     public const string AlreadyActive = "User.AlreadyActive";
 public const string CannotAuthenticateBannedUser = "User.CannotAuthenticateBannedUser";
     public const string UserIsSuspended = "User.UserIsSuspended";
-
+public const string NationalIdAlreadyExists = "User.NationalIdAlreadyExists";
 
     // Password Validation
     public const string IdRequired = "User.IdRequired";
@@ -37,10 +37,10 @@ public static class UserErrors
     public static Error InvalidCredentials => Error.Unauthorized(
         UserErrorCodes.InvalidCredentials,
         "Invalid email or password.");
+public static Error NationalIdAlreadyExists => Error.Conflict(
+    UserErrorCodes.NationalIdAlreadyExists,
+    "A user with the provided National ID already exists.");
 
-    public static Error AlreadyVerified => Error.Conflict(
-        UserErrorCodes.AlreadyVerified,
-        "The user account has already been verified.");
 
     public static readonly Error AlreadySuspended = Error.Conflict(
                 UserErrorCodes.AlreadySuspended,
@@ -58,9 +58,6 @@ public static class UserErrors
         UserErrorCodes.CannotActivateBannedUser,
         "A permanently banned user cannot be reactivated.");
 
-    public static readonly Error AlreadyActive = Error.Conflict(
-        UserErrorCodes.AlreadyActive,
-        "The user account is already active.");
 
     public static readonly Error CannotAuthenticateBannedUser = Error.Validation(
             UserErrorCodes.CannotAuthenticateBannedUser,

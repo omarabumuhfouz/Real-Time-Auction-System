@@ -13,7 +13,7 @@ public sealed class GetCategoryStatisticsQueryHandler : IQueryHandler<GetCategor
 
     public async Task<Result<IReadOnlyList<CategoryStatResponse>>> Handle(GetCategoryStatisticsQuery request, CancellationToken ct)
     {
-        var stats = await _categoryQueries.GetCategoryStatisticsAsync(ct);
+        var stats = await _categoryQueries.GetCategoryStatisticsAsync(request.Limit, request.IncludeOther,ct);
         GetCategoryStatisticsLogs.LogSuccess(_logger);
         return Result.Success(stats);
     }

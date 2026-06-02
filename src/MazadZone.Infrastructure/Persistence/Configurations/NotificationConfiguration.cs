@@ -20,7 +20,7 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
             .ValueGeneratedNever(); 
 
         builder.Property(n => n.UserId)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .IsRequired();
 
         // Using the constant for Title

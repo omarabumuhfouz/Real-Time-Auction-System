@@ -1,12 +1,11 @@
 namespace MazadZone.Application.Features.Orders.Queries.DTOs;
 
-// High-level aggregate for the Admin Dashboard
 public record AdminGlobalStatsDto(
-    decimal TotalSalesVolume,      // Sum of ALL orders (Gross Merchandise Value)
-    int TotalOrders,               // Count of ALL orders
+    decimal TotalSalesVolume,      
+    int TotalOrders,               
     
-    decimal TotalRealizedRevenue,  // Sum of ONLY Delivered/Completed orders
-    decimal AverageOrderValue,     // Average of ONLY Delivered/Completed orders
+    decimal TotalRealizedRevenue,  
+    decimal AverageOrderValue,     
     
     decimal TotalPendingAmount,    // Sum of Pending orders
     int TotalPendingOrders,        // Count of Pending orders

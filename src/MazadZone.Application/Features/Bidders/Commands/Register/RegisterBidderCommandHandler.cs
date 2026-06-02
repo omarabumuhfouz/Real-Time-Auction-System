@@ -4,6 +4,7 @@ using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.Errors;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;
 
@@ -79,6 +80,10 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
             return Result.Failure<RegisterBidderDto>(Error.Validation(
                 "Identity.NationalIdMismatch", 
                 "The national ID extracted from the card does not match the provided national ID."));
+        if(await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
+        {
+            // _logger.LogNationalIdConflict(NationalIdErrorCodes.AlreadyInUse, request.NationalId);
+            return UserErrors.NationalIdAlreadyExists;
         }
 
         var newUserResult = _CreateUser(request);

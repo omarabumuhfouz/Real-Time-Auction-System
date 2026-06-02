@@ -13,6 +13,7 @@ using MazadZone.Infrastructure.Persistence;
 using MazadZone.Infrastructure.Persistence.Interceptors;
 using AuthService.Infrastructure.Backgrounds;
 using MazadZone.Infrastructure.Services;
+using MazadZone.Infrastructure.Common;
 
 namespace MazadZone.Infrastructure;
 
@@ -31,6 +32,9 @@ public static class DependencyInjection
             .AddBackgroundServices()
             .AddGeminiServices(configuration)
             .AddGoogleVisionServices();
+
+        services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.GmailOptionsKey));
+
 
 
 
@@ -73,6 +77,7 @@ public static class DependencyInjection
 
         return services;
     }
+
 
     private static IServiceCollection AddOutboxPattern(this IServiceCollection services, IConfiguration configuration)
     {

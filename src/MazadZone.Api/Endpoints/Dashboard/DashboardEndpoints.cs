@@ -16,8 +16,11 @@ public static class DashboardEndpoints
                                 .WithApiVersionSet(versionSet)
                                 .MapToApiVersion(1, 0)
                                 .WithTags("Dashboard Statistics");
-
+                                
         // Map Dashboard Actions
+         GetSellerOrders.MapEndpoint(dashboardGroup);
+        GetSellerOrderStatistics.MapEndpoint(dashboardGroup);
+        GetTrendingRootCategories.MapEndpoint(dashboardGroup);
         GetStatistics.MapEndpoint(dashboardGroup);
         GetUserGrowthTrends.MapEndpoint(dashboardGroup);
         GetUserTrustStatistics.MapEndpoint(dashboardGroup);

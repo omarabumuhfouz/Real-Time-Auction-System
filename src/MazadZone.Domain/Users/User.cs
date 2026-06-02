@@ -113,7 +113,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public Result Suspend(Reason reason,DateTime until)
     {
         // Guard clauses to protect the state machine invariants
-        if (Status == UserStatus.Banned) return UserErrors.CannotSuspendBannedUser;
+    if (Status == UserStatus.Banned) return UserErrors.CannotSuspendBannedUser;
 
         if (Status == UserStatus.Suspended) return UserErrors.AlreadySuspended;
 

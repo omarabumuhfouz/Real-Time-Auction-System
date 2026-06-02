@@ -21,6 +21,7 @@ using MazadZone.Api.Endpoints.ChatAgent;
 using MazadZone.Api.Endpoints.Disputes;
 using MazadZone.Api.Endpoints.DisputeTypes;
 using MazadZone.Api.Endpoints.Dashboard;
+using MazadZone.Api.Endpoints.Emails;
 #endregion
 
 Log.Logger = new LoggerConfiguration()
@@ -62,6 +63,22 @@ try
         dbContext.Database.Migrate();
     }
 
+    //Map Endpoints
+    app.MapEmailEndpoints();
+    app.MapDashboardEndpoints();
+    app.MapNotificationEndpoints();
+    app.MapBidderEndpoints();
+    app.MapOrderEndpoints();
+    app.MapPaymentEndpoints();
+    app.MapCategoryEndpoints();
+    app.MapUserEndpoints();
+    app.MapSellerEndpoints();
+    app.MapSellerDashboardEndpoints();
+    app.MapAuctionEndpoints();
+    app.MapDisputeEndpoints();
+    app.MapDisputeTypeEndpoints();
+    app.MapAuthenticationEndpoints();
+    app.MapChatAgentEndpoints();
     // ==========================================
     // Middlewares Configuration
     // ==========================================

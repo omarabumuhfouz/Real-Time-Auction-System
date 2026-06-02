@@ -11,6 +11,8 @@ public interface IDisputeQueries : IScopedService
     Task<IReadOnlyList<RawDisputeBreakdown>> GetOpenDisputesBreakdownAsync(
         DateTime currStart, DateTime currEnd,
         DateTime prevStart, DateTime prevEnd,
+        int limit,
+        bool includeOther,
         CancellationToken ct);
 
     Task<IReadOnlyList<DisputeListItemDto>> ExportSelectedDisputesAsync(IEnumerable<Guid> disputeIds, CancellationToken ct);

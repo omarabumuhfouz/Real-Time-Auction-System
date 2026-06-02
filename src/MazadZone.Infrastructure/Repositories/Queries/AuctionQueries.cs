@@ -209,7 +209,7 @@ public partial class AuctionQueries(
     {
         var rawAuctions = await _context.Auctions
             .AsNoTracking()
-            .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value))
+            .Where(a => a.Bids.Any(b => b.BidderId == bidderId))
             .Select(a => new
             {
                 Id = a.Id.Value,

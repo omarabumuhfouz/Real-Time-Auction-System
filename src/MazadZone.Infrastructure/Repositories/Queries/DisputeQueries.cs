@@ -244,45 +244,94 @@ public class DisputeQueries : ResilientRepository, IDisputeQueries
     });
 }
 
-    public async Task<IReadOnlyList<RawDisputeBreakdown>> GetOpenDisputesBreakdownAsync(
+   public async Task<IReadOnlyList<RawDisputeBreakdown>> GetOpenDisputesBreakdownAsync(
     DateTime currStart, DateTime currEnd,
     DateTime prevStart, DateTime prevEnd,
+    int limit,
+    bool includeOther,
     CancellationToken ct)
-    {
-        var sql = @"
+{
+    var sql = @"
+        WITH BreakdownData AS (
+            SELECT 
+                dt.Name AS DisputeTypeName,
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) AS CurrentCases,
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) AS PreviousCases
+            FROM DisputeTypes dt
+            LEFT JOIN Disputes d ON dt.Id = d.DisputeTypeId AND d.Status = @OpenStatus
+            GROUP BY dt.Name
+            HAVING 
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) > 0
+                OR 
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) > 0
+        ),
+        RankedData AS (
+            SELECT 
+                DisputeTypeName,
+                CurrentCases,
+                PreviousCases,
+                ROW_NUMBER() OVER(ORDER BY CurrentCases DESC, DisputeTypeName ASC) AS Rnk
+            FROM BreakdownData
+        )
+        
         SELECT 
-            dt.Name AS DisputeTypeName,
-            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) AS CurrentCases,
-            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) AS PreviousCases
-        FROM DisputeTypes dt
-        -- Replaced the hardcoded '1' with the @OpenStatus parameter
-        LEFT JOIN Disputes d ON dt.Id = d.DisputeTypeId AND d.Status = @OpenStatus
-        GROUP BY dt.Name
-        HAVING 
-            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) > 0
-            OR 
-            SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) > 0
-        ORDER BY CurrentCases DESC;
+            DisputeTypeName,
+            CurrentCases,
+            PreviousCases,
+            IsOtherBucket
+        FROM (
+            -- Always select the Top N
+            SELECT 
+                DisputeTypeName,
+                CurrentCases,
+                PreviousCases,
+                CAST(0 AS BIT) AS IsOtherBucket, -- FIX: Explicitly cast to BIT
+                Rnk AS SortOrder
+            FROM RankedData
+            WHERE Rnk <= @Limit
     ";
 
-        return await ExecuteResilientAsync(async connection =>
-        {
-            var parameters = new
-            {
-                CurrStart = currStart,
-                CurrEnd = currEnd,
-                PrevStart = prevStart,
-                PrevEnd = prevEnd,
-                // Cast the enum to int so Dapper injects it perfectly into the SQL
-                OpenStatus = (int)DisputeStatus.Open
-            };
+    if (includeOther)
+    {
+        sql += @"
+            UNION ALL
 
-            var command = new CommandDefinition(sql, parameters, cancellationToken: ct);
-            var result = await connection.QueryAsync<RawDisputeBreakdown>(command);
-
-            return result.ToList().AsReadOnly();
-        });
+            -- Aggregate everything else into 'Other'
+            SELECT 
+                'Other' AS DisputeTypeName,
+                SUM(CurrentCases) AS CurrentCases,
+                SUM(PreviousCases) AS PreviousCases,
+                CAST(1 AS BIT) AS IsOtherBucket, -- FIX: Explicitly cast to BIT
+                @Limit + 1 AS SortOrder
+            FROM RankedData
+            WHERE Rnk > @Limit
+            HAVING COUNT(*) > 0 
+        ";
     }
+
+    sql += @"
+        ) FinalResult
+        ORDER BY SortOrder ASC;
+    ";
+
+    return await ExecuteResilientAsync(async connection =>
+    {
+        var parameters = new
+        {
+            CurrStart = currStart,
+            CurrEnd = currEnd,
+            PrevStart = prevStart,
+            PrevEnd = prevEnd,
+            Limit = limit,
+            OpenStatus = (int)DisputeStatus.Open
+        };
+
+        var command = new CommandDefinition(sql, parameters, cancellationToken: ct);
+        var result = await connection.QueryAsync<RawDisputeBreakdown>(command);
+
+        return result.ToList().AsReadOnly();
+    });
+}
 
     public async Task<IReadOnlyList<DisputeListItemDto>> ExportSelectedDisputesAsync(IEnumerable<Guid> disputeIds, CancellationToken ct)
     {

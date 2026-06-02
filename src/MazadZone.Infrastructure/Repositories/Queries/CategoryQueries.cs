@@ -3,10 +3,10 @@ namespace MazadZone.Infrastructure.Queries;
 using Dapper;
 using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Features.Categories.Queries;
+using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Categories;
 using MazadZone.Infrastructure.Repositories;
 using Polly;
-using System.Data;
 
 public sealed class CategoryQueries : ResilientRepository, ICategoryQueries
 {
@@ -166,52 +166,89 @@ public sealed class CategoryQueries : ResilientRepository, ICategoryQueries
     });
     }
 
-    public async Task<IReadOnlyList<CategoryStatResponse>> GetCategoryStatisticsAsync(CancellationToken ct)
-    {
-        var connection = _connectionFactory.CreateConnection();
-
-        const string sql = @"
+    public async Task<IReadOnlyList<CategoryStatResponse>> GetCategoryStatisticsAsync(
+    int limit, 
+    bool includeOther, 
+    CancellationToken ct)
+{
+    // 1. Base CTE to count and rank ALL categories
+    // Notice we replaced 'a.Status = 2' with 'a.Status = @ActiveStatus'
+    var sql = @"
+        WITH CategoryCounts AS (
             SELECT 
                 c.Id, 
                 c.Name, 
-                COUNT(a.id) as ActiveAuctionsCount
+                COUNT(a.Id) as ActiveAuctionsCount
             FROM Categories c
             LEFT JOIN Items i ON c.Id = i.CategoryId
-            LEFT JOIN Auctions a ON i.AuctionId = a.Id AND a.Status = 2 -- Active Status
+            LEFT JOIN Auctions a ON i.AuctionId = a.Id AND a.Status = @ActiveStatus
             WHERE c.IsDeleted = 0
-            GROUP BY c.Id, c.Name";
+            GROUP BY c.Id, c.Name
+        ),
+        RankedCategories AS (
+            SELECT 
+                Id, 
+                Name, 
+                ActiveAuctionsCount,
+                ROW_NUMBER() OVER(ORDER BY ActiveAuctionsCount DESC, Name ASC) as Rnk
+            FROM CategoryCounts
+        )
+        
+        SELECT 
+            Id, 
+            Name, 
+            ActiveAuctionsCount 
+        FROM (
+            -- Always select the Top N
+            SELECT 
+                Id, 
+                Name, 
+                ActiveAuctionsCount,
+                Rnk AS SortOrder
+            FROM RankedCategories
+            WHERE Rnk <= @Limit
+    ";
 
-        return await ExecuteResilientAsync(async connection =>
-        {
-            var result = await connection.QueryAsync<CategoryStatResponse>(sql);
-            return result.ToList();
-        });
-    }
-
-    public async Task<IReadOnlyList<TrendingCategoryResponse>> GetTrendingCategoriesAsync(int limit, CancellationToken ct)
+    // 2. Conditionally append the "Other" bucket logic
+    if (includeOther)
     {
-        var connection = _connectionFactory.CreateConnection();
+        sql += @"
+            UNION ALL
 
-        var since = DateTime.UtcNow.AddDays(-1);
-        const string sql = @"
-            SELECT TOP (@Limit)
-                c.Id,
-                c.Name, 
-                COUNT(b.id) as InteractionCount
-            FROM Categories c
-            JOIN Items i on c.Id = i.CategoryId
-            JOIN Auctions a ON i.AuctionId = a.Id
-            JOIN Bids b ON a.id = b.AuctionId
-            WHERE b.PlacedAtUtc >= @Since AND c.IsDeleted = 0
-            GROUP BY c.id, c.name
-        ORDER BY InteractionCount DESC";
-
-        return await ExecuteResilientAsync(async connection =>
-        {
-            var result = await connection.QueryAsync<TrendingCategoryResponse>(new CommandDefinition(sql, new { Since = since, Limit = limit }, cancellationToken: ct));
-            return result.ToList();
-        });
+            SELECT 
+                NULL AS Id, 
+                'Other' AS Name, 
+                SUM(ActiveAuctionsCount) AS ActiveAuctionsCount,
+                @Limit + 1 AS SortOrder 
+            FROM RankedCategories
+            WHERE Rnk > @Limit
+            HAVING COUNT(*) > 0 -- Ensures we don't generate an empty 'Other' row if total categories <= Limit
+        ";
     }
+
+    // 3. Close and sort the final result
+    sql += @"
+        ) FinalResult
+        ORDER BY SortOrder ASC;
+    ";
+
+    return await ExecuteResilientAsync(async connection =>
+    {
+        // Map the parameters safely to Dapper, casting the Enum to an integer
+        var parameters = new 
+        { 
+            Limit = limit,
+            ActiveStatus = (int)AuctionStatus.Active 
+        };
+
+        var result = await connection.QueryAsync<CategoryStatResponse>(
+            new CommandDefinition(sql, parameters, cancellationToken: ct)
+        );
+
+        return result.ToList().AsReadOnly();
+    });
+}
+
 
     public async Task<IReadOnlyList<CategoryResponse>> SearchByNameAsync(string name, CancellationToken ct)
     {
@@ -233,35 +270,87 @@ public sealed class CategoryQueries : ResilientRepository, ICategoryQueries
         });
     }
 
-    public async Task<IReadOnlyList<TrendingCategoryAuctionCountResponse>> GetTrendingCategoriesWithAuctionCountAsync(int limit, CancellationToken ct)
+    public async Task<IReadOnlyList<CategoryStatResponse>> GetRootCategoryStatisticsAsync(
+    int limit, 
+    bool includeOther, 
+    CancellationToken ct)
+{
+    // 1. Base CTE to count and rank ONLY Root Categories
+    // Notice the addition of 'AND c.ParentCategoryId IS NULL'
+    var sql = @"
+        WITH RootCategoryCounts AS (
+            SELECT 
+                c.Id, 
+                c.Name, 
+                COUNT(a.Id) as ActiveAuctionsCount
+            FROM Categories c
+            LEFT JOIN Items i ON c.Id = i.CategoryId
+            LEFT JOIN Auctions a ON i.AuctionId = a.Id AND a.Status = @ActiveStatus
+            WHERE c.IsDeleted = 0 AND c.ParentCategoryId IS NULL
+            GROUP BY c.Id, c.Name
+        ),
+        RankedCategories AS (
+            SELECT 
+                Id, 
+                Name, 
+                ActiveAuctionsCount,
+                ROW_NUMBER() OVER(ORDER BY ActiveAuctionsCount DESC, Name ASC) as Rnk
+            FROM RootCategoryCounts
+        )
+        
+        SELECT 
+            Id, 
+            Name, 
+            ActiveAuctionsCount 
+        FROM (
+            -- Always select the Top N
+            SELECT 
+                Id, 
+                Name, 
+                ActiveAuctionsCount,
+                Rnk AS SortOrder
+            FROM RankedCategories
+            WHERE Rnk <= @Limit
+    ";
+
+    // 2. Conditionally append the "Other" bucket logic
+    if (includeOther)
     {
-        // Calculate the moving 24-hour historical window cutoff
-        var since = DateTime.UtcNow.AddDays(-1);
+        sql += @"
+            UNION ALL
 
-        const string sql = @"
-        SELECT TOP (@Limit) 
-            c.Id,
-            c.Name, 
-            -- COUNT(DISTINCT) ensures an auction with 50 bids is only counted ONCE as a live active auction
-            COUNT(DISTINCT a.Id) AS ActiveAuctionsCount
-        FROM Categories c
-        INNER JOIN Items i ON c.Id = i.CategoryId
-        INNER JOIN Auctions a ON i.AuctionId = a.Id
-        INNER JOIN Bids b ON a.Id = b.AuctionId
-        WHERE b.PlacedAtUtc >= @Since 
-          AND c.IsDeleted = 0
-        GROUP BY c.Id, c.Name
-        ORDER BY ActiveAuctionsCount DESC;";
-
-        return await ExecuteResilientAsync(async connection =>
-        {
-            var result = await connection.QueryAsync<TrendingCategoryAuctionCountResponse>(
-                new CommandDefinition(sql, new { Since = since, Limit = limit }, cancellationToken: ct)
-            );
-
-            return result.ToList();
-        });
+            SELECT 
+                NULL AS Id, 
+                'Other' AS Name, 
+                SUM(ActiveAuctionsCount) AS ActiveAuctionsCount,
+                @Limit + 1 AS SortOrder 
+            FROM RankedCategories
+            WHERE Rnk > @Limit
+            HAVING COUNT(*) > 0 
+        ";
     }
+
+    // 3. Close and sort the final result
+    sql += @"
+        ) FinalResult
+        ORDER BY SortOrder ASC;
+    ";
+
+    return await ExecuteResilientAsync(async connection =>
+    {
+        var parameters = new 
+        { 
+            Limit = limit,
+            ActiveStatus = (int)AuctionStatus.Active 
+        };
+
+        var result = await connection.QueryAsync<CategoryStatResponse>(
+            new CommandDefinition(sql, parameters, cancellationToken: ct)
+        );
+
+        return result.ToList().AsReadOnly();
+    });
+}
 
 
     private class CategoryNodeDto

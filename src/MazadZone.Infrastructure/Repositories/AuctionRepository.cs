@@ -21,14 +21,14 @@ public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctio
         return await _context.Set<Auction>()
             .Include(a => a.Item)
             .Include(a => a.Bids)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id.Value == id.Value, cancellationToken);
     }
 
     public async Task<Auction?> GetByIdWithBidsAsync(AuctionId id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<Auction>()
             .Include(a => a.Bids)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id.Value == id.Value, cancellationToken);
     }
 
     public async Task<int> CancelAllActiveBySellerIdAsync(
@@ -46,19 +46,23 @@ public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctio
 
 
     public async Task<int> TerminateAllAuctionsBySellerIdAsync(UserId sellerId, string reason, CancellationToken ct)
-    {
-        var nonFinalStates = new[] {
-            AuctionStatus.Active,
-            AuctionStatus.Pending,
-        };
+{
+    var nonFinalStates = new[] {
+        AuctionStatus.Active,
+        AuctionStatus.Pending,
+    };
 
-        return await _context.Auctions
-            .Where(a => a.SellerId == sellerId.Value && nonFinalStates.Contains(a.Status))
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(a => a.Status, AuctionStatus.Cancelled)
-                .SetProperty(a => a.CancellationReason, Reason.Create($"Seller Banned: {reason}").Value),
-            ct);
-    }
+    // 1. Evaluate the complex object OUTSIDE the query tree
+    var cancellationReason = Reason.Create($"Seller Banned: {reason}").Value;
+
+    return await _context.Auctions
+        .Where(a => a.SellerId == sellerId && nonFinalStates.Contains(a.Status))
+        .ExecuteUpdateAsync(s => s
+            .SetProperty(a => a.Status, AuctionStatus.Cancelled)
+            // 2. Pass the evaluated variable in
+            .SetProperty(a => a.CancellationReason, cancellationReason),
+        ct);
+}
 
     public async Task<bool> HasBidderAlreadyParticipatedAsync(
         AuctionId auctionId,
@@ -67,9 +71,9 @@ public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctio
         CancellationToken cancellationToken = default)
     {
         return await _context.Set<Auction>()
-            .Where(a => a.Id == auctionId)
+            .Where(a => a.Id.Value == auctionId.Value)
             .SelectMany(a => a.Bids)
-            .AnyAsync(b => b.BidderId == bidderId && b.Id != excludeBidId, cancellationToken);
+            .AnyAsync(b => b.BidderId.Value == bidderId.Value && b.Id.Value != excludeBidId.Value, cancellationToken);
     }
 
 

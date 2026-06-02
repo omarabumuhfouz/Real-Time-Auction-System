@@ -125,9 +125,6 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<Guid>("AuctionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AuctionId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("BidderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -174,8 +171,6 @@ namespace MazadZone.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuctionId");
-
-                    b.HasIndex("AuctionId1");
 
                     b.HasIndex("BidderId");
 
@@ -975,14 +970,10 @@ namespace MazadZone.Infrastructure.Migrations
             modelBuilder.Entity("MazadZone.Domain.Auctions.Bid", b =>
                 {
                     b.HasOne("MazadZone.Domain.Auctions.Auction", null)
-                        .WithMany()
-                        .HasForeignKey("AuctionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MazadZone.Domain.Auctions.Auction", null)
                         .WithMany("Bids")
-                        .HasForeignKey("AuctionId1");
+                        .HasForeignKey("AuctionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MazadZone.Domain.Bidders.Bidder", null)
                         .WithMany()
