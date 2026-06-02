@@ -5,6 +5,7 @@ using MazadZone.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MazadZone.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260531204200_AddIdentityVerificationProperties")]
+    partial class AddIdentityVerificationProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,8 +248,16 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("NationalId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("TotalPidsPlaced")
                         .ValueGeneratedOnAdd()
@@ -683,11 +694,19 @@ namespace MazadZone.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ExtractedFullName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTime>("LastLogin")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("NationalId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -714,6 +733,13 @@ namespace MazadZone.Infrastructure.Migrations
 
                     b.Property<DateTime?>("SuspensionUntil")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("VerificationRejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("VerificationStatus")
+                        .HasColumnType("int");
 
                     b.ComplexProperty<Dictionary<string, object>>("FullName", "MazadZone.Domain.Users.User.FullName#FullName", b1 =>
                         {
@@ -1048,41 +1074,6 @@ namespace MazadZone.Infrastructure.Migrations
                         .WithOne()
                         .HasForeignKey("MazadZone.Domain.Bidders.Bidder", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.OwnsOne("MazadZone.Domain.Bidders.BidderVerification", "Verification", b1 =>
-                        {
-                            b1.Property<Guid>("BidderId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("ExtractedFullName")
-                                .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)");
-
-                            b1.Property<bool>("IsVerified")
-                                .HasColumnType("bit");
-
-                            b1.Property<string>("NationalId")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)");
-
-                            b1.Property<string>("RejectionReason")
-                                .HasMaxLength(500)
-                                .HasColumnType("nvarchar(500)");
-
-                            b1.Property<int>("Status")
-                                .HasColumnType("int");
-
-                            b1.HasKey("BidderId");
-
-                            b1.ToTable("BidderVerifications", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("BidderId");
-                        });
-
-                    b.Navigation("Verification")
                         .IsRequired();
                 });
 

@@ -18,6 +18,7 @@ public static class TableNames
     public const string Items = nameof(Items);
     public const string Sellers = nameof(Sellers);  
     public const string Bidders = nameof(Bidders);
+    public const string BidderVerifications = nameof(BidderVerifications);
     public const string Notifications = nameof(Notifications);  
     public const string Images = nameof(Images);
     public const string PaymentMethods = nameof(PaymentMethods);

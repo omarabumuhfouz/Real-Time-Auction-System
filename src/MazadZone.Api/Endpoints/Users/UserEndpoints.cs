@@ -31,6 +31,7 @@ public static class UserEndpoints
         ExportUsers.MapEndpoint(userGroup);
         GetUsers.MapEndpoint(userGroup);
         ExportSelectedUsers.MapEndpoint(userGroup);
+        VerifyIdentity.MapEndpoint(userGroup);
 
 
         // Map Auth Actions
