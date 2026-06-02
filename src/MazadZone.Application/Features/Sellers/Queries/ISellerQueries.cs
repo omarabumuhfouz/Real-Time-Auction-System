@@ -1,3 +1,5 @@
+using MazadZone.Application.Common.Paging;
+using MazadZone.Application.Features.Orders.Queries.DTOs;
 using MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
 using MazadZone.Application.Features.Sellers.Queries.GetUnverifiedSellers;
 
@@ -12,7 +14,7 @@ namespace MazadZone.Application.Features.Sellers.Queries;
 /// </summary>
 public interface ISellerQueries : IScopedService
 {
-    Task<PublicSellerProfileResponse?> GetPublicProfileAsync(UserId sellerId, CancellationToken cancellationToken);
+    Task<PublicSellerProfileResponse?> GetSellerProfileSummaryAsync(UserId sellerId, CancellationToken ct);
     Task<IReadOnlyList<UnverifiedSellerSummaryResponse>?> GetUnverifiedSellersAsync(CancellationToken cancellationToken);
-
+    Task<PagedList<FeedbackDto>> GetSellerFeedbacksAsync(UserId sellerId, int page, int pageSize, CancellationToken ct);
 }
