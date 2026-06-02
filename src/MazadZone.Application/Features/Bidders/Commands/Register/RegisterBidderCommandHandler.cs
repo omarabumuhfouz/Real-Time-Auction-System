@@ -4,6 +4,7 @@ using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.Errors;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;
 
@@ -43,6 +44,12 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         {
             // _logger.LogEmailConflict(EmailErrorCodes.AlreadyInUse, request.Email);
             return EmailErrors.AlreadyInUse;
+        }
+
+        if(await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
+        {
+            // _logger.LogNationalIdConflict(NationalIdErrorCodes.AlreadyInUse, request.NationalId);
+            return UserErrors.NationalIdAlreadyExists;
         }
 
         var newUserResult = _CreateUser(request);

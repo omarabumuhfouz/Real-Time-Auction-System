@@ -69,5 +69,4 @@ public async Task<IReadOnlyList<User>> GetByIdsAsync(IEnumerable<UserId> ids, Ca
                 .Where(u => ids.Contains(u.Id))
                 .ToListAsync(ct)).AsReadOnly();
     }
-
 }
