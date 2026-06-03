@@ -86,10 +86,10 @@ export function ModerateUsersFilters({
               value={filters.role}
               onValueChange={(val) => onFilterChange({ role: val as ModerateUserRole | "All Roles", page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="All Roles" className="cursor-pointer">All Roles</SelectItem>
                 <SelectItem value="Bidder" className="cursor-pointer">Bidder</SelectItem>
                 <SelectItem value="Seller" className="cursor-pointer">Seller</SelectItem>
@@ -105,10 +105,10 @@ export function ModerateUsersFilters({
               value={filters.status}
               onValueChange={(val) => onFilterChange({ status: val as ModerateUserStatus | "All Statuses", page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="All Statuses" className="cursor-pointer">All Statuses</SelectItem>
                 <SelectItem value="Active" className="cursor-pointer">Active</SelectItem>
                 <SelectItem value="Suspended" className="cursor-pointer">Suspended</SelectItem>
@@ -124,10 +124,10 @@ export function ModerateUsersFilters({
               value={filters.sortBy}
               onValueChange={(val) => onFilterChange({ sortBy: val, page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Date Joined" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="dateJoined" className="cursor-pointer">Date Joined</SelectItem>
                 <SelectItem value="name" className="cursor-pointer">Name</SelectItem>
                 <SelectItem value="lastActive" className="cursor-pointer">Last Active</SelectItem>

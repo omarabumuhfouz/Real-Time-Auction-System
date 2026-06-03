@@ -85,10 +85,10 @@ export function ModerateAuctionsFilters({
                 onFilterChange({ category: val === "All Categories" ? "" : val, page: 1 })
               }
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 {AUCTION_CATEGORIES.map((cat) => (
                   <SelectItem key={cat} value={cat} className="cursor-pointer">
                     {cat}
@@ -112,10 +112,10 @@ export function ModerateAuctionsFilters({
                 })
               }
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="All Statuses" className="cursor-pointer">
                   All Statuses
                 </SelectItem>
@@ -144,10 +144,10 @@ export function ModerateAuctionsFilters({
               value={filters.sortBy}
               onValueChange={(val) => onFilterChange({ sortBy: val, page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Date Created" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="dateCreated" className="cursor-pointer">
                   Date Created
                 </SelectItem>

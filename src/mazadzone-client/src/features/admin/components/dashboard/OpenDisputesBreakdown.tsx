@@ -139,7 +139,7 @@ export function OpenDisputesBreakdown({ data, isLoading }: OpenDisputesBreakdown
       </div>
 
       {/* Review CTA panel */}
-      <div className="mt-5 p-3.5 bg-accent/40 rounded-lg flex flex-col sm:flex-row xl:flex-col 2xl:flex-row items-start sm:items-center xl:items-start 2xl:items-center justify-between gap-4 border border-accent">
+      <div className="mt-4 p-3 bg-accent/40 rounded-lg flex flex-col sm:flex-row xl:flex-col 2xl:flex-row items-start sm:items-center xl:items-start 2xl:items-center justify-between gap-3 border border-accent">
         <div className="flex items-start gap-2.5">
           <span className="text-sm shrink-0 mt-0.5">🛡️</span>
           <p className="text-[11px] text-muted-foreground leading-snug">
