@@ -18,7 +18,7 @@ public static class SendChatMessage
             .Produces<ChatAgentResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
-            .RequireAuthorization(Policies.Shared);
+            .RequireAuthorization();
     }
 
     private static async Task<IResult> HandleAsync(
