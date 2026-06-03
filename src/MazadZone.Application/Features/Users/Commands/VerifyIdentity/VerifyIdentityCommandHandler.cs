@@ -92,8 +92,11 @@ public class VerifyIdentityCommandHandler : ICommandHandler<VerifyIdentityComman
             return Result.Failure<Unit>(Error.Validation("Identity.InvalidNationalIdFormat", reason));
         }
 
-        // Update bidder verification status to Verified
-        bidder.ApproveVerification(extractionResult.NationalId, user.FullName.GetDisplayName());
+        // Update bidder verification status to Verified using strictly the extracted name
+        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName :
+                                !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName : 
+                                "Unknown (OCR Failed to read name)";
+        bidder.ApproveVerification(extractionResult.NationalId, extractedFullName);
         _bidderRepository.Update(bidder);
 
         // Update associated Seller profile if it exists

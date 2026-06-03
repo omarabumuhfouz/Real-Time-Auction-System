@@ -31,5 +31,11 @@
     <ProjectReference Include="..\MazadZone.Application\MazadZone.Application.csproj" />
     <ProjectReference Include="..\MazadZone.Infrastructure\MazadZone.Infrastructure.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+  <None Update="tessdata\**\*">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  </ItemGroup>
 
 </Project>

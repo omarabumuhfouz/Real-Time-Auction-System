@@ -23,7 +23,7 @@ public class GetUsersQueryHandlerTests : UserBaseTest<GetUsersQueryHandler>
 
         var mockUsers = new List<UserDto>
         {
-            new UserDto(System.Guid.NewGuid(), "John Doe", "john@example.com", "+123", "User", "Active", System.DateTime.UtcNow, System.DateTime.UtcNow)
+            new UserDto(System.Guid.NewGuid(), "John Doe", "john@example.com", "+123", "User", "Active", System.DateTime.UtcNow, System.DateTime.UtcNow, "Verified", null, null, null)
         };
         var pagedList = new PagedList<UserDto>(mockUsers, 1, 10, 1);
 

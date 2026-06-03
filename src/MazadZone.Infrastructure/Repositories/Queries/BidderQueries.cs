@@ -30,7 +30,7 @@ public class BidderQueries : ResilientRepository, IBidderQueries
         ELSE 'UnKnown'
     END AS Status,
 
-    b.IsVerified,
+    bv.IsVerified,
     u.CreatedOnUtc AS MemberSince,
     u.LastLogin,
     b.City,
@@ -45,6 +45,7 @@ public class BidderQueries : ResilientRepository, IBidderQueries
     COALESCE(b.CompletedPurchasesCount, 0) AS CompletedPurchasesCount
 FROM Bidders b
 JOIN Users u ON b.Id = u.Id -- Added missing ON condition
+LEFT JOIN BidderVerifications bv ON b.Id = bv.BidderId
 WHERE b.Id = @bidderId;
         ";
 

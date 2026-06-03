@@ -37,10 +37,9 @@ try
     {
         options.AddPolicy("AllowAll", policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // Explicitly permit the frontend origin
-                .AllowAnyHeader()
+            policy.WithOrigins("http://localhost:3000")
                 .AllowAnyMethod()
-                .AllowCredentials(); // Mandated for SignalR auth handshakes
+                .AllowCredentials();
         });
     });
 
@@ -56,32 +55,16 @@ try
 
     var app = builder.Build();
 
-    // Auto apply migrations
+
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         dbContext.Database.Migrate();
     }
 
-    //Map Endpoints
-    app.MapEmailEndpoints();
-    app.MapDashboardEndpoints();
-    app.MapNotificationEndpoints();
-    app.MapBidderEndpoints();
-    app.MapOrderEndpoints();
-    app.MapPaymentEndpoints();
-    app.MapCategoryEndpoints();
-    app.MapUserEndpoints();
-    app.MapSellerEndpoints();
-    app.MapSellerDashboardEndpoints();
-    app.MapAuctionEndpoints();
-    app.MapDisputeEndpoints();
-    app.MapDisputeTypeEndpoints();
-    app.MapAuthenticationEndpoints();
-    app.MapChatAgentEndpoints();
-    // ==========================================
+
     // Middlewares Configuration
-    // ==========================================
+
 
     // Https Redirection
     app.UseHttpsRedirection();
@@ -124,9 +107,10 @@ try
         app.MapOpenApi();
     }
 
-    // ==========================================
+
     // EndPoints and Hubs registration
-    // ==========================================
+
+    app.MapEmailEndpoints();
     app.MapDashboardEndpoints();
     app.MapNotificationEndpoints();
     app.MapBidderEndpoints();
@@ -142,11 +126,11 @@ try
     app.MapAuthenticationEndpoints();
     app.MapChatAgentEndpoints();
 
-    // الـ Hubs الخاصة بـ SignalR (ستعمل الآن المصادقة عليها بنجاح)
+
     app.MapHub<AuctionsHub>("/hubs/auctions");
     app.MapHub<NotificationsHub>("/hubs/notifications");
 
-    // لوحة تحكم Hangfire
+
     app.UseHangfireDashboard("/hangfire");
 
     app.Run();

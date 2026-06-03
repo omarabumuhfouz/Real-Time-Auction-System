@@ -49,6 +49,9 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
                         .HasMaxLength(50)
                         .IsRequired();
 
+            verification.HasIndex(v => v.NationalId)
+                        .IsUnique();
+
             verification.Property(v => v.IsVerified)
                         .IsRequired();
 

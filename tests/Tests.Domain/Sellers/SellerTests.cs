@@ -9,39 +9,20 @@ public class SellerTests
 {
     #region Factory Method: BecomeSeller
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void BecomeSeller_NationalIdIsInvalid_ReturnsInvalidNationalIdError(string? invalidNationalId)
-    {
-        // Arrange
-        var bidderId = UserId.New();
-
-        // Act
-        var result = Seller.BecomeSeller(bidderId, invalidNationalId!);
-
-        // Assert
-        result.IsFailure.ShouldBeTrue();
-        result.TopError.ShouldBe(SellerErrors.InvalidNationalId);
-    }
-
     [Fact]
     public void BecomeSeller_ValidInputs_CreatesSellerAndRaisesSellerCreatedDomainEvent()
     {
         // Arrange
         var bidderId = UserId.New();
-        var nationalId = "9991012345";
 
         // Act
-        var result = Seller.BecomeSeller(bidderId, nationalId);
+        var result = Seller.BecomeSeller(bidderId);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
         
         var seller = result.Value;
         seller.Id.Value.ShouldBe(bidderId.Value);
-        seller.NationalId.ShouldBe(nationalId);
         seller.IsVerified.ShouldBeFalse();
         seller.Rating.ShouldBe(0);
         seller.ReviewsCount.ShouldBe(0);
@@ -179,7 +160,6 @@ public class SellerTests
     private static Seller CreateValidSeller()
     {
         return Seller.BecomeSeller(
-            UserId.New(), 
-            "9991012345").Value;
+            UserId.New()).Value;
     }
 }

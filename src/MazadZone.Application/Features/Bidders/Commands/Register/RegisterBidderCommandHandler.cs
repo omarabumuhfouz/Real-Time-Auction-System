@@ -80,6 +80,8 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
             return Result.Failure<RegisterBidderDto>(Error.Validation(
                 "Identity.NationalIdMismatch", 
                 "The national ID extracted from the card does not match the provided national ID."));
+        }
+
         if(await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
         {
             // _logger.LogNationalIdConflict(NationalIdErrorCodes.AlreadyInUse, request.NationalId);
@@ -103,8 +105,11 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
 
         var newBidder = bidderResult.Value;
         
-        // Approve verification on the Bidder entity
-        newBidder.ApproveVerification(extractionResult.NationalId, newUser.FullName.GetDisplayName());
+        // Approve verification on the Bidder entity using strictly the extracted name
+        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName :
+                                !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName : 
+                                "Unknown (OCR Failed to read name)";
+        newBidder.ApproveVerification(extractionResult.NationalId, extractedFullName);
 
         var accessToken = _tokenProvider.GenerateAccessToken(newUser);
         var refreshTokenRaw = _tokenProvider.GenerateRefreshToken();

@@ -284,9 +284,6 @@ namespace MazadZone.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NationalId")
-                        .IsUnique();
-
                     b.ToTable("Bidders", (string)null);
                 });
 
@@ -565,10 +562,6 @@ namespace MazadZone.Infrastructure.Migrations
 
                     b.Property<DateTime?>("ModifiedOnUtc")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("NationalId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Rating")
                         .HasColumnType("decimal(3, 2)");
@@ -1069,6 +1062,9 @@ namespace MazadZone.Infrastructure.Migrations
                                 .HasColumnType("int");
 
                             b1.HasKey("BidderId");
+
+                            b1.HasIndex("NationalId")
+                                .IsUnique();
 
                             b1.ToTable("BidderVerifications", (string)null);
 

@@ -30,8 +30,7 @@ public static class DependencyInjection
             .AddHangfireServices(configuration)
             .AddCachingServices(configuration)
             .AddBackgroundServices()
-            .AddGeminiServices(configuration)
-            .AddGoogleVisionServices();
+            .AddGeminiServices(configuration);
 
         services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.GmailOptionsKey));
 
@@ -205,25 +204,6 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddGoogleVisionServices(this IServiceCollection services)
-    {
-        services.AddSingleton<Google.Cloud.Vision.V1.ImageAnnotatorClient>(sp =>
-        {
-            var builder = new Google.Cloud.Vision.V1.ImageAnnotatorClientBuilder();
-            
-            var credentialsPath = @"C:\Users\anon\Downloads\mazadzonevestion-63efa229c4ad.json";
-            if (System.IO.File.Exists(credentialsPath))
-            {
-                using var stream = new System.IO.FileStream(credentialsPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                builder.GoogleCredential = Google.Apis.Auth.OAuth2.CredentialFactory.FromStream<Google.Apis.Auth.OAuth2.ServiceAccountCredential>(stream).ToGoogleCredential();
-            }
 
-            return builder.Build();
-        });
-
-        services.AddScoped<IIdentityExtractionService, GoogleVisionIdentityExtractionService>();
-
-        return services;
-    }
 
 }

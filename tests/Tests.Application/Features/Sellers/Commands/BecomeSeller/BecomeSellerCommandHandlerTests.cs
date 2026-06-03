@@ -86,8 +86,5 @@ public class BecomeSellerCommandHandlerTests : SellerBaseTest<BecomeSellerComman
         capturedSeller.ShouldNotBeNull();
         
         capturedSeller.Id.Value.ShouldBe(user.Id.Value); 
-        
-        
-        capturedSeller.NationalId.ShouldBe(expectedNationalId);
     }
 }

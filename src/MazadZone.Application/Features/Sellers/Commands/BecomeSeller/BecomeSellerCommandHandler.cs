@@ -51,7 +51,7 @@ public sealed class BecomeSellerCommandHandler : ICommandHandler<BecomeSellerCom
             return BidderErrors.NotFound;
         }
 
-        var result = Seller.BecomeSeller(request.UserId, nationalId: nationalId);
+        var result = Seller.BecomeSeller(request.UserId);
 
         if (result.IsFailure)
         {

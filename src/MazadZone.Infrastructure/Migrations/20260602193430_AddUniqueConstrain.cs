@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,8 +11,8 @@ namespace MazadZone.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateIndex(
-                name: "IX_Bidders_NationalId",
-                table: "Bidders",
+                name: "IX_BidderVerifications_NationalId",
+                table: "BidderVerifications",
                 column: "NationalId",
                 unique: true);
         }
@@ -21,8 +21,8 @@ namespace MazadZone.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
-                name: "IX_Bidders_NationalId",
-                table: "Bidders");
+                name: "IX_BidderVerifications_NationalId",
+                table: "BidderVerifications");
         }
     }
 }

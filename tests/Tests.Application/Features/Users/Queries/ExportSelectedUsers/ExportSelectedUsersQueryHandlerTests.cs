@@ -57,7 +57,11 @@ public class ExportSelectedUsersQueryHandlerTests : UserBaseTest<ExportSelectedU
             "Admin",
             "Active",
             mockDate,
-            mockDate
+            mockDate,
+            "Verified",       // VerificationStatus
+            null,             // NationalId
+            null,             // ExtractedFullName
+            null              // VerificationRejectionReason
         )
     };
 

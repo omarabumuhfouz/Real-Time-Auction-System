@@ -281,7 +281,7 @@ public class DatabaseSeeder : IDatabaseSeeder
                 $"Near {f.Company.CompanyName()}"
             ).Value;
 
-            var seller = Seller.BecomeSeller(user.Id, p.natId).Value;
+            var seller = Seller.BecomeSeller(user.Id).Value;
             seller.Verify();
             ClearDomainEvents(seller);
 
