@@ -8,15 +8,16 @@ public static class Ship
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/ship", HandleAsync)
-           // .RequireAuthorization() // Highly recommended: Only the seller (or an admin) should be allowed to mark an order as shipped
+           .RequireAuthorization(Policies.SellerOnly)
+           .WithOpenApi()
            .WithSummary("Mark an order as shipped")
-           .WithDescription("Updates the status of an order to 'Shipped', indicating that the seller has dispatched the item to the buyer. Returns a 409 Conflict if the order is already shipped, canceled, or hasn't been confirmed/processed yet.")
+           .WithDescription("Updates the status of an order to 'Shipped', indicating the seller has dispatched the item to the buyer. Returns a 409 Conflict if the order is already shipped, canceled, or hasn't been confirmed yet. **Requires Seller role.**")
            .Produces(StatusCodes.Status204NoContent)
-           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For a malformed GUID in the route
-           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
-           .ProducesProblem(StatusCodes.Status403Forbidden) // Token is valid, but the user lacks permission to modify THIS order
-           .ProducesProblem(StatusCodes.Status404NotFound) // Order does not exist
-           .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule violations (e.g., invalid state transition)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+           .ProducesProblem(StatusCodes.Status401Unauthorized)
+           .ProducesProblem(StatusCodes.Status403Forbidden)
+           .ProducesProblem(StatusCodes.Status404NotFound)
+           .ProducesProblem(StatusCodes.Status409Conflict)
            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 

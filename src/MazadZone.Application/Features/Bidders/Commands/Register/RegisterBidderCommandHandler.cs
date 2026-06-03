@@ -80,7 +80,9 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
             return Result.Failure<RegisterBidderDto>(Error.Validation(
                 "Identity.NationalIdMismatch", 
                 "The national ID extracted from the card does not match the provided national ID."));
-        if(await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
+        }
+
+        if (await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
         {
             // _logger.LogNationalIdConflict(NationalIdErrorCodes.AlreadyInUse, request.NationalId);
             return UserErrors.NationalIdAlreadyExists;

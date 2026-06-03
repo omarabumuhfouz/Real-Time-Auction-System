@@ -13,16 +13,17 @@ public static class AddFeedback
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/{id:guid}/feedback", HandleAsync)
-        //    .RequireAuthorization()
+           .RequireAuthorization(Policies.BidderOnly)
+           .WithOpenApi()
            .WithSummary("Add feedback to a delivered order")
-           .WithDescription("Allows a buyer to submit a rating and comment for a completed/delivered order. Returns a 409 Conflict if the order is not yet delivered, or if feedback has already been submitted for this order.")
+           .WithDescription("Allows the buyer to submit a rating and comment for a completed/delivered order. Returns a 409 Conflict if the order is not yet delivered, or if feedback has already been submitted. **Requires Bidder role.**")
            .Accepts<AddFeedbackRequest>("application/json")
            .Produces(StatusCodes.Status204NoContent)
-           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // e.g., Rating is outside the 1-5 range, or comment is too long
-           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
-           .ProducesProblem(StatusCodes.Status403Forbidden) // User is logged in, but is not the buyer of this order
-           .ProducesProblem(StatusCodes.Status404NotFound) // Order does not exist
-           .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule violations (e.g., Order not delivered yet, or feedback already exists)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+           .ProducesProblem(StatusCodes.Status401Unauthorized)
+           .ProducesProblem(StatusCodes.Status403Forbidden)
+           .ProducesProblem(StatusCodes.Status404NotFound)
+           .ProducesProblem(StatusCodes.Status409Conflict)
            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 

@@ -1,7 +1,7 @@
+using MazadZone.Api.Infrastructure.Binding;
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Auctions.DTOs;
 using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
-using MazadZone.Domain.Bidders;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,11 +14,15 @@ public static class GetMyBids
         app.MapGet("/my-bids", HandleAsync)
            .WithName("GetMyBids")
            .WithOpenApi()
-           .Produces<PagedList<MyBidAuctionDto>>(StatusCodes.Status200OK);
+           .WithSummary("Get the authenticated bidder's bids")
+           .WithDescription("Returns a paginated list of auctions the authenticated bidder has participated in. The bidder identity is taken from the JWT — no BidderId parameter is accepted. **Requires Bidder role.**")
+           .RequireAuthorization(Policies.BidderOnly)
+           .Produces<PagedList<MyBidAuctionDto>>(StatusCodes.Status200OK)
+           .Produces(StatusCodes.Status401Unauthorized)
+           .Produces(StatusCodes.Status403Forbidden);
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromQuery] UserId bidderId,
         [FromQuery] int? page,
         [FromQuery] int? pageSize,
         [FromQuery] string? query,
@@ -26,11 +30,12 @@ public static class GetMyBids
         [FromQuery] string? tab,
         [FromQuery] string? sortBy,
         [FromQuery] string? sortDirection,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
         var getMyBidsQuery = new GetMyBidsQuery(
-            bidderId,
+            boundUserId.Value,
             page ?? 1,
             pageSize ?? 12,
             query,

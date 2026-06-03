@@ -12,8 +12,12 @@ public static class ActivateAuction
             .WithName("ActivateAuction")
             .WithOpenApi()
             .WithSummary("Activates an auction")
+            .WithDescription("Transitions an auction from 'Pending' to 'Active' state, making it visible to bidders. **Requires Admin role.**")
+            .RequireAuthorization(Policies.AdminOnly)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
     }
 
     private static async Task<IResult> HandleAsync(

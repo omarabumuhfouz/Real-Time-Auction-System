@@ -14,7 +14,9 @@ public static class GetSimilarAuctions
             .WithName("GetSimilarAuctions")
             .WithOpenApi()
             .WithSummary("Gets similar auctions")
-            .Produces<IReadOnlyList<AuctionsListDto>>(StatusCodes.Status200OK);
+            .WithDescription("Retrieves a list of auctions similar to the specified one (same category). Use the optional 'limit' parameter to control how many results are returned (default: 6). This is a public endpoint — no authentication required.")
+            .Produces<IReadOnlyList<AuctionsListDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> HandleAsync(

@@ -13,7 +13,9 @@ public static class GetAuctionById
             .WithName("GetAuctionById")
             .WithOpenApi()
             .WithSummary("Gets auction details by id")
-            .Produces<AuctionDto>(StatusCodes.Status200OK);
+            .WithDescription("Retrieves the full details of a single auction by its unique identifier. This is a public endpoint — no authentication required.")
+            .Produces<AuctionDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> HandleAsync(

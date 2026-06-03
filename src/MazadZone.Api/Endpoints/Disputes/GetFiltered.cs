@@ -32,11 +32,12 @@ public static class GetFiltered
     {
         // Assuming your group route is already "/disputes"
         app.MapGet("/", HandleAsync)
-           // .RequireAuthorization(Policies.AdminOnly)
+           .RequireAuthorization(Policies.AdminOnly)
+           .WithOpenApi()
            .WithSummary("Get a filtered and sorted list of disputes")
-           .WithDescription("Retrieves a read-only list of disputes. Supports searching by name/category, filtering by status/date, and sorting.")
+           .WithDescription("Retrieves a read-only list of disputes. Supports searching by name/category, filtering by status/date, and sorting. **Requires Admin role.**")
            .Produces<IReadOnlyList<DisputeListItemDto>>(StatusCodes.Status200OK)
-           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // Triggers if FluentValidation fails
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
            .ProducesProblem(StatusCodes.Status401Unauthorized)
            .ProducesProblem(StatusCodes.Status403Forbidden)
            .ProducesProblem(StatusCodes.Status500InternalServerError);

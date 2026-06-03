@@ -17,7 +17,9 @@ public static class GetAuctions
             .WithName("GetAuctions")
             .WithOpenApi()
             .WithSummary("Search and filter auctions")
-            .Produces<PagedList<AuctionsListDto>>(StatusCodes.Status200OK);
+            .WithDescription("Retrieves a paginated list of auctions. Supports filtering by search term, category, bid price range, status, item condition, and sorting. This is a public endpoint — no authentication required.")
+            .Produces<PagedList<AuctionsListDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<IResult> HandleAsync(
@@ -25,8 +27,6 @@ public static class GetAuctions
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        System.Console.WriteLine($"\n\n\nBound Parameter Status: {parameters.Status}\n\n\n");
-
         var query = new GetAuctionsQuery(
             parameters.Page == 0 ? 1 : parameters.Page,
             parameters.PageSize == 0 ? 12 : parameters.PageSize,
