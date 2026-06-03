@@ -11,15 +11,10 @@ public static class Create
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/", HandleAsync)
-            .WithName("CreateNotification")
-            .WithOpenApi()
             .WithSummary("Creates a new Notification")
-            .WithDescription("Creates a new notification for a specified user with a title and message body. This is typically called by internal system processes. **Requires Admin role.**")
-            .RequireAuthorization(Policies.AdminOnly)
+            .WithDescription("Creates a new notification for a user with title and message.")
             .Produces<Guid>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status500InternalServerError);
     }
 

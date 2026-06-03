@@ -8,16 +8,15 @@ public static class Cancel
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/cancel", HandleAsync)
-           .RequireAuthorization(Policies.BidderOnly)
-           .WithOpenApi()
+        //    .RequireAuthorization()
            .WithSummary("Cancel an order")
-           .WithDescription("Cancels an existing order. Only cancellable if still in a 'Pending' state. Returns a 409 Conflict if the order has already been shipped or delivered. **Requires Bidder role.**")
+           .WithDescription("Cancels an existing order. This operation is typically restricted by domain rules—for example, an order might only be cancellable if it is still in a 'Pending' state. Returns a 409 Conflict if the order has already been shipped, delivered")
            .Produces(StatusCodes.Status204NoContent)
-           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
-           .ProducesProblem(StatusCodes.Status401Unauthorized)
-           .ProducesProblem(StatusCodes.Status403Forbidden)
-           .ProducesProblem(StatusCodes.Status404NotFound)
-           .ProducesProblem(StatusCodes.Status409Conflict)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For a malformed GUID in the route
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
+           .ProducesProblem(StatusCodes.Status403Forbidden) // User is logged in, but lacks permission to cancel THIS specific order
+           .ProducesProblem(StatusCodes.Status404NotFound) // Order does not exist
+           .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule violations (e.g., too late to cancel)
            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 

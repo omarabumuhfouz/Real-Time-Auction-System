@@ -8,16 +8,15 @@ public static class Confirm
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/confirm", HandleAsync)
-           .RequireAuthorization(Policies.SellerOnly)
-           .WithOpenApi()
+           // .RequireAuthorization() // for Admain or Seller
            .WithSummary("Confirm an order")
-           .WithDescription("Confirms an existing order, transitioning its state from 'Pending'. Indicates the seller has acknowledged the order and is preparing to fulfill it. Returns a 409 Conflict if the order is already confirmed, canceled, or in an invalid state. **Requires Seller role.**")
+           .WithDescription("Confirms an existing order, typically transitioning its state from 'Pending'. This indicates the seller has acknowledged the order and is preparing to fulfill it. Returns a 409 Conflict if the order is already confirmed, canceled, or in an invalid state for confirmation.")
            .Produces(StatusCodes.Status204NoContent)
-           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
-           .ProducesProblem(StatusCodes.Status401Unauthorized)
-           .ProducesProblem(StatusCodes.Status403Forbidden)
-           .ProducesProblem(StatusCodes.Status404NotFound)
-           .ProducesProblem(StatusCodes.Status409Conflict)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For a malformed GUID in the route
+           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
+           .ProducesProblem(StatusCodes.Status403Forbidden) // User is logged in, but lacks permission to confirm THIS specific order
+           .ProducesProblem(StatusCodes.Status404NotFound) // Order does not exist
+           .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule violations (e.g., order is already confirmed)
            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 

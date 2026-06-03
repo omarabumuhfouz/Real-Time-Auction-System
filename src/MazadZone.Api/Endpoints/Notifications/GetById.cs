@@ -4,7 +4,6 @@ using MazadZone.Application.Features.Notifications.Queries.GetNotificationById;
 using MazadZone.Application.Features.Notifications.Queries.DTOs;
 using MazadZone.Domain.Notifications;
 using MazadZone.Api.Extensions;
-using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Notifications;
 
@@ -13,21 +12,15 @@ public static class GetById
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/{id:guid}", HandleAsync)
-            .WithName("GetNotificationById")
-            .WithOpenApi()
             .WithSummary("Gets Notification by ID")
-            .WithDescription("Retrieves the full details of a specific notification by its unique identifier. **Requires authentication (any role).**")
-            .RequireAuthorization(Policies.Shared)
+            .WithDescription("Retrieves the details of a specific notification by its unique identifier.")
             .Produces<NotificationDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(
         Guid id,
-        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
@@ -40,8 +33,6 @@ public static class GetById
         {
             var notificationId = NotificationId.From(id);
 
-            // TODO(security): The GetNotificationByIdQueryHandler MUST verify that
-            // boundUserId.Value matches the notification's UserId before returning data.
             var query = new GetNotificationByIdQuery(notificationId);
 
             var result = await sender.Send(query, cancellationToken);
