@@ -25,11 +25,9 @@ public static class GetAuctions
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        System.Console.WriteLine($"\n\n\nBound Parameter Status: {parameters.Status}\n\n\n");
-
         var query = new GetAuctionsQuery(
-            parameters.Page == 0 ? 1 : parameters.Page,
-            parameters.PageSize == 0 ? 12 : parameters.PageSize,
+            parameters.Page,
+            parameters.PageSize,
             parameters.SearchTerm,
             parameters.CategoryId,
             parameters.MinCurrentBid is null && parameters.MaxCurrentBid is null
@@ -47,8 +45,8 @@ public static class GetAuctions
     // Create a flat parameter group structure
     public class AuctionQueryParameters
     {
-        public int Page { get; set; }
-        public int PageSize { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 12;
         public string? SearchTerm { get; set; }
         public CategoryId? CategoryId { get; set; }
         public decimal? MinCurrentBid { get; set; }
