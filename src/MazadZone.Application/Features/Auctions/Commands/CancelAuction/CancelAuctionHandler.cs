@@ -32,6 +32,14 @@ class CancelAuctionHandler(
         }
 
         var auction = auctionResult;
+
+        // Ownership check: the requesting seller must own this auction.
+        if (auction.SellerId != request.SellerId)
+        {
+            CancelAuctionLog.LogDomainViolation(_logger, request.AuctionId.Value, "Seller does not own this auction.");
+            return Result.Failure<Unit>(AuctionErrors.Forbidden);
+        }
+
         var updateResult = auction.MarkAsCancelled(_dateTimeProvider.Now, request.Reason);
         
         if (updateResult.IsFailure)

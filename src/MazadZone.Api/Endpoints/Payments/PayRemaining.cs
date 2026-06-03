@@ -17,8 +17,12 @@ public static class PayRemaining
             .WithName("PayRemainingAmount")
             .WithOpenApi()
             .WithSummary("Pays the remaining amount for an order after authorization")
+            .WithDescription("Charges the remaining balance on an order for a won auction using the specified payment method. This is called after the initial payment authorization is confirmed. **Requires Bidder role.**")
+            .RequireAuthorization(Policies.BidderOnly)
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
     }
 

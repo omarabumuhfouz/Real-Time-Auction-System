@@ -9,17 +9,17 @@ public static class ReplyToFeedback
     public static void MapEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/orders/{orderId:guid}/feedback/reply", HandleAsync)
-           // .RequireAuthorization() // Highly recommended: Only the seller of this specific order should be able to reply
+           .RequireAuthorization(Policies.SellerOnly)
            .WithName("ReplyToOrderFeedback")
            .WithSummary("Reply to order feedback")
-           .WithDescription("Allows a seller to publicly reply to feedback left by a buyer on a specific completed order. Returns a 404 if the order is not found, and a 409 Conflict if no feedback exists yet or if a reply has already been submitted.")
+           .WithDescription("Allows the seller to publicly reply to feedback left by the buyer on a specific completed order. Returns a 404 if the order is not found, and a 409 Conflict if no feedback exists yet or if a reply has already been submitted. **Requires Seller role.**")
            .Accepts<ReplyToFeedbackRequest>("application/json")
            .Produces(StatusCodes.Status204NoContent)
-           .ProducesValidationProblem(StatusCodes.Status400BadRequest) // For a malformed GUID, or if the 'ReplyText' is empty/too long
-           .ProducesProblem(StatusCodes.Status401Unauthorized) // Missing or invalid token
-           .ProducesProblem(StatusCodes.Status403Forbidden) // Token is valid, but the user is not the seller of THIS order
-           .ProducesProblem(StatusCodes.Status404NotFound) // Order does not exist
-           .ProducesProblem(StatusCodes.Status409Conflict) // Domain rule violations (e.g., no feedback to reply to, or already replied)
+           .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+           .ProducesProblem(StatusCodes.Status401Unauthorized)
+           .ProducesProblem(StatusCodes.Status403Forbidden)
+           .ProducesProblem(StatusCodes.Status404NotFound)
+           .ProducesProblem(StatusCodes.Status409Conflict)
            .ProducesProblem(StatusCodes.Status500InternalServerError)
            .WithOpenApi();
     }
