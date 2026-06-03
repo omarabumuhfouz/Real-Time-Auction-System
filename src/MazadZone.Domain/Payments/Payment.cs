@@ -15,21 +15,29 @@ public sealed class Payment : AggregateRoot<PaymentId>
     private Payment() { }
 
     private Payment(
-        PaymentId id, OrderId orderId, UserId userId, Money? capturedHoldedAmount, Money? capturedRemainingAmount = null)
+        PaymentId id, OrderId orderId, UserId userId, Money capturedHoldedAmount, Money orderTotalAmount, decimal platformFeePercentage, Money? capturedRemainingAmount = null)
         : base(id)
     {
         OrderId = orderId;
         UserId = userId;
-        CapturedHoldedAmount = capturedHoldedAmount ?? Money.Zero();
+        CapturedHoldedAmount = capturedHoldedAmount;
         CapturedRemainingAmount = capturedRemainingAmount ?? Money.Zero();
+        
+        GrossAmount = orderTotalAmount;
+        PlatformFee = GrossAmount * platformFeePercentage;
+        NetAmount = GrossAmount - PlatformFee;
+
         Status = PaymentStatus.Pending;
         CreatedAtUtc = DateTime.UtcNow;
     }
 
     public OrderId OrderId { get; private init; }
     public UserId UserId { get; private init; }
-    public Money CapturedHoldedAmount { get; private set; } = Money.Zero();
-    public Money CapturedRemainingAmount { get; private set; } = Money.Zero();
+    public Money CapturedHoldedAmount { get; private set; }
+    public Money CapturedRemainingAmount { get; private set; }
+    public Money GrossAmount { get; private set; }
+    public Money PlatformFee { get; private set; }
+    public Money NetAmount { get; private set; }
     public PaymentStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private init; }
     public DateTime? CompletedAtUtc { get; private set; }
@@ -43,14 +51,14 @@ public sealed class Payment : AggregateRoot<PaymentId>
     // Encapsulate the collection
     public IReadOnlyCollection<Transaction> Transactions => _transactions.AsReadOnly();
 
-    public static Result<Payment> Create(OrderId orderId, UserId userId, Money amount)
+    public static Result<Payment> Create(OrderId orderId, UserId userId, Money depositAmount, Money orderTotalAmount, decimal platformFeePercentage)
     {
-        if (amount <= Money.Zero())
+        if (depositAmount <= Money.Zero())
             return Result.Failure<Payment>(PaymentErrors.AmountMustBeGreaterThanZero);
 
         var paymentId = PaymentId.New();
 
-        var payment = new Payment(paymentId, orderId, userId, amount);
+        var payment = new Payment(paymentId, orderId, userId, depositAmount, orderTotalAmount, platformFeePercentage);
 
         payment.RaiseDomainEvent(new PaymentCreatedDomainEvent(paymentId, orderId));
         return Result.Success(payment);

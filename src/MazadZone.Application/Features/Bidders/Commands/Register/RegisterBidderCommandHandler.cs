@@ -1,9 +1,10 @@
-﻿using MazadZone.Application.Features.Authentication.DTOs;
+using MazadZone.Application.Features.Authentication.DTOs;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Repositories;
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Users.Errors;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;
 
@@ -14,7 +15,14 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
     private readonly IBidderRepository _bidderRepository;
     private readonly IPasswordService _passwordService;
     private readonly ITokenProvider _tokenProvider;
+    private readonly IIdentityExtractionService _identityExtractionService;
     private readonly ILogger<RegisterBidderCommandHandler> _logger;
+
+    private static readonly System.Text.RegularExpressions.Regex StandardizedIdRegex = 
+        new System.Text.RegularExpressions.Regex(
+            @"^\d{10,15}$", 
+            System.Text.RegularExpressions.RegexOptions.Compiled, 
+            TimeSpan.FromMilliseconds(250));
 
     public RegisterBidderCommandHandler(
         IUnitOfWork unitOfWork,
@@ -22,6 +30,7 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         ITokenProvider tokenProvider,
         IUserRepository userRepository,
         IBidderRepository bidderRepository,
+        IIdentityExtractionService identityExtractionService,
         ILogger<RegisterBidderCommandHandler> logger
     )
     {
@@ -30,6 +39,7 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         _bidderRepository = bidderRepository;
         _passwordService = passwordService;
         _tokenProvider = tokenProvider;
+        _identityExtractionService = identityExtractionService;
         _logger = logger;
     }
 
@@ -41,8 +51,41 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
 
         if (await _userRepository.IsEmailInUseAsync(emailResult.Value, ct))
         {
-            // _logger.LogEmailConflict(EmailErrorCodes.AlreadyInUse, request.Email);
+            _logger.LogEmailConflict(EmailErrorCodes.AlreadyInUse, request.Email);
             return EmailErrors.AlreadyInUse;
+        }
+
+        // Perform Google Cloud Vision identity extraction & verification
+        if (request.IdentityCardImageBytes == null || request.IdentityCardImageBytes.Length == 0)
+        {
+            return Result.Failure<RegisterBidderDto>(Error.Validation("Identity.ImageRequired", "An image file of the identity card is required."));
+        }
+
+        var extractionResult = await _identityExtractionService.ExtractDataAsync(request.IdentityCardImageBytes);
+        if (!extractionResult.Success || string.IsNullOrWhiteSpace(extractionResult.NationalId))
+        {
+            var extractionReason = extractionResult.ErrorMessage ?? "Failed to extract text from ID card image.";
+            return Result.Failure<RegisterBidderDto>(Error.Validation("Identity.ExtractionFailed", extractionReason));
+        }
+
+        if (!StandardizedIdRegex.IsMatch(extractionResult.NationalId))
+        {
+            return Result.Failure<RegisterBidderDto>(Error.Validation(
+                "Identity.InvalidNationalIdFormat", 
+                $"Extracted National ID '{extractionResult.NationalId}' is invalid. Must be a numeric value of 10 to 15 digits."));
+        }
+
+        if (extractionResult.NationalId != request.NationalId)
+        {
+            return Result.Failure<RegisterBidderDto>(Error.Validation(
+                "Identity.NationalIdMismatch", 
+                "The national ID extracted from the card does not match the provided national ID."));
+        }
+
+        if(await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
+        {
+            // _logger.LogNationalIdConflict(NationalIdErrorCodes.AlreadyInUse, request.NationalId);
+            return UserErrors.NationalIdAlreadyExists;
         }
 
         var newUserResult = _CreateUser(request);
@@ -54,14 +97,19 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
         var newUser = newUserResult.Value;
         newUser.AddBidderRole();
 
-        var bidderResult = Bidder.CompleteProfile(newUser.Id,request.NationalId, request.Address.ToAddress());
+        var bidderResult = Bidder.CompleteProfile(newUser.Id, request.NationalId, request.Address.ToAddress());
         if (bidderResult.IsFailure)
         {
             return bidderResult.TopError;
         }
 
         var newBidder = bidderResult.Value;
-
+        
+        // Approve verification on the Bidder entity using strictly the extracted name
+        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName :
+                                !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName : 
+                                "Unknown (OCR Failed to read name)";
+        newBidder.ApproveVerification(extractionResult.NationalId, extractedFullName);
 
         var accessToken = _tokenProvider.GenerateAccessToken(newUser);
         var refreshTokenRaw = _tokenProvider.GenerateRefreshToken();

@@ -1,5 +1,6 @@
 
 using MazadZone.Application.Common.Interfaces;
+using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions.Events;
 using MazadZone.Domain.Repositories;

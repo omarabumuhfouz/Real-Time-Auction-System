@@ -27,7 +27,7 @@ public class HashedRefreshTokenConfiguration : IEntityTypeConfiguration<HashedRe
             .IsRequired();
 
         builder.Property(rt => rt.UserId)
-            .HasConversion(new UserIdIdConverter()) 
+            .HasConversion(new UserIdConverter()) 
             .IsRequired();
 
         builder.Property(rt => rt.ExpiresAt)

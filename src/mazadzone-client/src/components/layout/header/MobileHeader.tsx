@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
 import { Search, Gavel, Package, User, ChevronDown, LayoutDashboard, Menu, X } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORIES } from "./header.constants";
-import { NotificationPopover, useGetUnreadCount, useNotificationStore } from "@/features/notifications";
+import { NotificationPopover, useGetUnreadCount } from "@/features/notifications";
+import { useNotificationStore } from "@/features/notifications/store/notification.store";
 import { useAuthStore } from "@/stores/auth.store";
 
 export interface MobileHeaderProps {
@@ -36,20 +40,26 @@ export const MobileHeader = ({
   pathname,
 }: MobileHeaderProps) => {
   const userId = useAuthStore((state) => state.user?.id);
-  const { data: serverUnreadCount = 0 } = useGetUnreadCount(userId || "", {
+
+  // Fetch server count once on mount — used only to hydrate the Zustand store
+  const { data: serverUnreadCount } = useGetUnreadCount(userId || "", {
     enabled: isAuthenticated,
   });
-  const hasLocalNotifications = useNotificationStore(
-    (state) => state.notifications.length > 0,
-  );
-  const localUnreadCount = useNotificationStore((state) =>
-    state.notifications.reduce(
-      (count, notification) => count + (notification.isRead ? 0 : 1),
-      0,
-    ),
-  );
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const consumeOptimistic = useNotificationStore((state) => state._consumeOptimistic);
 
-  const unreadCount = hasLocalNotifications ? localUnreadCount : serverUnreadCount;
+  // Hydrate the Zustand badge from server data on initial load and after background refetches.
+  // If an optimistic update (from SignalR) is pending, skip the overwrite — the Zustand
+  // value is more recent than what the server returned.
+  useEffect(() => {
+    if (serverUnreadCount !== undefined) {
+      const wasOptimistic = consumeOptimistic();
+      if (!wasOptimistic) {
+        setUnreadCount(serverUnreadCount);
+      }
+    }
+  }, [serverUnreadCount, setUnreadCount, consumeOptimistic]);
 
   return (
     <>
@@ -134,7 +144,7 @@ export const MobileHeader = ({
                 </Link>
                 {isSeller && (
                   <Link
-                    href={ROUTES.SELLER.DASHBOARD}
+                    href={ROUTES.SELLER.AUCTIONS}
                     className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

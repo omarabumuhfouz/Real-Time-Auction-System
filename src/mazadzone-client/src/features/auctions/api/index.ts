@@ -4,11 +4,13 @@ export {
   useGetAuctions,
   useGetAuctionById,
   useGetAuctionsByCategory,
-  useGetClosingSoonAuctions,
+  useGetEndingSoonAuctions,
   useGetUpcomingAuctions,
   useGetBidHistory,
   useGetSimilarAuctions,
   useGetSellerAuctions,
+  useGetRootCategories,
+  useGetCategoryTree,
 } from "./auction.queries";
 
 // Mutations
@@ -30,6 +32,8 @@ export {
   activateAuction,
   endAuction,
   cancelAuction,
+  getRootCategories,
+  getCategoryTree,
 } from "./auction.api";
 
 // Pure Mappers

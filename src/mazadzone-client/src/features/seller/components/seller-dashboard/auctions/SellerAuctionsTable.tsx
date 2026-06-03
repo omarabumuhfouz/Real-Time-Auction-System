@@ -1,0 +1,225 @@
+"use client";
+
+import { useState } from "react";
+import { Inbox, Filter, ArrowUpDown, Download } from "lucide-react";
+import { AuctionPagination } from "@/features/auctions";
+import type { SellerAuctionSummaryDto } from "@/features/seller";
+import { SellerAuctionsTableRow } from "./SellerAuctionsTableRow";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { StatusPillBar, type StatusPillItem } from "@/components/ui/status-pill-bar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const SORT_OPTIONS = [
+  { value: "EndTime", label: "Ending Soon" },
+  { value: "CreationDate", label: "Recently Created" },
+  { value: "bidsCount", label: "Most Bids" },
+  { value: "lastBidAmount", label: "Highest Bid" },
+] as const;
+
+const TABLE_HEADERS = [
+  { key: "auction", label: "Auction", className: "" },
+  { key: "category", label: "Category", className: "" },
+  { key: "status", label: "Status", className: "" },
+  { key: "bids", label: "Bids", className: "" },
+  { key: "currentBid", label: "Current Bid", className: "" },
+  { key: "timeLeft", label: "Time Left", className: "" },
+  { key: "endsAt", label: "Ends At", className: "" },
+  { key: "actions", label: "Actions", className: "text-right pr-6" },
+] as const;
+
+interface SellerAuctionsTableProps {
+  auctions: SellerAuctionSummaryDto[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  isLoading: boolean;
+  activeStatus: string;
+  sortBy: string;
+  onStatusChange: (status: string) => void;
+  onSortChange: (sort: string) => void;
+  onPageChange: (page: number) => void;
+  onDeleteAuction: (id: string) => Promise<void>;
+  activeCount: number;
+  pendingCount: number;
+  soldCount: number;
+  unsoldCount: number;
+}
+
+export function SellerAuctionsTable({
+  auctions,
+  totalCount,
+  currentPage,
+  totalPages,
+  isLoading,
+  activeStatus,
+  sortBy,
+  onStatusChange,
+  onSortChange,
+  onPageChange,
+  onDeleteAuction,
+  activeCount,
+  pendingCount,
+  soldCount,
+  unsoldCount,
+}: SellerAuctionsTableProps) {
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeletingInProgress, setIsDeletingInProgress] = useState(false);
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setIsDeletingInProgress(true);
+    try {
+      await onDeleteAuction(deleteTargetId);
+    } finally {
+      setIsDeletingInProgress(false);
+      setDeleteTargetId(null);
+    }
+  };
+
+  const statusPills: StatusPillItem[] = [
+    { key: "Active", label: "Active", count: activeCount, color: "#10b981" },
+    { key: "Pending", label: "Pending", count: pendingCount, color: "#f59e0b" },
+    { key: "Sold", label: "Sold", count: soldCount, color: "#3b82f6" },
+    { key: "Unsold", label: "Unsold", count: unsoldCount, color: "#64748b" },
+  ];
+
+  return (
+    <div className="space-y-5">
+
+      {/* Toolbar: Status Pills + Sort + Export */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <StatusPillBar
+          items={statusPills}
+          activeKey={activeStatus}
+          onSelect={onStatusChange}
+        />
+
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          {/* Sort Select */}
+          <Select value={sortBy} onValueChange={onSortChange}>
+            <SelectTrigger className="cursor-pointer">
+              <span className="flex items-center gap-2">
+                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="Sort by" />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} className="cursor-pointer" value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Export Button */}
+          <Button
+            variant="outline"
+            className="rounded-lg h-9 px-3.5 text-xs font-semibold flex items-center gap-2 cursor-pointer"
+          >
+            <Download className="h-3.5 w-3.5 text-muted-foreground" />
+            Export
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Table */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full text-left border-collapse min-w-[900px]">
+          <thead>
+            <tr className="bg-muted/30 border-b border-border text-[10px] font-bold uppercase tracking-wider text-muted-foreground h-11">
+              {TABLE_HEADERS.map((header) => (
+                <th key={header.key} className={cn("px-5 py-3", header.className)}>
+                  {header.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/50">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, rowIdx) => (
+                <tr key={rowIdx} className="animate-pulse">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-12 bg-muted rounded-lg shrink-0" />
+                      <div className="space-y-1.5 w-24">
+                        <div className="h-3.5 bg-muted rounded" />
+                        <div className="h-2.5 bg-muted rounded w-16" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4"><div className="h-3 bg-muted rounded w-24" /></td>
+                  <td className="px-5 py-4"><div className="h-5 bg-muted rounded w-16" /></td>
+                  <td className="px-5 py-4"><div className="h-3 bg-muted rounded w-6" /></td>
+                  <td className="px-5 py-4"><div className="h-3 bg-muted rounded w-20" /></td>
+                  <td className="px-5 py-4"><div className="h-3 bg-muted rounded w-12" /></td>
+                  <td className="px-5 py-4"><div className="h-3.5 bg-muted rounded w-24" /></td>
+                  <td className="px-5 py-4 text-right pr-6"><div className="h-8 bg-muted rounded-lg w-20 ml-auto" /></td>
+                </tr>
+              ))
+            ) : auctions.length === 0 ? (
+              <tr>
+                <td colSpan={TABLE_HEADERS.length} className="px-5 py-14 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-2 max-w-xs mx-auto">
+                    <Inbox className="h-8 w-8 text-muted-foreground/40" />
+                    <h3 className="text-sm font-bold text-foreground">No auctions found</h3>
+                    <p className="text-xs text-muted-foreground">
+                      No auctions match the selected filter.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              auctions.map((auction) => (
+                <SellerAuctionsTableRow
+                  key={auction.auctionId}
+                  auction={auction}
+                  onDelete={handleDeleteClick}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+          <p className="text-xs font-medium text-muted-foreground text-left">
+            Showing <span className="font-bold text-foreground">{Math.min(totalCount, (currentPage - 1) * 5 + 1)}</span> to{" "}
+            <span className="font-bold text-foreground">{Math.min(totalCount, currentPage * 5)}</span> of{" "}
+            <span className="font-bold text-foreground">{totalCount}</span> auctions
+          </p>
+          <AuctionPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            hasPreviousPage={currentPage > 1}
+            hasNextPage={currentPage < totalPages}
+            className="w-full sm:w-auto"
+          />
+        </div>
+      )}
+
+      {/* Confirm Delete Modal */}
+      <DeleteConfirmationModal
+        isOpen={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={handleConfirmDelete}
+        isConfirming={isDeletingInProgress}
+      />
+    </div>
+  );
+}

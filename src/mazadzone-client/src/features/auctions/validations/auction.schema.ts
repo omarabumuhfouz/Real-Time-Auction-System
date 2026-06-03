@@ -25,15 +25,9 @@ export const createAuctionSchema = z
       .min(20, "Description must be at least 20 characters")
       .max(2000, "Description must be at most 2000 characters"),
 
-    category: z.enum(
-      Object.values(AuctionCategory) as [string, ...string[]],
-      { message: "Please select a category" },
-    ),
+    category: z.string().min(1, "Please select a category"),
 
-    subcategory: z.enum(
-      Object.values(AuctionSubcategory) as [string, ...string[]],
-      { message: "Please select a subcategory" },
-    ),
+    subcategory: z.string().optional().nullable(),
 
     condition: z.enum(
       Object.values(AuctionCondition) as [string, ...string[]],

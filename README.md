@@ -23,6 +23,7 @@
 - [Design Patterns](#-design-patterns)
 - [Domain Model](#-domain-model)
 - [Features](#-features)
+- [Frontend Client](#-frontend-client-mazadzone-client)
 - [API Endpoints](#-api-endpoints)
 - [Real-Time (SignalR)](#-real-time-signalr)
 - [Project Structure](#-project-structure)
@@ -42,7 +43,7 @@
 ### Key Highlights
 
 - ⚡ **Real-Time Bidding** — Live bid updates via SignalR WebSockets
-- 🤖 **AI Sales Agent** — Gemini-powered RAG chatbot for auction discovery
+- 🤖 **AI Sales Agent** — Gemini-powerd chatbot for auction discovery
 - 🔒 **Secure by Design** — JWT + RSA key rotation, BCrypt hashing, input validation
 - 📦 **Transactional Outbox** — Guaranteed domain event delivery with reliable processing
 - 🏗️ **Clean Architecture** — Strict 4-layer separation with Domain-Driven Design
@@ -91,17 +92,125 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 > 💡 **Dependency Rule**: Dependencies only point inward. The Domain layer has zero knowledge of databases, HTTP, or any external framework.
 
 ---
+## ✨ Features
+
+### 🏛️ Auction Management
+- Create, activate, cancel, and end auctions
+- Admin-level force cancellation
+- Automated lifecycle management via Hangfire scheduled jobs
+- Hierarchical category system (tree structure with breadcrumbs)
+- Advanced search with filters (status, price range, category, keyword)
+- Pagination, sorting, and similar auction recommendations
+- Trending categories with auction counts
+
+### 💰 Real-Time Bidding
+- Live bid placement with instant SignalR WebSocket broadcast
+- Minimum bid increment enforcement (configurable per auction)
+- Automatic outbid notifications to previous leading bidder
+- Deposit hold system (percentage-based: `BidDepositPercentage`)
+- Bid history tracking with status (Leading, Outbid)
+- Bid removal with automatic leader recalculation
+
+### 🤖 AI Sales Agent (RAG)
+- **Google Gemini 2.0 Flash** powered conversational chatbot
+- Retrieval-Augmented Generation: fetches live auction data as JSON context
+- Strict scope enforcement — refuses to answer anything outside MazadZone auctions
+- Bilingual support (English/Arabic)
+- Prompt injection defense via `SystemInstruction` isolation
+- Graceful fallback when API key is not configured
+
+### 👤 User Management
+- Bidder registration with profile creation
+- Bidder identity verification (admin workflow)
+- Role-based access control (Bidder, Seller, Admin)
+- Profile settings management
+- Email change and password change
+- Account activation, suspension, and banning with cascade effects
+- Bulk account suspension and banning
+- Admin user creation
+- Payment method management
+
+### 🛡️ Admin Dashboard
+- Comprehensive admin dashboard for platform overview
+- Centralized management of Users, Disputes, Auctions, Bids, and Categories
+- Statistics and metrics for platform performance
+
+### 🏪 Seller Management
+- "Become a Seller" upgrade flow
+- Seller verification by admin
+- Seller public profile
+- Seller dashboard with auction/order stats
+- Unverified seller listing for admin review
+- Configurable platform fees for sellers
+
+### 🔐 Authentication & Security
+- JWT Bearer tokens with RSA-256 signing
+- Automatic RSA key rotation (`KeyRotationService` background service)
+- Refresh token rotation with secure BCrypt hashing
+- Login / Logout / Token Refresh flow
+- Correlation ID middleware for distributed tracing
+
+### 📋 Order Management
+- Automatic order creation when auction ends (winner flow)
+- Full lifecycle: `Created → Confirmed → Shipped → Delivered`
+- Order cancellation
+- Order search with filters
+- Order details with buyer/seller information
+- Lookup order by winning bid
+- Seller-specific and global order statistics
+- **Feedback system**: buyers leave reviews, sellers can reply
+- Remaining payment processing after deposit
+
+### 💳 Payment Processing
+- Deposit hold/capture flow at bid time
+- Remaining balance payment after auction win
+- Payment status tracking
+
+### ⚖️ Dispute Resolution
+- Dispute filing with typed categories
+- Status workflow: `Open → UnderReview → Resolved`
+- Admin review and resolution
+- Filtered dispute listing (by status, type, date)
+- Configurable dispute types (CRUD by admin with soft-delete and restore)
+
+### 📁 Category Management (Hierarchical)
+- Full tree structure with parent/child relationships
+- CRUD operations (create, update, soft-delete, restore)
+- Add/remove sub-categories
+- Move category to new parent
+- Make category a root
+- Category search
+- Breadcrumb navigation
+- Category statistics
+- Trending categories & trending with auction counts
+
+### 🔔 Notifications
+- Real-time in-app notifications via SignalR `NotificationsHub`
+- Domain event-driven notification generation
+- Create, read, mark-as-read, and delete notifications
+- Per-notification detail view
+
+### 📊 Observability
+- Structured logging with Serilog (enriched with environment, process, thread, exceptions)
+- Centralized log aggregation via Seq
+- OpenTelemetry sink support
+- Performance monitoring via `PerformanceBehaviour` (flags slow queries)
+- Request correlation tracking via `CorrelationIdMiddleware`
+
+---
 
 ## 🛠️ Tech Stack
 
-### Core Framework
+### Backend
+
+#### Core Framework
 | Technology | Version | Purpose |
 |---|---|---|
 | **.NET** | 9.0 | Runtime & SDK |
 | **C#** | 13 | Primary language |
 | **ASP.NET Core** | 9.0 | Web API framework (Minimal APIs) |
 
-### Data & Persistence
+#### Data & Persistence
 | Technology | Purpose |
 |---|---|
 | **Entity Framework Core 9** | ORM with Code-First migrations, value converters, interceptors |
@@ -109,13 +218,13 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 | **SQL Server 2022** | Primary relational database |
 | **Redis** | Distributed caching layer via `StackExchange.Redis` |
 
-### Real-Time & Communication
+#### Real-Time & Communication
 | Technology | Purpose |
 |---|---|
 | **SignalR** | WebSocket-based real-time bid updates and notifications (2 hubs) |
 | **Google Gemini AI** (`Google.GenAI 1.7.0`) | RAG-powered AI sales agent chatbot |
 
-### Infrastructure & DevOps
+#### Infrastructure & DevOps
 | Technology | Purpose |
 |---|---|
 | **Docker & Docker Compose** | Containerized development environment (SQL Server, Redis, Seq) |
@@ -124,7 +233,7 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 | **OpenTelemetry** | Distributed tracing support via Serilog OTel sink |
 | **GitHub Actions** | CI/CD pipeline (build, test) |
 
-### Security
+#### Security
 | Technology | Purpose |
 |---|---|
 | **JWT Bearer Authentication** | Stateless API authentication with RSA-256 signing |
@@ -132,7 +241,7 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 | **BCrypt.Net** | Secure password hashing |
 | **FluentValidation** | Declarative request validation pipeline |
 
-### Libraries & Frameworks
+#### Libraries & Frameworks
 | Library | Version | Purpose |
 |---|---|---|
 | **MediatR** | 14.1.0 | CQRS command/query bus + pipeline behaviors |
@@ -145,6 +254,50 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 | **Bogus** | 35.6.5 | Realistic test data seeding |
 | **Asp.Versioning** | 8.1.0 | API versioning (URL segment) |
 | **Newtonsoft.Json** | 13.0.4 | JSON serialization for outbox messages |
+
+### Frontend (`mazadzone-client`)
+
+#### Core Framework
+| Technology | Version | Purpose |
+|---|---|---|
+| **Next.js** | 16.2.4 | React framework with App Router, SSR, and file-based routing |
+| **React** | 19.2.4 | UI library with React Compiler |
+| **TypeScript** | 5.x | Type-safe JavaScript |
+
+#### UI & Styling
+| Technology | Purpose |
+|---|---|
+| **Tailwind CSS 4** | Utility-first CSS framework |
+| **shadcn/ui** | Accessible, customizable Radix-based component library |
+| **Radix UI** | Headless, accessible UI primitives |
+| **Lucide React** | Modern icon library |
+| **Embla Carousel** | Lightweight carousel/slider component |
+| **Recharts** | Charting library for dashboards and statistics |
+| **Sonner** | Toast notification library |
+| **next-themes** | Dark/light mode theming |
+
+#### State & Data Fetching
+| Technology | Purpose |
+|---|---|
+| **TanStack React Query** | Server state management, caching, and synchronization |
+| **Zustand** | Lightweight client-side state management (auth store, notification store) |
+| **Axios** | HTTP client with interceptors for API communication |
+| **@microsoft/signalr** | SignalR client for real-time WebSocket connections |
+
+#### Forms & Validation
+| Technology | Purpose |
+|---|---|
+| **React Hook Form** | Performant form state management |
+| **Zod** | Schema-based validation with TypeScript inference |
+| **@hookform/resolvers** | Zod ↔ React Hook Form integration |
+
+#### Developer Tools
+| Technology | Purpose |
+|---|---|
+| **ESLint** | Linting and code quality |
+| **date-fns** | Modern date utility library |
+| **@faker-js/faker** | Test data generation |
+| **React Compiler** | Automatic memoization (via Babel plugin) |
 
 ---
 
@@ -218,40 +371,65 @@ The system follows **Clean Architecture** with strict dependency inversion — i
 graph TB
     subgraph Auction Context
         A["🏛️ Auction<br/>Aggregate Root"]
-        B["📦 Item<br/>Entity"]
-        C["💰 Bid<br/>Entity"]
-        A --> B
-        A --> C
+        A_item["📦 Item<br/>Entity"]
+        A_bid["💰 Bid<br/>Entity"]
+        A --> A_item
+        A --> A_bid
     end
 
-    subgraph User Context
-        D["👤 User<br/>Aggregate Root"]
-        E["🏷️ Seller<br/>Entity"]
-        F["🙋 Bidder<br/>Entity"]
-        D --> E
-        D --> F
+    subgraph Identity Context
+        U["👤 User<br/>Aggregate Root"]
+        U_token["🔑 HashedRefreshToken<br/>Entity"]
+        U_pm["💳 PaymentMethod<br/>Entity"]
+        U --> U_token
+        U --> U_pm
+    end
+
+    subgraph Seller Context
+        S["🏷️ Seller<br/>Aggregate Root"]
+    end
+
+    subgraph Bidder Context
+        B["🙋 Bidder<br/>Aggregate Root"]
     end
 
     subgraph Order Context
-        G["📋 Order<br/>Aggregate Root"]
-        H["💳 Payment<br/>Aggregate Root"]
+        O["📋 Order<br/>Aggregate Root"]
+        O_fb["⭐ Feedback<br/>Entity"]
+        O --> O_fb
+    end
+
+    subgraph Payment Context
+        P["💳 Payment<br/>Aggregate Root"]
+        P_tx["🔄 Transaction<br/>Entity"]
+        P --> P_tx
     end
 
     subgraph Support Context
-        I["⚖️ Dispute<br/>Aggregate Root"]
-        J["📂 DisputeType<br/>Entity"]
+        D["⚖️ Dispute<br/>Aggregate Root"]
+        DT["📂 DisputeType<br/>Aggregate Root"]
     end
 
-    subgraph Catalog
-        K["📁 Category<br/>Entity (Tree)"]
-        L["🔔 Notification<br/>Entity"]
+    subgraph Catalog Context
+        C["📁 Category<br/>Aggregate Root (Tree)"]
+        C_sub["📁 SubCategory<br/>Self-Reference"]
+        C --> C_sub
     end
 
-    A -.->|"AuctionEnded"| G
-    G -.->|"OrderCreated"| H
-    A -.->|"BidPlaced"| L
-    A -.->|"BidderOutbid"| L
-    I -.->|"DisputeResolved"| L
+    subgraph Notification Context
+        N["🔔 Notification<br/>Aggregate Root"]
+    end
+
+    U -.->|"UserId"| S
+    U -.->|"UserId"| B
+    A -.->|"AuctionEnded"| O
+    O -.->|"OrderCreated"| P
+    A -.->|"BidPlaced"| N
+    A -.->|"BidderOutbid"| N
+    A_bid -.->|"BidderId"| B
+    A -.->|"SellerId"| S
+    A_item -.->|"CategoryId"| C
+    D -.->|"DisputeResolved"| N
 ```
 
 ### Auction Lifecycle (State Machine)
@@ -309,103 +487,107 @@ stateDiagram-v2
 
 ---
 
-## ✨ Features
 
-### 🏛️ Auction Management
-- Create, activate, cancel, and end auctions
-- Admin-level force cancellation
-- Automated lifecycle management via Hangfire scheduled jobs
-- Hierarchical category system (tree structure with breadcrumbs)
-- Advanced search with filters (status, price range, category, keyword)
-- Pagination, sorting, and similar auction recommendations
-- Trending categories with auction counts
 
-### 💰 Real-Time Bidding
-- Live bid placement with instant SignalR WebSocket broadcast
-- Minimum bid increment enforcement (configurable per auction)
-- Automatic outbid notifications to previous leading bidder
-- Deposit hold system (percentage-based: `BidDepositPercentage`)
-- Bid history tracking with status (Leading, Outbid)
-- Bid removal with automatic leader recalculation
+## 🖥️ Frontend Client (`mazadzone-client`)
 
-### 🤖 AI Sales Agent (RAG)
-- **Google Gemini 2.0 Flash** powered conversational chatbot
-- Retrieval-Augmented Generation: fetches live auction data as JSON context
-- Strict scope enforcement — refuses to answer anything outside MazadZone auctions
-- Bilingual support (English/Arabic)
-- Prompt injection defense via `SystemInstruction` isolation
-- Graceful fallback when API key is not configured
+A modern, full-featured web application built with **Next.js 16** (App Router) and **React 19**.
 
-### 👤 User Management
-- Bidder registration with profile creation
-- Bidder identity verification (admin workflow)
-- Role-based access control (Bidder, Seller, Admin)
-- Profile settings management
-- Email change and password change
-- Account activation, suspension, and banning with cascade effects
-- Admin user creation
-- Payment method management
+### Frontend Architecture
 
-### 🏪 Seller Management
-- "Become a Seller" upgrade flow
-- Seller verification by admin
-- Seller public profile
-- Seller dashboard with auction/order stats
-- Unverified seller listing for admin review
+```
+mazadzone-client/src/
+├── app/                     # Next.js App Router (file-based routing)
+│   ├── (auth)/              #   Auth route group (login, register)
+│   ├── (main)/              #   Main app route group
+│   │   ├── auctions/        #     Auction listing & detail pages
+│   │   ├── bids/            #     Bid history page
+│   │   ├── orders/          #     Order management page
+│   │   ├── seller/          #     Seller dashboard & auction management
+│   │   ├── profile/         #     User profile & settings
+│   │   ├── notifications/   #     Notification center
+│   │   └── users/           #     User management
+│   └── (admin)/             #   Admin route group
+│       └── admin/           #     Admin panel
+│           ├── auctions/    #       Auction moderation
+│           ├── categories/  #       Category management
+│           ├── disputes/    #       Dispute resolution
+│           └── users/       #       User administration
+├── features/                # Feature-sliced modules (API, components, types, validations)
+│   ├── auctions/            #   Auction listing, detail, creation
+│   ├── auth/                #   Login, registration forms
+│   ├── bidding/             #   Bid placement UI
+│   ├── orders/              #   Order tracking & management
+│   ├── seller/              #   Seller dashboard
+│   ├── admin/               #   Admin management panels
+│   ├── disputes/            #   Dispute filing & tracking
+│   ├── notifications/       #   Notification components & hooks
+│   ├── payment/             #   Payment processing UI
+│   └── profile/             #   Profile editing
+├── components/              # Shared components
+│   ├── ui/                  #   29 shadcn/ui components (Button, Dialog, Table, etc.)
+│   ├── layout/              #   Header, Footer, PageWrapper, ModeToggle
+│   ├── providers/           #   React Query, Theme, Auth providers
+│   ├── feedback/            #   Error & loading states
+│   ├── dialogs/             #   Shared modal dialogs
+│   └── seo/                 #   SEO meta components
+├── lib/                     # Core infrastructure
+│   ├── api/                 #   Axios client with JWT interceptors
+│   ├── signalr/             #   SignalR connection factory & hub clients
+│   │   ├── connection-factory.ts    # Shared connection management
+│   │   ├── bidding-hub.client.ts    # Real-time bid updates
+│   │   └── notifications-hub.client.ts  # Real-time notifications
+│   ├── auth/                #   Auth token management
+│   ├── query/               #   React Query configuration
+│   └── toast/               #   Toast notification utilities
+├── stores/                  # Zustand state stores
+│   ├── auth.store.ts        #   Authentication state (user, tokens, roles)
+│   └── notification.store.ts #  Notification state
+├── hooks/                   # Custom React hooks
+│   ├── use-debounce.ts      #   Input debouncing
+│   ├── use-media-query.ts   #   Responsive breakpoints
+│   ├── use-mounted.ts       #   Hydration-safe mounting
+│   ├── use-require-role.ts  #   Role-based route protection
+│   └── use-url-filters.ts   #   URL-based filter state
+├── config/                  # Application configuration
+│   ├── env.ts               #   Environment variables (type-safe)
+│   ├── app.config.ts        #   App-wide settings
+│   ├── routes.config.ts     #   Route path constants
+│   └── navigation.config.ts #   Navigation menu structure
+├── types/                   # Global TypeScript types
+└── utils/                   # Utility functions
+```
 
-### 🔐 Authentication & Security
-- JWT Bearer tokens with RSA-256 signing
-- Automatic RSA key rotation (`KeyRotationService` background service)
-- Refresh token rotation with secure BCrypt hashing
-- Login / Logout / Token Refresh flow
-- Correlation ID middleware for distributed tracing
+### Key Frontend Features
 
-### 📋 Order Management
-- Automatic order creation when auction ends (winner flow)
-- Full lifecycle: `Created → Confirmed → Shipped → Delivered`
-- Order cancellation
-- Order search with filters
-- Order details with buyer/seller information
-- Lookup order by winning bid
-- Seller-specific and global order statistics
-- **Feedback system**: buyers leave reviews, sellers can reply
-- Remaining payment processing after deposit
+| Feature | Technologies Used |
+|---|---|
+| **Real-Time Bidding UI** | SignalR client (`bidding-hub.client.ts`) + React Query invalidation |
+| **Live Notifications** | SignalR client (`notifications-hub.client.ts`) + Zustand store + Sonner toasts |
+| **Server-Side Rendering** | Next.js App Router with SSR for SEO-critical pages |
+| **Dark/Light Mode** | `next-themes` with system preference detection |
+| **Role-Based Access** | `use-require-role` hook guards routes by user role (Bidder, Seller, Admin) |
+| **Form Validation** | Zod schemas + React Hook Form for type-safe validation |
+| **Countdown Timers** | Custom `CountdownTimer` component for auction end times |
+| **Charts & Analytics** | Recharts for seller dashboard and admin statistics |
+| **Optimistic Updates** | React Query mutations with optimistic UI patterns |
+| **Responsive Design** | Tailwind CSS 4 + `use-media-query` hook for adaptive layouts |
+| **29 UI Components** | shadcn/ui library (Button, Dialog, Table, Select, Sheet, Carousel, etc.) |
 
-### 💳 Payment Processing
-- Deposit hold/capture flow at bid time
-- Remaining balance payment after auction win
-- Payment status tracking
+### Frontend ↔ Backend Integration
 
-### ⚖️ Dispute Resolution
-- Dispute filing with typed categories
-- Status workflow: `Open → UnderReview → Resolved`
-- Admin review and resolution
-- Filtered dispute listing (by status, type, date)
-- Configurable dispute types (CRUD by admin with soft-delete and restore)
-
-### 📁 Category Management (Hierarchical)
-- Full tree structure with parent/child relationships
-- CRUD operations (create, update, soft-delete, restore)
-- Add/remove sub-categories
-- Move category to new parent
-- Make category a root
-- Category search
-- Breadcrumb navigation
-- Category statistics
-- Trending categories & trending with auction counts
-
-### 🔔 Notifications
-- Real-time in-app notifications via SignalR `NotificationsHub`
-- Domain event-driven notification generation
-- Create, read, mark-as-read, and delete notifications
-- Per-notification detail view
-
-### 📊 Observability
-- Structured logging with Serilog (enriched with environment, process, thread, exceptions)
-- Centralized log aggregation via Seq
-- OpenTelemetry sink support
-- Performance monitoring via `PerformanceBehaviour` (flags slow queries)
-- Request correlation tracking via `CorrelationIdMiddleware`
+```
+┌─────────────────────────────────────┐
+│        mazadzone-client             │
+│  Next.js 16 / React 19 / TypeScript │
+├─────────────────────────────────────┤
+│  Axios Client ──── REST API ──────► MazadZone.Api (HTTP)
+│  SignalR Client ── WebSocket ────► AuctionsHub (real-time bids)
+│  SignalR Client ── WebSocket ────► NotificationsHub (alerts)
+│  Zustand ───────── Client State    (auth tokens, UI state)
+│  React Query ───── Server State    (cached API responses)
+└─────────────────────────────────────┘
+```
 
 ---
 
@@ -414,6 +596,10 @@ stateDiagram-v2
 All endpoints are versioned under `/api/v1/` and documented via **Scalar UI** at `/scalar/v1`.
 
 > **Total: 75+ endpoints** across 12 modules.
+
+<details>
+<summary><b>Click to expand all API Endpoints</b></summary>
+<br/>
 
 ### 🏛️ Auctions (`/api/v1/auctions`)
 
@@ -552,6 +738,8 @@ All endpoints are versioned under `/api/v1/` and documented via **Scalar UI** at
 
 > 🛡️ = Admin-only endpoint
 
+</details>
+
 ---
 
 ## 📡 Real-Time (SignalR)
@@ -573,7 +761,11 @@ Two SignalR hubs provide real-time communication:
 
 ## 📁 Project Structure
 
-```
+<details>
+<summary><b>Click to expand full project structure</b></summary>
+<br/>
+
+```text
 Real-Time-Auction-System/
 ├── 📂 src/
 │   ├── 📂 MazadZone.Domain/                 # Core business logic (zero dependencies)
@@ -698,6 +890,25 @@ Real-Time-Auction-System/
 │       ├── Dockerfile                        #   Multi-stage Docker build
 │       └── appsettings.json                  #   Application configuration
 │
+│   📂 mazadzone-client/                      # Frontend web application
+│       ├── src/
+│       │   ├── app/                           #   Next.js App Router routes
+│       │   │   ├── (auth)/                   #     Login, Register
+│       │   │   ├── (main)/                   #     Main app (auctions, orders, profile, seller)
+│       │   │   └── (admin)/                  #     Admin panel (users, categories, disputes)
+│       │   ├── features/                     #   10 feature modules (auctions, auth, bidding, etc.)
+│       │   ├── components/                   #   Shared UI components (29 shadcn/ui + layout)
+│       │   ├── lib/                          #   API client, SignalR hubs, auth, React Query
+│       │   ├── stores/                       #   Zustand stores (auth, notifications)
+│       │   ├── hooks/                        #   Custom hooks (debounce, media query, role guard)
+│       │   ├── config/                       #   Environment, routes, navigation config
+│       │   ├── types/                        #   Global TypeScript types
+│       │   └── utils/                        #   Utility functions
+│       ├── package.json                      #   Dependencies & scripts
+│       ├── next.config.ts                    #   Next.js configuration
+│       ├── tsconfig.json                     #   TypeScript configuration
+│       └── components.json                   #   shadcn/ui configuration
+│
 ├── 📂 tests/
 │   ├── Tests.Domain/                         # Domain unit tests
 │   ├── Tests.Application/                    # Application layer tests
@@ -709,6 +920,7 @@ Real-Time-Auction-System/
 ├── .github/workflows/ci.yml                 # GitHub Actions CI pipeline
 └── .editorconfig                             # Code style configuration
 ```
+</details>
 
 ---
 
@@ -717,6 +929,7 @@ Real-Time-Auction-System/
 ### Prerequisites
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [Node.js 20+](https://nodejs.org/) (for the frontend client)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - [SQL Server 2022](https://www.microsoft.com/sql-server) (or use Docker)
 - A [Gemini API Key](https://aistudio.google.com/apikey) (for the AI chatbot feature)
@@ -898,9 +1111,7 @@ Push to main / PR → Checkout → Setup .NET 9 → Restore → Build (Release) 
 - [ ] 📝 **API Documentation** — Auto-generated SDK clients (C#, TypeScript) from OpenAPI spec
 
 ### Phase 5 — Frontend
-- [ ] 🎨 **Web Client** — React / Next.js frontend with real-time bidding UI
 - [ ] 📱 **Mobile App** — React Native / Flutter cross-platform mobile application
-- [ ] 🖥️ **Admin Panel** — Dedicated admin dashboard for user management, disputes, and analytics
 
 ---
 

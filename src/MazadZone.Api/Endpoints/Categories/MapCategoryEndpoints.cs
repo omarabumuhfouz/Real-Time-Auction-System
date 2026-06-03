@@ -15,14 +15,12 @@ public static class CategoryEndpoints
                                .WithTags("Category Management");
 
         // Registered Queries
-        GetTrendingWithAuctionCounts.MapEndpoint(categoryGroup);
+        GetCategoryStatistics.MapEndpoint(categoryGroup);
         GetRoots.MapEndpoint(categoryGroup);       
         GetById.MapEndpoint(categoryGroup);
         GetTree.MapEndpoint(categoryGroup);
         GetSub.MapEndpoint(categoryGroup);        
         GetBreadcrumbs.MapEndpoint(categoryGroup);
-        GetStatistics.MapEndpoint(categoryGroup);
-        GetTrending.MapEndpoint(categoryGroup);
         Search.MapEndpoint(categoryGroup); 
 
         // Registered Commands

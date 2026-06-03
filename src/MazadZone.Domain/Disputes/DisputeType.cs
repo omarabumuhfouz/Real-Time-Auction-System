@@ -1,4 +1,4 @@
-namespace MazadZone.Domain.Orders; // Or MazadZone.Domain.Support
+namespace MazadZone.Domain.Disputes; // Or MazadZone.Domain.Support
 
 using MazadZone.Domain.Primitives;
 using MazadZone.Domain.Shared.ValueObjects;
@@ -11,6 +11,7 @@ public sealed class DisputeType : AggregateRoot<DisputeTypeId> , IAuditableEntit
     {
         Name = name;
         Description = description;
+        IsActive = true;
     }
 
     public Name Name { get; private set; }
@@ -42,6 +43,7 @@ public sealed class DisputeType : AggregateRoot<DisputeTypeId> , IAuditableEntit
     public Result Delete()
     {
         if (!IsActive) return Result.Success();
+
         IsActive = false;
         DeletedOnUtc = DateTime.UtcNow;
         return Result.Success();
@@ -49,6 +51,9 @@ public sealed class DisputeType : AggregateRoot<DisputeTypeId> , IAuditableEntit
 
     public Result Restore()
     {
+        if (IsActive) return Result.Success();
+
+        
         IsActive = true;
         DeletedOnUtc = null;
         return Result.Success();

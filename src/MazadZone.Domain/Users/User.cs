@@ -40,6 +40,8 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public DateTime? SuspensionUntil { get; private set; }
     public DateTime LastLogin { get; private set; } = DateTime.UtcNow;
 
+
+
     public DateTime CreatedOnUtc { get; set; }
     public DateTime? ModifiedOnUtc { get; set; }
 
@@ -111,7 +113,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
     public Result Suspend(Reason reason,DateTime until)
     {
         // Guard clauses to protect the state machine invariants
-        if (Status == UserStatus.Banned) return UserErrors.CannotSuspendBannedUser;
+    if (Status == UserStatus.Banned) return UserErrors.CannotSuspendBannedUser;
 
         if (Status == UserStatus.Suspended) return UserErrors.AlreadySuspended;
 
@@ -134,7 +136,7 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
         if (Status == UserStatus.Banned) return Result.Success();
 
         Status = UserStatus.Banned;
-         EnforcementReason = reason;
+        EnforcementReason = reason;
 
         RevokeAllRefreshTokens();
 
@@ -161,6 +163,8 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
 
         return Result.Success();
     }
+
+
 
     public Result AddRefreshToken(string hashedToken)
     {

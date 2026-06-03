@@ -11,7 +11,7 @@ export function BidHistory({ bidHistory, totalBids }: BidHistoryProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       {/* Header */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Gavel className="size-4 text-primary" aria-hidden="true" />
           <h2 className="text-base font-bold text-foreground">
@@ -30,15 +30,13 @@ export function BidHistory({ bidHistory, totalBids }: BidHistoryProps) {
             <BidHistoryRow key={entry.id} entry={entry} />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Gavel className="size-8 text-primary" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground">
-              No Bids Yet !
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Gavel className="size-6 text-muted-foreground/30 mb-2" />
+            <h3 className="text-sm font-bold text-foreground">
+              No Bids Yet
             </h3>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              🚀 Be the first bidder and start the action!
+            <p className="mt-1 text-xs text-muted-foreground">
+              Be the first bidder and start the action!
             </p>
           </div>
         )}

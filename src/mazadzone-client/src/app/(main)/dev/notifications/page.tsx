@@ -63,7 +63,7 @@ export default function NotificationsTestPage() {
 
   // Zustand Notification Store selectors
   const notifications = useNotificationStore((state) => state.notifications);
-  const unreadCount = useNotificationStore((state) => state.getUnreadCount());
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const addNotification = useNotificationStore((state) => state.addNotification);
   const clearNotifications = useNotificationStore((state) => state.clearAll);
 

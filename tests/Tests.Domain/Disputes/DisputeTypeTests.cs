@@ -1,4 +1,4 @@
-using MazadZone.Domain.Orders; // Adjust namespace if it is MazadZone.Domain.Support
+using MazadZone.Domain.Disputes;
 using MazadZone.Domain.Shared.ValueObjects;
 using Shouldly;
 

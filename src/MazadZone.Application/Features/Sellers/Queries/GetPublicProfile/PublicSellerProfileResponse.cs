@@ -1,3 +1,4 @@
+using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
 
 namespace MazadZone.Application.Features.Sellers.Queries.GetPublicProfile;
@@ -15,6 +16,5 @@ public record PublicSellerProfileResponse(
     int TotalBidsPlaced,      
     int AuctionParticipatedCount,
     int AuctionsWonCount,
-    int CompletedPurchasesCount,
-    List<FeedbackDto> Feedbacks
+    int CompletedPurchasesCount
     );

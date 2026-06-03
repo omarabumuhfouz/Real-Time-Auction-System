@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Check } from "lucide-react";
+import { Shield, Check, AlertTriangle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { CreditCardForm } from "./CreditCardForm";
 import { type CreditCardFormValues } from "../validations/creditCard.schema";
 import { type PayoutDetails } from "../types";
+import { useAddPaymentMethod } from "../api/payment.mutations";
+import { useAuthStore } from "@/stores/auth.store";
 
 export interface PaymentMethodDrawerProps {
   isOpen: boolean;
@@ -47,6 +49,10 @@ export function PaymentMethodDrawer({
 }: PaymentMethodDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [billingSameAsDelivery, setBillingSameAsDelivery] = useState(true);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const { user } = useAuthStore();
+  const addPaymentMethodMutation = useAddPaymentMethod();
 
   const getCardBrand = (num: string): "VISA" | "MASTERCARD" | "AMEX" => {
     const cleanNum = num.replace(/\s/g, "");
@@ -56,14 +62,42 @@ export function PaymentMethodDrawer({
     return "VISA";
   };
 
+  const getCardBrandEnum = (brand: string): number => {
+    switch (brand) {
+      case "VISA":
+        return 1;
+      case "MASTERCARD":
+        return 2;
+      case "AMEX":
+        return 3;
+      default:
+        return 0; // Unknown
+    }
+  };
+
   const handleFormSave = async (data: CreditCardFormValues) => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate Stripe processing delay
-      
       const cleanNum = data.cardNumber.replace(/\s/g, "");
       const lastFour = cleanNum.slice(-4);
       const cardBrand = getCardBrand(data.cardNumber);
+      const cardBrandEnum = getCardBrandEnum(cardBrand);
+
+      const expiryParts = data.expiryDate.split("/");
+      const expiryMonth = parseInt(expiryParts[0], 10);
+      const expiryYear = 2000 + parseInt(expiryParts[1], 10);
+
+      // Perform real backend HTTP call hitting "/api/v1/users/me/payment-methods"
+      const response = await addPaymentMethodMutation.mutateAsync({
+        last4Digits: lastFour,
+        expiryMonth,
+        expiryYear,
+        cardholderName: user?.fullName || "Cardholder Name",
+        brand: cardBrandEnum,
+        gatewayToken: `pm_mock_${Math.random().toString(36).substring(2, 10)}`,
+        isDefault: true,
+      });
 
       if (mode === "payout" && onSavePayout) {
         onSavePayout({
@@ -72,21 +106,26 @@ export function PaymentMethodDrawer({
           cardType: cardBrand,
           expiryDate: data.expiryDate,
           cvv: data.cvv,
-          cardholderName: "",
+          cardholderName: response.cardholderName,
         });
       } else if (mode === "payment" && onSaveCard) {
         onSaveCard({
-          id: `pm-${Date.now()}`,
+          id: response.id,
           cardType: cardBrand,
-          lastFourDigits: lastFour,
+          lastFourDigits: response.last4Digits,
           expiryDate: data.expiryDate,
-          cardholderName: "",
-          isDefault: true,
+          cardholderName: response.cardholderName,
+          isDefault: response.isDefault,
         });
       }
       onClose();
-    } catch (e) {
-      console.error("Card configuration failed:", e);
+    } catch (e: any) {
+      const errMsg = e.message || "An unexpected error occurred while saving your payment method.";
+      setSubmitError(errMsg);
+      console.error("Failed to add payment method to user profile:", e.message || e);
+      if (e.errors) {
+        console.error("Validation errors details:", JSON.stringify(e.errors, null, 2));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -154,6 +193,17 @@ export function PaymentMethodDrawer({
                     You will be prompted to enter billing address details at confirmation.
                   </p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Submit Error Alert */}
+          {submitError && (
+            <div className="flex items-start gap-3 bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-xs md:text-sm text-destructive">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-bold">Error Registering Card</p>
+                <p className="leading-relaxed font-medium">{submitError}</p>
               </div>
             </div>
           )}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Download, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import type { UseModerateAuctionsFilters } from "../../api/queries";
+import type { UseModerateAuctionsFilters } from "../../api";
 import type { AuctionStatus } from "../../types/admin.types";
 import { AUCTION_CATEGORIES } from "../../constants/moderate-auctions.constants";
 
@@ -37,6 +37,25 @@ export function ModerateAuctionsFilters({
 }: ModerateAuctionsFiltersProps) {
   const hasSelection = selectedIds.length > 0;
 
+  // Local search state for debouncing
+  const [localSearch, setLocalSearch] = useState(filters.search || "");
+
+  // Keep local search query in sync when search filter changes from elsewhere (e.g. URL query)
+  useEffect(() => {
+    setLocalSearch(filters.search || "");
+  }, [filters.search]);
+
+  // Apply search filter after 400ms debounce
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (localSearch !== filters.search) {
+        onFilterChange({ search: localSearch, page: 1 });
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [localSearch, filters.search, onFilterChange]);
+
   return (
     <div className="bg-card text-card-foreground border border-border rounded-xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
 
@@ -49,8 +68,8 @@ export function ModerateAuctionsFilters({
             type="text"
             placeholder="Search auctions by title, seller, or ID..."
             className="pl-9 h-9 w-full text-xs bg-white text-black border-transparent placeholder:text-black/50 focus-visible:ring-foreground/20 shadow-sm"
-            value={filters.search}
-            onChange={(e) => onFilterChange({ search: e.target.value, page: 1 })}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
           />
         </div>
 
@@ -66,10 +85,10 @@ export function ModerateAuctionsFilters({
                 onFilterChange({ category: val === "All Categories" ? "" : val, page: 1 })
               }
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 {AUCTION_CATEGORIES.map((cat) => (
                   <SelectItem key={cat} value={cat} className="cursor-pointer">
                     {cat}
@@ -93,10 +112,10 @@ export function ModerateAuctionsFilters({
                 })
               }
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="All Statuses" className="cursor-pointer">
                   All Statuses
                 </SelectItem>
@@ -125,10 +144,10 @@ export function ModerateAuctionsFilters({
               value={filters.sortBy}
               onValueChange={(val) => onFilterChange({ sortBy: val, page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Date Created" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="dateCreated" className="cursor-pointer">
                   Date Created
                 </SelectItem>

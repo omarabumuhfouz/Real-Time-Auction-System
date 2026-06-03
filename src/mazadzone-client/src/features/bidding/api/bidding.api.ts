@@ -9,6 +9,8 @@ import type {
   PlaceBidRequestDto,
 } from "./bidding.contracts";
 
+const MY_BIDS_SORT_BY = "CreationDate";
+
 /**
  * Fetches the user's active/ended bid activities.
  */
@@ -22,14 +24,15 @@ export async function fetchMyBids(
   } = {},
 ): Promise<PagedListOfMyBidAuctionDto> {
   const response = await api.get<PagedListOfMyBidAuctionDto>(
-    "/api/v1/bidders/my-bids",
+    "/bidders/my-bids",
     {
       params: {
         bidderId,
         page: params.page ?? 1,
         pageSize: params.pageSize ?? 5,
         tab: params.filter === "All" ? undefined : params.filter,
-        sortBy: params.sortBy,
+        // The backend only accepts explicit contract values here.
+        sortBy: MY_BIDS_SORT_BY,
       },
     },
   );
@@ -43,5 +46,5 @@ export async function placeBid(
   auctionId: string,
   request: PlaceBidRequestDto,
 ): Promise<void> {
-  await api.post<void>(`/api/v1/auctions/${auctionId}/bids`, request);
+  await api.post<void>(`/auctions/${auctionId}/bids`, request);
 }

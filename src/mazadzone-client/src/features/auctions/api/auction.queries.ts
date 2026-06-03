@@ -16,7 +16,12 @@ import {
   getAuctions,
   getAuctionById,
   getSimilarAuctions,
+  getRootCategories,
+  getCategoryTree,
 } from "./auction.api";
+import type {
+  CategoryDto,
+} from "./auction.contracts";
 
 import { auctionKeys } from "./auction.keys";
 import {
@@ -36,7 +41,42 @@ export function useGetAuctions(filters?: AuctionFilters) {
   return useQuery<PaginatedResponse<AuctionSummary>>({
     queryKey: auctionKeys.list(filters || {}),
     queryFn: async () => {
+      let resolvedCategoryId: string | undefined = undefined;
+
+      if (filters?.category && (filters.category as string) !== "all") {
+        try {
+          const tree = await getCategoryTree();
+          const matchedCat = tree.find(
+            (c) => c.name.toLowerCase() === filters.category?.toLowerCase()
+          );
+          if (matchedCat) {
+            resolvedCategoryId = matchedCat.id;
+
+            if (filters.subcategory && (filters.subcategory as string) !== "all") {
+              const subList = matchedCat.subCategories || matchedCat.subcategories || [];
+              const matchedSub = subList.find(
+                (s) => s.name.toLowerCase() === filters.subcategory?.toLowerCase()
+              );
+              if (matchedSub) {
+                resolvedCategoryId = matchedSub.id;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to fetch category tree for GUID mapping:", err);
+        }
+      }
+
       const queryParams = mapFiltersToQueryParams(filters);
+      if (resolvedCategoryId) {
+        queryParams.CategoryId = resolvedCategoryId;
+      } else {
+        queryParams.CategoryId = undefined;
+      }
+      
+      // Clear SubCategoryId to ensure backend queries only use the mapped CategoryId
+      queryParams.SubCategoryId = undefined;
+
       const raw = await getAuctions(queryParams);
       
       return {
@@ -107,10 +147,26 @@ export function useGetAuctionsByCategory(category: AuctionCategory) {
   return useQuery<PaginatedResponse<AuctionSummary>>({
     queryKey: [...auctionKeys.all, "category", category],
     queryFn: async () => {
+      let resolvedCategoryId: string | undefined = undefined;
+
+      if (category && (category as string) !== "all") {
+        try {
+          const tree = await getCategoryTree();
+          const matchedCat = tree.find(
+            (c) => c.name.toLowerCase() === category.toLowerCase()
+          );
+          if (matchedCat) {
+            resolvedCategoryId = matchedCat.id;
+          }
+        } catch (err) {
+          console.warn("Failed to fetch category tree for GUID mapping in useGetAuctionsByCategory:", err);
+        }
+      }
+
       const raw = await getAuctions({
         Page: 1,
         PageSize: 12,
-        CategoryId: category,
+        CategoryId: resolvedCategoryId,
       });
 
       return {
@@ -130,9 +186,9 @@ export function useGetAuctionsByCategory(category: AuctionCategory) {
 /**
  * Hook to get active auctions ending soon.
  */
-export function useGetClosingSoonAuctions(limit: number = 4) {
+export function useGetEndingSoonAuctions(limit: number = 4) {
   return useQuery<AuctionSummary[]>({
-    queryKey: [...auctionKeys.all, "closing-soon", limit],
+    queryKey: [...auctionKeys.all, "ending-soon", limit],
     queryFn: async () => {
       const raw = await getAuctions({
         Page: 1,
@@ -240,5 +296,27 @@ export function useGetSellerAuctions(filters?: {
         hasPreviousPage: raw.hasPreviousPage ?? false,
       };
     },
+  });
+}
+
+/**
+ * Hook to retrieve root categories from the API.
+ */
+export function useGetRootCategories() {
+  return useQuery<CategoryDto[]>({
+    queryKey: ["categories", "roots"],
+    queryFn: getRootCategories,
+    staleTime: 60 * 60 * 1000, // Keep cached for 1 hour since category structure rarely changes
+  });
+}
+
+/**
+ * Hook to retrieve the complete categories and subcategories tree from the API.
+ */
+export function useGetCategoryTree() {
+  return useQuery<CategoryDto[]>({
+    queryKey: ["categories", "tree"],
+    queryFn: getCategoryTree,
+    staleTime: 60 * 60 * 1000,
   });
 }

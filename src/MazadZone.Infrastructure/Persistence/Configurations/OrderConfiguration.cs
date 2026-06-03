@@ -28,7 +28,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
               .IsRequired(false);
 
               builder.Property(o => o.BidderId)
-                     .HasConversion(new UserIdIdConverter())
+                     .HasConversion(new UserIdConverter())
                      .IsRequired();
 
               builder.Property(o => o.AuctionId)

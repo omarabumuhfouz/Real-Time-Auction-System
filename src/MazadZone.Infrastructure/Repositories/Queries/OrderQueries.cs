@@ -2,6 +2,7 @@ using Dapper;
 using MazadZone.Application.Common.Interfaces;
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Orders.Queries.DTOs;
+using MazadZone.Application.Features.Orders.Queries.GetSellerOrderStatistics;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Orders;
@@ -12,11 +13,11 @@ using Polly;
 namespace MazadZone.Infrastructure.Repositories;
 
 
-public class OrderQueries : ResilientRepository , IOrderQueries
+public class OrderQueries : ResilientRepository, IOrderQueries
 {
 
-    public OrderQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy) 
-        : base(sqlFactory, resiliencePolicy) {}
+    public OrderQueries(ISqlConnectionFactory sqlFactory, IAsyncPolicy resiliencePolicy)
+        : base(sqlFactory, resiliencePolicy) { }
 
     public async Task<OrderDetailsDto?> GetOrderDetailsAsync(OrderId orderId, CancellationToken ct = default)
     {
@@ -41,23 +42,28 @@ public class OrderQueries : ResilientRepository , IOrderQueries
 
            CAST(CASE WHEN d.OrderId IS NOT NULL AND d.Status != @ResolvedDisputeStatus THEN 1 ELSE 0 END AS BIT) AS HasActiveDispute,
            CAST(CASE WHEN d.OrderId IS NULL AND o.Status IN (@ShippedStatus, @DeliveredStatus) THEN 1 ELSE 0 END AS BIT) AS IsDisputable,
-           CAST(CASE WHEN f.OrderId IS NULL AND o.Status = @DeliveredStatus THEN 1 ELSE 0 END AS BIT) AS CanLeaveFeedback
+           CAST(CASE WHEN f.OrderId IS NULL AND o.Status = @DeliveredStatus THEN 1 ELSE 0 END AS BIT) AS CanLeaveFeedback,
+           
+           ISNULL(p.GrossAmount, 0) AS GrossAmount,
+           ISNULL(p.PlatformFee, 0) AS PlatformFee,
+           ISNULL(p.NetAmount, 0) AS NetAmount
 
         FROM Orders o
         LEFT JOIN Disputes d ON o.Id = d.OrderId
         LEFT JOIN Feedbacks f ON o.Id = f.OrderId
+        LEFT JOIN Payments p ON o.Id = p.OrderId
         WHERE o.Id = @OrderId";
 
-       return await ExecuteResilientAsync(connection => 
-        connection.QueryFirstOrDefaultAsync<OrderDetailsDto>(sql, new
-        {
-            OrderId = orderId.Value,
-            ResolvedDisputeStatus = (int)DisputeStatus.Resolved,
-            ShippedStatus = (int)OrderStatus.Shipped,
-            DeliveredStatus = (int)OrderStatus.Delivered
-        }, 
-        commandType: System.Data.CommandType.Text)
-    );
+        return await ExecuteResilientAsync(connection =>
+         connection.QueryFirstOrDefaultAsync<OrderDetailsDto>(sql, new
+         {
+             OrderId = orderId.Value,
+             ResolvedDisputeStatus = (int)DisputeStatus.Resolved,
+             ShippedStatus = (int)OrderStatus.Shipped,
+             DeliveredStatus = (int)OrderStatus.Delivered
+         },
+         commandType: System.Data.CommandType.Text)
+     );
     }
 
     public async Task<PagedList<OrderSummaryDto>> SearchOrdersAsync(OrderSearchFilter filter, CancellationToken ct = default)
@@ -142,13 +148,13 @@ public class OrderQueries : ResilientRepository , IOrderQueries
             LEFT JOIN Feedbacks f ON o.FeedbackId = f.Id
             WHERE a.SellerId = @SellerId";
 
-        var stats = await ExecuteResilientAsync( connection =>
+        var stats = await ExecuteResilientAsync(connection =>
              connection.QuerySingleOrDefaultAsync<SellerOrderStatsDto>(sql, new
-            {
-                SellerId = sellerId.Value,
-                PendingStatus = (int)OrderStatus.Pending,
-                ResolvedDispute = (int)DisputeStatus.Resolved
-            })
+             {
+                 SellerId = sellerId.Value,
+                 PendingStatus = (int)OrderStatus.Pending,
+                 ResolvedDispute = (int)DisputeStatus.Resolved
+             })
         );
 
         return stats ?? SellerOrderStatsDto.Empty;
@@ -175,11 +181,16 @@ public class OrderQueries : ResilientRepository , IOrderQueries
 
           CAST(CASE WHEN o.DisputeId IS NOT NULL AND d.Status != @ResolvedDisputeStatus THEN 1 ELSE 0 END AS BIT) AS HasActiveDispute,
            CAST(CASE WHEN o.DisputeId IS NULL AND o.Status IN (@ShippedStatus, @DeliveredStatus) THEN 1 ELSE 0 END AS BIT) AS IsDisputable,
-           CAST(CASE WHEN o.FeedbackId IS NULL AND o.Status = @DeliveredStatus THEN 1 ELSE 0 END AS BIT) AS CanLeaveFeedback
+           CAST(CASE WHEN o.FeedbackId IS NULL AND o.Status = @DeliveredStatus THEN 1 ELSE 0 END AS BIT) AS CanLeaveFeedback,
+           
+           ISNULL(p.GrossAmount, 0) AS GrossAmount,
+           ISNULL(p.PlatformFee, 0) AS PlatformFee,
+           ISNULL(p.NetAmount, 0) AS NetAmount
 
         FROM Orders o
         LEFT JOIN Disputes d ON o.DisputeId = d.Id
         LEFT JOIN Feedbacks f ON o.FeedbackId = f.Id
+        LEFT JOIN Payments p ON o.Id = p.OrderId
         WHERE o.WinningBidId = @WinningBidId";
 
         return await ExecuteResilientAsync(connection => connection.QueryFirstOrDefaultAsync<OrderDetailsDto>(sql, new
@@ -242,5 +253,124 @@ public class OrderQueries : ResilientRepository , IOrderQueries
     public Task<AuctionId> GetAuctionIdByOrderIdAsync(OrderId orderId, CancellationToken ct = default)
     {
         throw new NotImplementedException();
+    }
+
+    public Task<OrderStatisticsDto> GetSellerOrderStatisticsAsync(UserId sellerId, CancellationToken ct)
+    {
+        var sql = @"
+            SELECT 
+                COUNT(o.Id) AS TotalOrders,
+                SUM(CASE WHEN o.Status = @PendingStatus THEN 1 ELSE 0 END) AS PendingCount,
+                SUM(CASE WHEN o.Status = @ConfirmedStatus THEN 1 ELSE 0 END) AS ConfirmedCount,
+                SUM(CASE WHEN o.Status = @ShippedStatus THEN 1 ELSE 0 END) AS ShippedCount,
+                SUM(CASE WHEN o.Status = @DeliveredStatus THEN 1 ELSE 0 END) AS DeliveredCount,
+                SUM(CASE WHEN o.Status = @CanceledStatus THEN 1 ELSE 0 END) AS CanceledCount
+            FROM Orders o
+            INNER JOIN Auctions a ON o.AuctionId = a.Id
+            WHERE a.SellerId = @SellerId;
+        ";
+
+
+        var parameters = new
+        {
+            SellerId = sellerId.Value,
+            PendingStatus = (int)OrderStatus.Pending,
+            ConfirmedStatus = (int)OrderStatus.Confirmed,
+            ShippedStatus = (int)OrderStatus.Shipped,
+            DeliveredStatus = (int)OrderStatus.Delivered,
+            CanceledStatus = (int)OrderStatus.Canceled
+        };
+
+        return ExecuteResilientAsync(async connection =>
+        {
+            var result = await connection.QueryFirstOrDefaultAsync<OrderStatisticsDto>(
+            new CommandDefinition(sql, parameters, cancellationToken: ct));
+
+            return result ?? new OrderStatisticsDto(0, 0, 0, 0, 0, 0);
+        });
+
+    }
+
+public async Task<PagedList<OrderSummaryDto>> GetSellerOrdersTableAsync(
+        UserId sellerId, 
+        OrderStatus? statusFilter, 
+        int page, 
+        int pageSize, 
+        CancellationToken ct)
+    {
+        // 1. Base WHERE clause
+        var whereClause = "WHERE a.SellerId = @SellerId";
+        if (statusFilter.HasValue)
+        {
+            whereClause += " AND o.Status = @Status";
+        }
+
+        // 2. Build the multi-query
+        var sql = $@"
+            -- Query 1: Get Total Count for Pagination
+            SELECT COUNT(o.Id)
+            FROM Orders o
+            INNER JOIN Auctions a ON o.AuctionId = a.Id
+            {whereClause};
+
+            -- Query 2: Get the actual page of data
+            SELECT 
+                o.Id AS OrderId,
+                i.Title AS AuctionName,
+                c.Name AS CategoryName,
+                u.FirstName + ' ' + u.LastName AS BidderName,
+                u.Email AS BidderEmail,
+                CASE o.Status
+                    WHEN @StatusPending THEN 'Pending'
+                    WHEN @StatusConfirmed THEN 'Confirmed'
+                    WHEN @StatusShipped THEN 'Shipped'
+                    WHEN @StatusDelivered THEN 'Delivered'
+                    WHEN @StatusCanceled THEN 'Canceled'
+                ELSE 'Unknown'
+                END AS Status,
+                o.CreatedOnUtc AS OrderDate,
+                o.TotalAmount,
+                o.Currency
+            FROM Orders o
+            INNER JOIN Auctions a ON o.AuctionId = a.Id
+            INNER JOIN Items i ON a.Id = i.AuctionId
+            INNER JOIN Categories c ON i.CategoryId = c.Id
+            INNER JOIN Users u ON o.BidderId = u.Id
+            {whereClause}
+            ORDER BY o.CreatedOnUtc DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+        ";
+
+        
+        var parameters = new 
+        { 
+            SellerId = sellerId.Value,
+            Status = statusFilter.HasValue ? (int)statusFilter.Value : (int?)null,
+            Offset = (page - 1) * pageSize,
+            PageSize = pageSize,
+        StatusPending = (int)OrderStatus.Pending,
+        StatusConfirmed = (int)OrderStatus.Confirmed,
+        StatusShipped = (int)OrderStatus.Shipped,
+        StatusDelivered = (int)OrderStatus.Delivered,
+        StatusCanceled = (int)OrderStatus.Canceled
+        };
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var multi = await connection.QueryMultipleAsync(
+            new CommandDefinition(sql, parameters, cancellationToken: ct));
+
+            var totalCount = await multi.ReadSingleAsync<int>();
+            var items = (await multi.ReadAsync<OrderSummaryDto>()).ToList();
+
+            // 3. Map directly to your custom PagedList
+            return new PagedList<OrderSummaryDto>(
+                items.AsReadOnly(),
+                page,
+                pageSize,
+                totalCount
+            );
+        });
+        
     }
 }

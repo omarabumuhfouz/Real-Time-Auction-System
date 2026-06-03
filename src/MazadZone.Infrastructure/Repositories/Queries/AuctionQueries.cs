@@ -8,13 +8,8 @@ using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Enums;
-using MazadZone.Domain.Auctions.ValueObjects;
-using MazadZone.Domain.Bidders;
-using MazadZone.Domain.Categories;
 using MazadZone.Domain.Orders;
-using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Users.ValueObjects;
-using MazadZone.Domain.ValueObjects;
 using MazadZone.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using MzadZone.Domain.Payments;
@@ -111,6 +106,7 @@ public partial class AuctionQueries(
         var bids = auction.Bids.OrderByDescending(b => b.Amount)
             .Select(b => new BidDto(
                 b.BidderId.Value,
+                _context.Users.Where(u => u.Id == b.BidderId).Select(u => u.FullName.FirstName + " " + u.FullName.LastName).FirstOrDefault(),
                 b.Amount.Amount,
                 (int)b.Status,
                 b.PlacedAtUtc
@@ -213,7 +209,7 @@ public partial class AuctionQueries(
     {
         var rawAuctions = await _context.Auctions
             .AsNoTracking()
-            .Where(a => a.Bids.Any(b => b.BidderId == bidderId.Value))
+            .Where(a => a.Bids.Any(b => b.BidderId == bidderId))
             .Select(a => new
             {
                 Id = a.Id.Value,
@@ -454,4 +450,5 @@ public partial class AuctionQueries(
 
         return new PagedList<AuctionsListDto>(items, parameters.Page, parameters.PageSize, totalCount);
     }
+
 }

@@ -18,7 +18,7 @@ export async function searchOrders(
   params?: SearchOrdersQueryParams,
 ): Promise<PagedListOfOrderSummaryDto> {
   const response = await api.get<PagedListOfOrderSummaryDto>(
-    "/api/v1/orders/search",
+    "/orders/search",
     { params },
   );
   return response.data;
@@ -28,7 +28,7 @@ export async function searchOrders(
  * Get detailed information about a single order by ID.
  */
 export async function getOrderDetails(id: string): Promise<OrderDetailsDto> {
-  const response = await api.get<OrderDetailsDto>(`/api/v1/orders/${id}`);
+  const response = await api.get<OrderDetailsDto>(`/orders/${id}`);
   return response.data;
 }
 
@@ -36,7 +36,7 @@ export async function getOrderDetails(id: string): Promise<OrderDetailsDto> {
  * Create a new order listing via PUT.
  */
 export async function createOrder(request: CreateOrderRequest): Promise<void> {
-  await api.put<void>("/api/v1/orders", request);
+  await api.put<void>("/orders", request);
 }
 
 /**
@@ -46,7 +46,7 @@ export async function payRemainingAmount(
   orderId: string,
   paymentMethodId: string,
 ): Promise<void> {
-  await api.post<void>(`/api/v1/payments/${orderId}/pay-remaining`, {
+  await api.post<void>(`/payments/${orderId}/pay-remaining`, {
     paymentMethodId,
   });
 }
@@ -55,26 +55,26 @@ export async function payRemainingAmount(
  * Confirm an order (Seller lifecycle action).
  */
 export async function confirmOrder(id: string): Promise<void> {
-  await api.put<void>(`/api/v1/orders/${id}/confirm`);
+  await api.put<void>(`/orders/${id}/confirm`);
 }
 
 /**
  * Mark an order as shipped (Seller lifecycle action).
  */
 export async function shipOrder(id: string): Promise<void> {
-  await api.put<void>(`/api/v1/orders/${id}/ship`);
+  await api.put<void>(`/orders/${id}/ship`);
 }
 
 /**
  * Mark an order as delivered (Buyer lifecycle action).
  */
 export async function deliverOrder(id: string): Promise<void> {
-  await api.put<void>(`/api/v1/orders/${id}/deliver`);
+  await api.put<void>(`/orders/${id}/deliver`);
 }
 
 /**
  * Cancel an order.
  */
 export async function cancelOrder(id: string): Promise<void> {
-  await api.put<void>(`/api/v1/orders/${id}/cancel`);
+  await api.put<void>(`/orders/${id}/cancel`);
 }

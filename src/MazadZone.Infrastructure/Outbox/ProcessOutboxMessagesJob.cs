@@ -69,84 +69,85 @@ public sealed class ProcessOutboxMessagesJob : BackgroundService
     }
 
     private async Task ProcessMessagesAsync(CancellationToken stoppingToken)
+{
+    using var scope = _scopeFactory.CreateScope();
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+
+    var messages = await dbContext.Set<OutboxMessage>()
+        .Where(m => m.ProcessedOnUtc == null)
+        .Take(_options.BatchSize)
+        .ToListAsync(stoppingToken);
+
+    if (!messages.Any()) return;
+
+    // OPTIMIZATION: Create the settings ONCE outside the loop to save memory/CPU
+    var jsonSettings = new JsonSerializerSettings
     {
-        using var scope = _scopeFactory.CreateScope();
-
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
-
-        var messages = await dbContext.Set<OutboxMessage>()
-            .Where(m => m.ProcessedOnUtc == null)
-            .Take(_options.BatchSize)
-            .ToListAsync(stoppingToken);
-
-        if (!messages.Any()) return;
-
-        foreach (var message in messages)
+        TypeNameHandling = TypeNameHandling.All,
+        Converters = new JsonConverter[]
         {
-            try
-            {
-                // 1. Safe Type Resolution across assemblies
-                var type = Type.GetType(message.Type)
-                    ?? AppDomain.CurrentDomain.GetAssemblies()
-                        .Select(a => a.GetType(message.Type))
-                        .FirstOrDefault(t => t != null);
-
-                if (type is null)
-                {
-                    _logger.LogWarning("Could not resolve type: {MessageType} for message {MessageId}", message.Type, message.Id);
-                    continue;
-                }
-
-                // 2. Deserialize
-                var settings = new JsonSerializerSettings
-                {
-                    TypeNameHandling = TypeNameHandling.All,
-                    Converters = new JsonConverter[]
-                    {
-                        new MoneyJsonConverter(),
-                        new CurrencyJsonConverter(),
-                        new NameJsonConverter(),
-                        new ImageJsonConverter(),
-                        new DescriptionJsonConverter(),
-                        new TitleJsonConverter(),
-                        new ReasonJsonConverter()
-                    }
-                };
-                var domainEvent = JsonConvert.DeserializeObject(message.Content, type, settings) as IDomainEvent;
-
-                if (domainEvent is null)
-                {
-                    _logger.LogWarning("Deserialized event is null for message {MessageId}", message.Id);
-                    continue;
-                }
-
-                // 3. Publish DIRECTLY to MediatR (No Wrapper Needed)
-                await _retryPolicy.ExecuteAsync(async () =>
-                    await publisher.Publish(domainEvent, stoppingToken));
-
-                // 4. Mark as processed
-                message.ProcessedOnUtc = DateTime.UtcNow;
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                // Rethrow to let the caller handle graceful exit
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to process outbox message {MessageId}", message.Id);
-                message.Error = ex.Message;
-            }
+            new MoneyJsonConverter(),
+            new CurrencyJsonConverter(),
+            new NameJsonConverter(),
+            new ImageJsonConverter(),
+            new DescriptionJsonConverter(),
+            new TitleJsonConverter(),
+            new ReasonJsonConverter()
         }
+    };
 
+    foreach (var message in messages)
+    {
         try
         {
-            await dbContext.SaveChangesAsync(stoppingToken);
+            // 1. Safe Type Resolution across assemblies
+            var type = Type.GetType(message.Type)
+                ?? AppDomain.CurrentDomain.GetAssemblies()
+                    .Select(a => a.GetType(message.Type))
+                    .FirstOrDefault(t => t != null);
+
+            if (type is null)
+            {
+                _logger.LogWarning("Could not resolve type: {MessageType} for message {MessageId}", message.Type, message.Id);
+                continue;
+            }
+
+            // 2. Deserialize using the pre-configured settings
+            var domainEvent = JsonConvert.DeserializeObject(message.Content, type, jsonSettings) as IDomainEvent;
+
+            if (domainEvent is null)
+            {
+                _logger.LogWarning("Deserialized event is null for message {MessageId}", message.Id);
+                continue;
+            }
+
+            // 3. Publish DIRECTLY to MediatR
+            await _retryPolicy.ExecuteAsync(async () =>
+                await publisher.Publish(domainEvent, stoppingToken));
+
+            // 4. Mark as processed
+            message.ProcessedOnUtc = DateTime.UtcNow;
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
-            // Graceful shutdown requested during save changes
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process outbox message {MessageId}", message.Id);
+            message.Error = ex.Message;
         }
     }
+
+    try
+    {
+        await dbContext.SaveChangesAsync(stoppingToken);
+    }
+    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+    {
+        // Graceful shutdown requested during save changes
+    }
+}
 }

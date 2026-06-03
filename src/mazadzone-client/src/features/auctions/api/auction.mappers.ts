@@ -112,6 +112,7 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
       startingPrice: dto.startBidAmount,
       currentBid: dto.currentBidAmount > 0 ? dto.currentBidAmount : null,
       bidCount: dto.bids?.length ?? 0,
+      minimumIncrement: dto.minBidAmount ?? 10,
     },
     timing: {
       startDate: parseUtcDate(dto.startTime),
@@ -146,24 +147,42 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
 }
 
 /**
+ * Helper to convert local time strings from the form directly into timezone-agnostic local ISO strings
+ * matching the exact shape: "YYYY-MM-DDTHH:mm:ss".
+ */
+export function convertLocalToUtcIsoString(localDateTimeStr: string): string {
+  if (!localDateTimeStr) return "";
+  
+  // localDateTimeStr is in the format "YYYY/MM/DD HH:mm"
+  const clean = localDateTimeStr.replace(/\//g, "-").replace(" ", "T");
+  // Formats literally as "YYYY-MM-DDTHH:mm:00" keeping the exact hours selected
+  return `${clean}:00`;
+}
+
+/**
  * Maps creation form input values into a backend CreateAuctionRequest DTO payload.
  */
 export function mapCreateAuctionInputToRequest(
   input: CreateAuctionInput,
   sellerId: string,
 ): CreateAuctionRequest {
+  const addressParts = (input.shippingLocation || "Amman, Main St, 1").split(",");
+  const city = addressParts[0]?.trim() || "Amman";
+  const street = addressParts[1]?.trim() || "Main St";
+  const building = addressParts[2]?.trim()?.replace(/Bldg\s+/i, "") || "1";
+
   return {
     sellerId,
     shippingAddress: {
-      city: input.shippingLocation || "Amman",
-      street: "Main St",
-      building: "1",
-      landmark: "Near Center",
+      city,
+      street,
+      building,
+      landmark: "Registered Location",
     },
     startBidAmount: input.startingPrice,
-    minBidAmount: input.startingPrice + (input.minimumIncrement || 1),
-    startTime: new Date(input.startDate).toISOString(),
-    endTime: new Date(input.endDate).toISOString(),
+    minBidAmount: input.minimumIncrement || 1,
+    startTime: convertLocalToUtcIsoString(input.startDate),
+    endTime: convertLocalToUtcIsoString(input.endDate),
     title: input.title,
     description: input.description,
     images: (input.images || []).map((file, idx) => ({
@@ -171,7 +190,7 @@ export function mapCreateAuctionInputToRequest(
       altText: input.title,
       isMain: idx === 0,
     })),
-    catigoryId: "cat-1", // Maps dynamically or falls back to 'cat-1' to satisfy schema constraints.
+    catigoryId: input.subcategory || input.category || "cat-1",
     status: input.condition,
     condition: input.conditionDescription,
   };

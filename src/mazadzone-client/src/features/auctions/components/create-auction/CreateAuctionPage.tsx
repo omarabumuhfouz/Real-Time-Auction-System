@@ -140,20 +140,73 @@ export function CreateAuctionPage() {
     setSubmitError(null);
     setSubmitSuccess(false);
 
+    // Formats and converts potential 12-hour AM/PM formats to 24-hour (military) formats safely
     const formatToSlashDate = (dateTimeStr: string): string => {
       if (!dateTimeStr) return "";
-      const [datePart, timePart] = dateTimeStr.split("T");
-      const slashDate = datePart.replace(/-/g, "/"); // Convert to yyyy/mm/dd
-      return timePart ? `${slashDate} ${timePart}` : slashDate;
+      
+      const cleanStr = dateTimeStr.trim();
+      const parts = cleanStr.split(/[T ]/);
+      const datePart = parts[0].replace(/-/g, "/"); // Convert to yyyy/mm/dd
+      let timePart = parts[1] || "00:00";
+      
+      const hasPm = /pm/i.test(cleanStr);
+      const hasAm = /am/i.test(cleanStr);
+      
+      if (hasPm || hasAm) {
+        // Strip AM/PM indicators and parse components
+        const cleanTime = timePart.replace(/am|pm/i, "").trim();
+        const timeParts = cleanTime.split(":");
+        let hour = parseInt(timeParts[0], 10);
+        const minute = timeParts[1] || "00";
+        
+        if (hasPm && hour < 12) {
+          hour += 12;
+        } else if (hasAm && hour === 12) {
+          hour = 0;
+        }
+        
+        const formattedHour = String(hour).padStart(2, "0");
+        return `${datePart} ${formattedHour}:${minute}`;
+      }
+      
+      return `${datePart} ${timePart}`;
     };
 
+    let auctionFolderId = "";
+
     try {
-      // Build creation payload
-      await createAuction({
+      // 1. Generate a unique folder ID for the auction images
+      auctionFolderId = typeof crypto?.randomUUID === "function" 
+        ? crypto.randomUUID() 
+        : Math.random().toString(36).substring(2, 15);
+
+      // 2. Upload the images to our dynamic Route Handler
+      const uploadFormData = new FormData();
+      if (data.images && data.images.length > 0) {
+        data.images.forEach((imgFile) => {
+          uploadFormData.append("images", imgFile);
+        });
+      }
+
+      const uploadResponse = await fetch(`/api/upload?auctionId=${auctionFolderId}`, {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errData = await uploadResponse.json();
+        throw new Error(errData.error || "Failed to upload auction images.");
+      }
+
+      const uploadResult = await uploadResponse.json();
+      const imageUrls: string[] = uploadResult.urls;
+
+      // 3. Build creation payload with the uploaded image URLs
+      const payload = {
         title: data.title,
         description: data.description,
-        category: data.category as AuctionCategory,
-        subcategory: data.subcategory as AuctionSubcategory,
+        category: data.category,
+        subcategory: data.subcategory || "",
         condition: data.condition as AuctionCondition,
         conditionDescription: data.conditionDescription,
         startingPrice: parseDotFormattedPrice(data.startingPrice),
@@ -161,8 +214,12 @@ export function CreateAuctionPage() {
         shippingLocation: data.shippingLocation,
         startDate: formatToSlashDate(data.startDate),
         endDate: formatToSlashDate(data.endDate),
-        images: data.images as File[],
-      });
+        images: imageUrls,
+      };
+
+      console.log("Create Auction onSubmit form payload:", payload);
+
+      await createAuction(payload);
 
       setSubmitSuccess(true);
       appToast.success("Auction created!", "Redirecting to your dashboard...");
@@ -171,16 +228,47 @@ export function CreateAuctionPage() {
       setTimeout(() => {
         router.push(ROUTES.SELLER.AUCTIONS);
       }, 1500);
-    } catch (err: unknown) {
-      console.warn("Backend creation failed, running premium testing simulation...", err);
+    } catch (err: any) {
+      console.error("Auction creation failed:", {
+        message: err.message,
+        statusCode: err.statusCode,
+        errors: err.errors,
+      });
 
-      // Simulate successful local testing workflow
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSubmitSuccess(true);
-      appToast.success("Auction created!", "Redirecting to your dashboard...");
-      setTimeout(() => {
-        router.push(ROUTES.SELLER.AUCTIONS);
-      }, 1500);
+      // Cleanup uploaded images on backend failure to prevent orphaned filesystem files
+      if (auctionFolderId) {
+        try {
+          await fetch(`/api/upload?auctionId=${auctionFolderId}`, {
+            method: "DELETE",
+          });
+          console.log("Successfully cleaned up uploaded images after API error");
+        } catch (cleanupErr) {
+          console.error("Failed to cleanup uploaded images on failure:", cleanupErr);
+        }
+      }
+
+      const errorMessage = err.message || "Failed to create auction. Please check the inputs.";
+      setSubmitError(errorMessage);
+      appToast.error("Failed to create auction", errorMessage);
+
+      // Map backend validation errors back to react-hook-form fields if present (safely guarding against null and arrays)
+      if (err.errors && typeof err.errors === "object" && !Array.isArray(err.errors)) {
+        Object.entries(err.errors).forEach(([key, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0) {
+            const lowerKey = key.toLowerCase();
+            const formKey = Object.keys(methods.getValues()).find(
+              (k) => k.toLowerCase() === lowerKey
+            ) as keyof CreateAuctionFormValues | undefined;
+
+            if (formKey) {
+              methods.setError(formKey, {
+                type: "server",
+                message: messages[0],
+              });
+            }
+          }
+        });
+      }
     }
   };
 

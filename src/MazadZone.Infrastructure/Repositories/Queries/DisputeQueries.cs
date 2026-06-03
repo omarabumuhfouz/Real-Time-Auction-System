@@ -6,7 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using MazadZone.Application.Common.Interfaces;
+using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Disputes.Queries;
+using MazadZone.Application.Features.Disputes.Queries.GetOpenDisputesBreakdown;
 using MazadZone.Domain.Orders;
 using Polly;
 
@@ -77,24 +79,24 @@ public class DisputeQueries : ResilientRepository, IDisputeQueries
 
             // STEP 3: Manually map the dynamic row directly into your strict records
             // STEP 3: Manually map the dynamic row directly into your strict records
-return new DisputeDetailsDto(
-    Id: (Guid?)row.Id ?? Guid.Empty,
-    Status: row.Status is null ? "Unknown" : ((object)row.Status).ToString()!,
-    DisputeType: (string?)row.DisputeType ?? "Unknown",
-    Title: (string?)row.Title ?? string.Empty,
-    Description: (string?)row.Description ?? string.Empty,
+            return new DisputeDetailsDto(
+                Id: (Guid?)row.Id ?? Guid.Empty,
+                Status: row.Status is null ? "Unknown" : ((object)row.Status).ToString()!,
+                DisputeType: (string?)row.DisputeType ?? "Unknown",
+                Title: (string?)row.Title ?? string.Empty,
+                Description: (string?)row.Description ?? string.Empty,
 
-    AuctionDetails: new AuctionDisputeInfo
-    {
-        Id = (Guid?)row.AuctionId ?? Guid.Empty,
-        Title = (string?)row.AuctionTitle ?? string.Empty,
-        FinalPrice = (decimal?)row.FinalPrice ?? 0m,
-        EndTime = (DateTime?)row.EndTime ?? DateTime.MinValue,
-        MainImageUrl = (string?)row.MainImageUrl ?? string.Empty
-    },
+                AuctionDetails: new AuctionDisputeInfo
+                {
+                    Id = (Guid?)row.AuctionId ?? Guid.Empty,
+                    Title = (string?)row.AuctionTitle ?? string.Empty,
+                    FinalPrice = (decimal?)row.FinalPrice ?? 0m,
+                    EndTime = (DateTime?)row.EndTime ?? DateTime.MinValue,
+                    MainImageUrl = (string?)row.MainImageUrl ?? string.Empty
+                },
 
-    Parties: new List<DisputeParties>
-    {
+                Parties: new List<DisputeParties>
+                {
         new DisputeParties
         {
             Bidder = new DisputeUserDto
@@ -110,106 +112,258 @@ return new DisputeDetailsDto(
                 Email = (string?)row.SellerEmail ?? string.Empty
             }
         }
-    },
+                },
 
-    Attachments: attachments?.ToList() ?? new List<DisputeAttachmentDto>()
-);
+                Attachments: attachments?.ToList() ?? new List<DisputeAttachmentDto>()
+            );
         });
     }
 
-    public async Task<IReadOnlyList<DisputeListItemDto>> GetFilteredDisputesAsync(DisputeFilterParams filters, CancellationToken ct)
-    {
-        // 1. Base Query with "WHERE 1=1" to make appending AND clauses easy
-        var sqlBuilder = new StringBuilder(@"
-        SELECT 
-            d.Id,
-            bidder.FirstName + ' ' + bidder.LastName AS BidderName,
-            seller.FirstName + ' ' + seller.LastName AS SellerName,
-            dt.Name AS Category,
-
-            CASE d.Status
-                WHEN 1 THEN 'Open'
-                WHEN 2 THEN 'UnderReview'
-                WHEN 3 THEN 'Resolved'
-                ELSE 'Unknown'
-            END AS Status,
-
-            d.CreatedAtUtc AS SubmittedDate
-        FROM Disputes d
-        JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
-        JOIN Orders o ON d.OrderId = o.Id
-        JOIN Auctions a ON o.AuctionId = a.Id
-        JOIN Users bidder ON o.BidderId = bidder.Id
-        JOIN Users seller ON a.SellerId = seller.Id
-        WHERE 1=1 ");
-
-        var parameters = new DynamicParameters();
-
-        // 2. Conditionally append filters
-        if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
-        {
-            // Searches across Bidder Name, Seller Name, and Category
-            sqlBuilder.Append(@" AND (
-            bidder.FirstName LIKE @Search OR 
-            bidder.LastName LIKE @Search OR 
-            seller.FirstName LIKE @Search OR 
-            seller.LastName LIKE @Search OR
-            dt.Name LIKE @Search)");
-
-            parameters.Add("Search", $"%{filters.SearchTerm}%");
-        }
-
-        if (!string.IsNullOrWhiteSpace(filters.Status))
+    public async Task<PagedList<DisputeListItemDto>> GetFilteredDisputesAsync(DisputeFilterParams filters, CancellationToken ct)
 {
-    // Check if the string matches an actual defined name in the enum (case-insensitively)
-    bool isDefinedName = Enum.GetNames<DisputeStatus>()
-        .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
+    var parameters = new DynamicParameters();
 
-    if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
+    // 1. Build the shared FROM and WHERE clauses to be used by both COUNT and SELECT
+    var filterConditions = new StringBuilder(@"
+    FROM Disputes d
+    JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
+    JOIN Orders o ON d.OrderId = o.Id
+    JOIN Auctions a ON o.AuctionId = a.Id
+    JOIN Users bidder ON o.BidderId = bidder.Id
+    JOIN Users seller ON a.SellerId = seller.Id
+    WHERE 1 = 1 ");
+
+    // 2. Conditionally append filters
+    if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
     {
-        sqlBuilder.Append(" AND d.Status = @Status ");
-        parameters.Add("Status", (int)statusEnum);
+        // Searches across Bidder Name, Seller Name, and Category
+        filterConditions.Append(@" AND (
+        bidder.FirstName LIKE @Search OR 
+        bidder.LastName LIKE @Search OR 
+        seller.FirstName LIKE @Search OR 
+        seller.LastName LIKE @Search OR
+        dt.Name LIKE @Search)");
+
+        parameters.Add("Search", $"%{filters.SearchTerm}%");
     }
+
+    if (!string.IsNullOrWhiteSpace(filters.Status))
+    {
+        // Check if the string matches an actual defined name in the enum (case-insensitively)
+        bool isDefinedName = Enum.GetNames<DisputeStatus>()
+            .Any(name => string.Equals(name, filters.Status, StringComparison.OrdinalIgnoreCase));
+
+        if (isDefinedName && Enum.TryParse<DisputeStatus>(filters.Status, ignoreCase: true, out var statusEnum))
+        {
+            filterConditions.Append(" AND d.Status = @Status ");
+            parameters.Add("Status", (int)statusEnum);
+        }
+    }
+
+    if (filters.CategoryId.HasValue)
+    {
+        filterConditions.Append(" AND d.DisputeTypeId = @CategoryId ");
+        parameters.Add("CategoryId", filters.CategoryId.Value);
+    }
+
+    if (filters.FromDate.HasValue)
+    {
+        filterConditions.Append(" AND d.CreatedAtUtc >= @FromDate ");
+        parameters.Add("FromDate", filters.FromDate.Value);
+    }
+
+    if (filters.ToDate.HasValue)
+    {
+        filterConditions.Append(" AND d.CreatedAtUtc <= @ToDate ");
+        parameters.Add("ToDate", filters.ToDate.Value);
+    }
+
+    // 3. Build Count Query String
+    var countSql = $"SELECT COUNT(1) {filterConditions}";
+
+    // 4. Build Data Query String
+    var dataSqlBuilder = new StringBuilder($@"
+    SELECT 
+        d.Id,
+        (bidder.FirstName + ' ' + bidder.LastName) AS BidderName,
+        (seller.FirstName + ' ' + seller.LastName) AS SellerName,
+        dt.Name AS Category,
+        CASE d.Status
+            WHEN 1 THEN 'Open'
+            WHEN 2 THEN 'UnderReview'
+            WHEN 3 THEN 'Resolved'
+            ELSE 'Unknown'
+        END AS Status,
+        d.CreatedAtUtc AS SubmittedDate
+    {filterConditions}");
+
+    // Apply Safe Sorting
+    var sortString = filters.SortColumn?.ToLower() switch
+    {
+        "category" => "dt.Name",
+        "status" => "d.Status",
+        "biddername" => "BidderName",
+        "sellername" => "SellerName",
+        _ => "d.CreatedAtUtc" // Default sort
+    };
+
+    var direction = filters.IsDescending ? "DESC" : "ASC";
+    dataSqlBuilder.Append($" ORDER BY {sortString} {direction}");
+
+    // Apply Pagination Limits if not exporting
+    if (!filters.IsExport)
+    {
+        dataSqlBuilder.Append(" OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY");
+        parameters.Add("Offset", (filters.PageNumber - 1) * filters.PageSize);
+        parameters.Add("PageSize", filters.PageSize);
+    }
+
+    // 5. Combine commands or stream multi-results
+    return await ExecuteResilientAsync(async connection =>
+    {
+        if (!filters.IsExport)
+        {
+            var combinedSql = $"{countSql}; {dataSqlBuilder}";
+
+            var command = new CommandDefinition(combinedSql, parameters, cancellationToken: ct);
+            using var multi = await connection.QueryMultipleAsync(command);
+
+            int totalCount = await multi.ReadFirstAsync<int>();
+            var items = (await multi.ReadAsync<DisputeListItemDto>()).ToList();
+
+            return new PagedList<DisputeListItemDto>(items, filters.PageNumber, filters.PageSize, totalCount);
+        }
+        else
+        {
+            // If exporting, skip pagination metrics entirely to maximize performance
+            var command = new CommandDefinition(dataSqlBuilder.ToString(), parameters, cancellationToken: ct);
+            var items = (await connection.QueryAsync<DisputeListItemDto>(command)).ToList();
+
+            return new PagedList<DisputeListItemDto>(items, 1, items.Count, items.Count);
+        }
+    });
 }
 
-        if (filters.CategoryId.HasValue)
-        {
-            sqlBuilder.Append(" AND d.DisputeTypeId = @CategoryId ");
-            parameters.Add("CategoryId", filters.CategoryId.Value);
-        }
+   public async Task<IReadOnlyList<RawDisputeBreakdown>> GetOpenDisputesBreakdownAsync(
+    DateTime currStart, DateTime currEnd,
+    DateTime prevStart, DateTime prevEnd,
+    int limit,
+    bool includeOther,
+    CancellationToken ct)
+{
+    var sql = @"
+        WITH BreakdownData AS (
+            SELECT 
+                dt.Name AS DisputeTypeName,
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) AS CurrentCases,
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) AS PreviousCases
+            FROM DisputeTypes dt
+            LEFT JOIN Disputes d ON dt.Id = d.DisputeTypeId AND d.Status = @OpenStatus
+            GROUP BY dt.Name
+            HAVING 
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @CurrStart AND d.CreatedAtUtc < @CurrEnd THEN 1 ELSE 0 END) > 0
+                OR 
+                SUM(CASE WHEN d.Id IS NOT NULL AND d.CreatedAtUtc >= @PrevStart AND d.CreatedAtUtc < @PrevEnd THEN 1 ELSE 0 END) > 0
+        ),
+        RankedData AS (
+            SELECT 
+                DisputeTypeName,
+                CurrentCases,
+                PreviousCases,
+                ROW_NUMBER() OVER(ORDER BY CurrentCases DESC, DisputeTypeName ASC) AS Rnk
+            FROM BreakdownData
+        )
+        
+        SELECT 
+            DisputeTypeName,
+            CurrentCases,
+            PreviousCases,
+            IsOtherBucket
+        FROM (
+            -- Always select the Top N
+            SELECT 
+                DisputeTypeName,
+                CurrentCases,
+                PreviousCases,
+                CAST(0 AS BIT) AS IsOtherBucket, -- FIX: Explicitly cast to BIT
+                Rnk AS SortOrder
+            FROM RankedData
+            WHERE Rnk <= @Limit
+    ";
 
-        if (filters.FromDate.HasValue)
-        {
-            sqlBuilder.Append(" AND d.CreatedAtUtc >= @FromDate ");
-            parameters.Add("FromDate", filters.FromDate.Value);
-        }
+    if (includeOther)
+    {
+        sql += @"
+            UNION ALL
 
-        if (filters.ToDate.HasValue)
-        {
-            sqlBuilder.Append(" AND d.CreatedAtUtc <= @ToDate ");
-            parameters.Add("ToDate", filters.ToDate.Value);
-        }
+            -- Aggregate everything else into 'Other'
+            SELECT 
+                'Other' AS DisputeTypeName,
+                SUM(CurrentCases) AS CurrentCases,
+                SUM(PreviousCases) AS PreviousCases,
+                CAST(1 AS BIT) AS IsOtherBucket, -- FIX: Explicitly cast to BIT
+                @Limit + 1 AS SortOrder
+            FROM RankedData
+            WHERE Rnk > @Limit
+            HAVING COUNT(*) > 0 
+        ";
+    }
 
-        // 3. Apply Safe Sorting
-        // WARNING: Never inject filters.SortColumn directly to avoid SQL Injection. Map it safely.
-        var sortString = filters.SortColumn?.ToLower() switch
+    sql += @"
+        ) FinalResult
+        ORDER BY SortOrder ASC;
+    ";
+
+    return await ExecuteResilientAsync(async connection =>
+    {
+        var parameters = new
         {
-            "category" => "dt.Name",
-            "status" => "d.Status",
-            "biddername" => "BidderName",
-            "sellername" => "SellerName",
-            _ => "d.CreatedAtUtc" // Default sort
+            CurrStart = currStart,
+            CurrEnd = currEnd,
+            PrevStart = prevStart,
+            PrevEnd = prevEnd,
+            Limit = limit,
+            OpenStatus = (int)DisputeStatus.Open
         };
 
-        var direction = filters.IsDescending ? "DESC" : "ASC";
-        sqlBuilder.Append($" ORDER BY {sortString} {direction}");
+        var command = new CommandDefinition(sql, parameters, cancellationToken: ct);
+        var result = await connection.QueryAsync<RawDisputeBreakdown>(command);
 
-        // 4. Execute
+        return result.ToList().AsReadOnly();
+    });
+}
+
+    public async Task<IReadOnlyList<DisputeListItemDto>> ExportSelectedDisputesAsync(IEnumerable<Guid> disputeIds, CancellationToken ct)
+    {
+        var sql = @"
+    SELECT 
+        d.Id,
+        bidder.FirstName + ' ' + bidder.LastName AS BidderName,
+        seller.FirstName + ' ' + seller.LastName AS SellerName,
+        dt.Name AS Category,
+        CASE d.Status
+            WHEN 1 THEN 'Open'
+            WHEN 2 THEN 'UnderReview'
+            WHEN 3 THEN 'Resolved'
+            ELSE 'Unknown'
+        END AS Status,
+        d.CreatedAtUtc AS SubmittedDate
+    FROM Disputes d
+    JOIN DisputeTypes dt ON d.DisputeTypeId = dt.Id
+    JOIN Orders o ON d.OrderId = o.Id
+    JOIN Auctions a ON o.AuctionId = a.Id
+    JOIN Users bidder ON o.BidderId = bidder.Id
+    JOIN Users seller ON a.SellerId = seller.Id
+    WHERE d.Id IN @DisputeIds
+    ORDER BY d.CreatedAtUtc DESC"; // Default safe sorting for exports
+
         return await ExecuteResilientAsync(async connection =>
         {
-            var result = await connection.QueryAsync<DisputeListItemDto>(sqlBuilder.ToString(), parameters);
+            var command = new CommandDefinition(sql, new { DisputeIds = disputeIds }, cancellationToken: ct);
+            var result = await connection.QueryAsync<DisputeListItemDto>(command);
+
             return result.ToList().AsReadOnly();
         });
-
     }
+
 }

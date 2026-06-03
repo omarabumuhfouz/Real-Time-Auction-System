@@ -252,15 +252,16 @@ public static Order CreateOrderWithFeedback()
     /// </summary>
     public static List<OrderSummaryDto> CreateOrderSummaries() =>
     [
-        new(
-            Id: Guid.NewGuid(), 
-            Status: "Shipped", 
-            TotalAmount: 450.00m, 
-            Currency: "JOD", 
-            CreatedAt: DateTime.UtcNow, 
-            HasActiveDispute: true, 
-            IsDisputable: false, 
-            CanLeaveFeedback: false
+        new OrderSummaryDto(
+            OrderId: Guid.NewGuid(),
+            AuctionName: "Vintage Rolex Submariner",
+            CategoryName: "Watches",
+            BidderName: "Ali Ahmad",
+            BidderEmail: "ali.ahmad@example.com",
+            Status: "Shipped",
+            OrderDate: DateTime.UtcNow,
+            TotalAmount: 4500.00m,
+            Currency: "JOD"
         )
     ];
 

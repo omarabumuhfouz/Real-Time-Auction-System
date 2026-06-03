@@ -43,7 +43,7 @@ export function AdminDisputesFilters({
         <div className="flex flex-col gap-1 w-full sm:w-auto min-w-[160px]">
           <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Dispute Status</span>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-10 bg-card border-border">
+            <SelectTrigger>
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -60,7 +60,7 @@ export function AdminDisputesFilters({
         <div className="flex flex-col gap-1 w-full sm:w-auto min-w-[160px]">
           <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Category</span>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-10 bg-card border-border">
+            <SelectTrigger>
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +77,7 @@ export function AdminDisputesFilters({
         <div className="flex flex-col gap-1 w-full sm:w-auto min-w-[160px]">
           <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Sort By</span>
           <Select defaultValue="Submitted Date">
-            <SelectTrigger className="h-10 bg-card border-border">
+            <SelectTrigger>
               <SelectValue placeholder="Sort By" />
             </SelectTrigger>
             <SelectContent>

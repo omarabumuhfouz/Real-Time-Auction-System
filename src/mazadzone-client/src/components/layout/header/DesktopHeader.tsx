@@ -1,9 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { Search, Gavel, Package, User, ChevronDown, LayoutDashboard } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Gavel, Package, User, ChevronDown, LayoutDashboard, Plus } from "lucide-react";
 import { ROUTES } from "@/config/routes.config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CATEGORIES } from "./header.constants";
 import type { AuthUser } from "@/stores/auth.store";
-import { NotificationPopover, useGetUnreadCount, useNotificationStore } from "@/features/notifications";
+import { NotificationPopover, useGetUnreadCount } from "@/features/notifications";
+import { useNotificationStore } from "@/features/notifications/store/notification.store";
 import { useAuthStore } from "@/stores/auth.store";
+import { GlobalHeaderSearch } from "./GlobalHeaderSearch";
+import { useGetProfile } from "@/features/profile";
 
 export interface DesktopHeaderProps {
   isAuthenticated: boolean;
@@ -27,37 +32,50 @@ export interface DesktopHeaderProps {
 
 export const DesktopHeader = ({
   isAuthenticated,
+  user,
   logout,
   mounted,
   pathname,
 }: DesktopHeaderProps) => {
   const userId = useAuthStore((state) => state.user?.id);
-  const { data: serverUnreadCount = 0 } = useGetUnreadCount(userId || "", {
+
+  // Fetch the real, live profile details (real name and email) from the DB
+  const { data: profile } = useGetProfile();
+
+  // Fetch server count once on mount — used only to hydrate the Zustand store
+  const { data: serverUnreadCount } = useGetUnreadCount(userId || "", {
     enabled: isAuthenticated,
   });
-  const hasLocalNotifications = useNotificationStore(
-    (state) => state.notifications.length > 0,
-  );
-  const localUnreadCount = useNotificationStore((state) =>
-    state.notifications.reduce(
-      (count, notification) => count + (notification.isRead ? 0 : 1),
-      0,
-    ),
-  );
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const consumeOptimistic = useNotificationStore((state) => state._consumeOptimistic);
 
-  const unreadCount = hasLocalNotifications ? localUnreadCount : serverUnreadCount;
+  // Hydrate the Zustand badge from server data on initial load and after background refetches.
+  // If an optimistic update (from SignalR) is pending, skip the overwrite — the Zustand
+  // value is more recent than what the server returned.
+  useEffect(() => {
+    if (serverUnreadCount !== undefined) {
+      const wasOptimistic = consumeOptimistic();
+      if (!wasOptimistic) {
+        setUnreadCount(serverUnreadCount);
+      }
+    }
+  }, [serverUnreadCount, setUnreadCount, consumeOptimistic]);
 
+  const displayName = profile?.fullName || user?.fullName || "User";
+  const displayEmail = profile?.email || user?.email || "";
 
   return (
     <>
       {/* Desktop Search Bar (Part of Top Row) */}
-      <div className="hidden md:flex flex-1 max-w-xl ml-5 mr-7 relative mx-0 pr-0">
-        <Input
-          className="w-full bg-white text-black  text-2xl pl-5  rounded-2xl h-13 border-none focus-visible:ring-2 focus-visible:ring-primary"
-          placeholder="Search..."
-        />
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400" />
-      </div>
+      <GlobalHeaderSearch
+        isAdmin={false}
+        placeholder="Search..."
+        containerClassName="hidden md:flex flex-1 max-w-xl ml-5 mr-7 relative mx-0 pr-0"
+        inputClassName="w-full bg-white text-black text-2xl pl-5 rounded-2xl h-13 border-none focus-visible:ring-2 focus-visible:ring-primary"
+        iconClassName="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 cursor-pointer"
+        iconPosition="right"
+      />
 
       {/* Right Nav (Desktop) */}
       <div className="hidden md:flex items-center gap-6">
@@ -97,20 +115,33 @@ export const DesktopHeader = ({
 
               <NotificationPopover unreadCount={unreadCount} />
 
-
-
-
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 hover:text-primary transition-colors outline-none">
-                  <User className="h-7 w-7" />
-                  <ChevronDown className="h-7 w-7" />
+                <DropdownMenuTrigger className="flex items-center gap-2 hover:opacity-90 transition-opacity outline-none cursor-pointer">
+                  <div className="size-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm select-none border border-primary-foreground/20 shrink-0">
+                    {displayName
+                      ? displayName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)
+                      : "U"}
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white text-black border-none rounded-md shadow-lg">
-                  <DropdownMenuItem asChild>
-                    <Link href={ROUTES.PROFILE.VIEW} className="cursor-pointer font-medium">Profile Settings</Link>
+                <DropdownMenuContent align="end" className="w-56 bg-white text-black border-none rounded-xl shadow-lg p-1">
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 rounded-lg focus:outline-none transition-colors p-2.5">
+                    <Link href={ROUTES.PROFILE.PUBLIC(userId || "")} className="flex flex-col items-start w-full group">
+                      <span className="text-sm font-bold leading-none text-gray-900 group-hover:text-primary group-focus:text-primary transition-colors">{displayName}</span>
+                      <span className="text-xs mt-1.5 leading-none text-gray-500 truncate">{displayEmail}</span>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 font-medium focus:text-red-600">
+                  <DropdownMenuSeparator className="bg-gray-100" />
+                  <DropdownMenuItem asChild className="cursor-pointer font-medium text-sm flex items-center py-2 px-3 rounded-lg focus:bg-primary focus:text-white focus:outline-none transition-colors">
+                    <Link href={ROUTES.PROFILE.VIEW}>Profile Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-100" />
+                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 font-medium text-sm flex items-center py-2 px-3 rounded-lg focus:bg-primary focus:text-white focus:outline-none transition-colors">
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -122,6 +153,15 @@ export const DesktopHeader = ({
 
     </>
   );
+};
+
+const SUBCATEGORIES_BY_CATEGORY: Record<string, string[]> = {
+  "Tech and Electronics": ["Laptops", "Smartphones", "Cameras", "Others"],
+  "Fashion and Style": ["Watches", "Shoes", "Accessories", "Others"],
+  "Home and Living": ["Furniture", "Decor", "Others"],
+  "Collectibles and Art": ["Paintings", "Antiques", "Sculptures", "Others"],
+  "Hobbies and Leisure": ["Books", "Musical Instruments", "Sports Equipment", "Others"],
+  "Motors": ["Cars", "Motorcycles", "Others"],
 };
 
 export const DesktopBottomRow = ({
@@ -137,25 +177,97 @@ export const DesktopBottomRow = ({
   handleSellClick: () => void;
   router: { push: (path: string) => void };
 }) => {
+  const [activeHoverCategory, setActiveHoverCategory] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (category: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveHoverCategory(category);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setActiveHoverCategory(null);
+    }, 150); // Small delay to allow moving mouse to the submenu
+  };
+
+  const handleSubMenuMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  };
+
+  const handleSubMenuMouseLeave = () => {
+    setActiveHoverCategory(null);
+  };
+
+  const handleSubcategoryClick = (category: string, subcategory: string) => {
+    setActiveHoverCategory(null);
+    const params = new URLSearchParams();
+    params.set("category", category);
+    params.set("subcategory", subcategory);
+    router.push(`${ROUTES.AUCTIONS.LIST}?${params.toString()}`);
+  };
+
   return (
-    <div className="hidden md:flex mx-auto h-14 max-w-[1408px] items-center justify-between pt-4 px-4 md:px-0">
-      <nav className="flex items-center gap-6 whitespace-nowrap overflow-x-auto no-scrollbar pt-1.5">
-        {CATEGORIES.map((category) => (
-          <button
-            key={category}
-            onClick={() => handleCategoryClick(category)}
-            className="text-lg font-normal text-primary-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            {category}
-          </button>
-        ))}
+    <div className="hidden md:flex mx-auto h-14 max-w-[1408px] items-center justify-between pt-4 px-4 md:px-0 relative">
+      <nav className="flex items-center gap-6 whitespace-nowrap overflow-x-auto no-scrollbar pt-1.5 h-full">
+        {CATEGORIES.map((category) => {
+          const isCategoryHovered = activeHoverCategory === category;
+          return (
+            <button
+              key={category}
+              onMouseEnter={() => handleMouseEnter(category)}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleCategoryClick(category)}
+              className={cn(
+                "text-lg font-normal text-primary-foreground hover:text-primary transition-colors cursor-pointer relative pb-3 h-full flex items-center",
+                isCategoryHovered && "text-primary"
+              )}
+            >
+              {category}
+              {isCategoryHovered && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in zoom-in-95 duration-150" />
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      <div className="flex items-center gap-9 shrink-0 ml-6">
+      {/* Horizontal Subcategories Dropdown Bar */}
+      <div
+        onMouseEnter={handleSubMenuMouseEnter}
+        onMouseLeave={handleSubMenuMouseLeave}
+        className={cn(
+          "absolute left-0 right-0 z-40 transition-all duration-200 ease-in-out shadow-lg rounded-b-2xl border border-t-0 border-background/10 bg-foreground overflow-hidden px-6",
+          activeHoverCategory
+            ? "h-14 opacity-100 visible pointer-events-auto"
+            : "h-0 opacity-0 invisible pointer-events-none"
+        )}
+        style={{ top: "100%" }}
+      >
+        <div className="h-full flex items-center">
+          <div className="flex items-center gap-5 whitespace-nowrap py-2 w-full">
+            <span className="text-background/60 text-xs uppercase tracking-wider font-extrabold mr-2 select-none">
+              Subcategories:
+            </span>
+            {activeHoverCategory &&
+              SUBCATEGORIES_BY_CATEGORY[activeHoverCategory]?.map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => handleSubcategoryClick(activeHoverCategory, sub)}
+                  className="text-sm font-semibold text-background/95 hover:text-primary hover:bg-background/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                >
+                  {sub}
+                </button>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-9 shrink-0 ml-6 pb-2.5">
         {mounted && isSeller && (
           <Button
             variant="outline"
-            onClick={() => router.push(ROUTES.SELLER.DASHBOARD)}
+            onClick={() => router.push(ROUTES.SELLER.AUCTIONS)}
             className="bg-transparent border-white/20 text-white  text-lg hover:bg-primary/20 hover:text-primary hover:border-primary gap-2 h-12 rounded-xl"
           >
             <LayoutDashboard className="h-5 w-5" />
@@ -165,9 +277,10 @@ export const DesktopBottomRow = ({
 
         <Button
           onClick={handleSellClick}
-          className="bg-primary hover:bg-primary/90 text-white font-medium px-6 h-12 w-24 rounded-xl shadow-md text-lg"
+          className="bg-primary hover:bg-primary/90 text-white font-medium px-5 h-12 rounded-xl shadow-md text-lg flex items-center gap-1.5"
         >
-          Sell
+          <Plus className="h-5 w-5 shrink-0" />
+          <span>Sell</span>
         </Button>
       </div>
     </div>

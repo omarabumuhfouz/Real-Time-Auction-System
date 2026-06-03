@@ -95,3 +95,10 @@ export interface PagedListOfAuctionsListDto {
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
 }
+
+export interface CategoryDto {
+  id: string;
+  name: string;
+  subCategories?: CategoryDto[];
+  subcategories?: CategoryDto[];
+}

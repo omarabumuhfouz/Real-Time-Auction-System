@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Calendar as CalendarIcon, Download, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import type { UseModerateUsersFilters } from "../../api/queries";
+import type { UseModerateUsersFilters } from "../../api";
 import type { ModerateUserRole, ModerateUserStatus } from "../../types/admin.types";
 
 interface ModerateUsersFiltersProps {
@@ -25,6 +25,9 @@ interface ModerateUsersFiltersProps {
   isExporting: boolean;
   onExport: () => void;
   selectedIds: string[];
+  onBulkActivate: () => void;
+  onBulkSuspend: () => void;
+  onBulkBan: () => void;
 }
 
 export function ModerateUsersFilters({
@@ -32,9 +35,31 @@ export function ModerateUsersFilters({
   onFilterChange,
   isExporting,
   onExport,
-  selectedIds
+  selectedIds,
+  onBulkActivate,
+  onBulkSuspend,
+  onBulkBan
 }: ModerateUsersFiltersProps) {
   const hasSelection = selectedIds.length > 0;
+
+  // Local search state for debouncing
+  const [localSearch, setLocalSearch] = useState(filters.search || "");
+
+  // Keep local search query in sync when search filter changes from elsewhere (e.g. URL query)
+  useEffect(() => {
+    setLocalSearch(filters.search || "");
+  }, [filters.search]);
+
+  // Apply search filter after 400ms debounce
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (localSearch !== filters.search) {
+        onFilterChange({ search: localSearch, page: 1 });
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [localSearch, filters.search, onFilterChange]);
 
   return (
     <div className="bg-card text-card-foreground border border-border rounded-xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
@@ -48,8 +73,8 @@ export function ModerateUsersFilters({
             type="text"
             placeholder="Search users by name or email..."
             className="pl-9 h-9 w-full text-xs bg-white text-black border-transparent placeholder:text-black/50 focus-visible:ring-foreground/20 shadow-sm"
-            value={filters.search}
-            onChange={(e) => onFilterChange({ search: e.target.value, page: 1 })}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
           />
         </div>
 
@@ -61,10 +86,10 @@ export function ModerateUsersFilters({
               value={filters.role}
               onValueChange={(val) => onFilterChange({ role: val as ModerateUserRole | "All Roles", page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="All Roles" className="cursor-pointer">All Roles</SelectItem>
                 <SelectItem value="Bidder" className="cursor-pointer">Bidder</SelectItem>
                 <SelectItem value="Seller" className="cursor-pointer">Seller</SelectItem>
@@ -80,10 +105,10 @@ export function ModerateUsersFilters({
               value={filters.status}
               onValueChange={(val) => onFilterChange({ status: val as ModerateUserStatus | "All Statuses", page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="All Statuses" className="cursor-pointer">All Statuses</SelectItem>
                 <SelectItem value="Active" className="cursor-pointer">Active</SelectItem>
                 <SelectItem value="Suspended" className="cursor-pointer">Suspended</SelectItem>
@@ -99,10 +124,10 @@ export function ModerateUsersFilters({
               value={filters.sortBy}
               onValueChange={(val) => onFilterChange({ sortBy: val, page: 1 })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Date Joined" />
               </SelectTrigger>
-              <SelectContent sideOffset={5} className="border-border">
+              <SelectContent>
                 <SelectItem value="dateJoined" className="cursor-pointer">Date Joined</SelectItem>
                 <SelectItem value="name" className="cursor-pointer">Name</SelectItem>
                 <SelectItem value="lastActive" className="cursor-pointer">Last Active</SelectItem>
@@ -145,9 +170,16 @@ export function ModerateUsersFilters({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-card text-foreground border-border" sideOffset={5}>
-            <DropdownMenuItem className="text-xs cursor-pointer" disabled>Suspend Selected</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs text-destructive focus:text-destructive cursor-pointer" disabled>Ban Selected</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs font-semibold cursor-pointer" onClick={onExport}>
+            <DropdownMenuItem className="text-xs cursor-pointer text-success-foreground" onClick={onBulkActivate}>
+              Activate Selected
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-xs cursor-pointer text-muted-foreground" onClick={onBulkSuspend}>
+              Suspend Selected
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-xs text-destructive focus:text-destructive cursor-pointer" onClick={onBulkBan}>
+              Ban Selected
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-xs font-semibold cursor-pointer border-t border-border mt-1 pt-1" onClick={onExport}>
               Export Selected
             </DropdownMenuItem>
           </DropdownMenuContent>

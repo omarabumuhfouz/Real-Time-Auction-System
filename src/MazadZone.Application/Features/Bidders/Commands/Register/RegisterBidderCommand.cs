@@ -1,4 +1,4 @@
-﻿using MazadZone.Application.Features.Bidders.DTOs;
+using MazadZone.Application.Features.Bidders.DTOs;
 
 namespace MazadZone.Application.Features.Bidders.Commands.Register;
 public record RegisterBidderCommand(
@@ -10,6 +10,6 @@ public record RegisterBidderCommand(
     string SecondName,
     string ThirdName,
     string LastName,
-    AddressDto Address
-    
+    AddressDto Address,
+    byte[] IdentityCardImageBytes
 ) : ICommand<RegisterBidderDto>;

@@ -6,7 +6,7 @@ import homeHeroImg from "@/assets/Images/Home.png";
 
 export function HomeHero() {
   return (
-    <section className="relative w-full h-[411px] bg-[#0b101b] overflow-hidden flex items-center">
+    <section className="relative w-full h-[420px] bg-[#0b101b] overflow-hidden flex items-center">
       {/* Hero Image as Background - Full width section but contained image */}
       <div className="absolute inset-0 z-0 select-none pointer-events-none">
         <Image
@@ -14,25 +14,26 @@ export function HomeHero() {
           alt="MazadZone Hero"
           fill
           sizes="100vw"
-          className="object-contain object-center"
+          className="object-cover object-center"
           priority
         />
+        {/* Dark gradient overlay on the right side behind the text to improve readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0b101b]/50 to-[#0b101b]/95" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 flex justify-end">
-        <div className="w-full lg:w-1/2 space-y-4">
-          <div className="space-y-0.5">
-            <h2 className="text-lg md:text-xl font-bold tracking-tight text-white uppercase">
-              BID. WIN. <span className="text-primary font-black">OWN</span>
+      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-12 lg:px-16 relative z-10 flex justify-end">
+        <div className="w-full lg:w-5/12 xl:w-[35%] space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xs md:text-sm font-bold tracking-widest text-slate-400 uppercase">
+              BID. WIN. OWN.
             </h2>
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              The <span className="text-primary italic">Extraordinary</span>
+              Bid <span className="text-primary">Live</span>. Win Unique Finds.
             </h1>
           </div>
 
           <p className="text-xs md:text-sm text-slate-200 max-w-sm leading-relaxed">
-            Access the world&apos;s most unique collectibles, rare art, luxury cars,
-            fine furniture, and more, all in one place.
+            Discover rare items, follow real-time auctions, and compete before the countdown ends.
           </p>
 
           <div className="pt-2">
@@ -45,6 +46,9 @@ export function HomeHero() {
           </div>
         </div>
       </div>
+
+      {/* Soft gradient fade into the page content */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
     </section>
   );
 }

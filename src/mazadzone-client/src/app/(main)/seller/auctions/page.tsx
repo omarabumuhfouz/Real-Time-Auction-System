@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { SellerDashboardPage } from "@/features/auctions";
+import { SellerDashboardPage } from "@/features/seller";
 
 export default function Page() {
   return (
@@ -10,4 +10,3 @@ export default function Page() {
     </Suspense>
   );
 }
-

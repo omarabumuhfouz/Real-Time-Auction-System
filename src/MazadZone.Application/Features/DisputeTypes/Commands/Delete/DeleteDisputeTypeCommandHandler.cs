@@ -3,7 +3,7 @@ namespace MazadZone.Features.DisputeTypes.Commands.Delete;
 using Microsoft.Extensions.Logging;
 using MazadZone.Domain.Disputes;
 
-internal sealed class DeleteDisputeTypeCommandHandler : ICommandHandler<DeleteDisputeTypeCommand, Unit>
+public sealed class DeleteDisputeTypeCommandHandler : ICommandHandler<DeleteDisputeTypeCommand, Unit>
 {
     private readonly IDisputeTypeRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
@@ -27,6 +27,8 @@ internal sealed class DeleteDisputeTypeCommandHandler : ICommandHandler<DeleteDi
             DisputeTypeLogs.LogNotFound(_logger, request.DisputeTypeId);
             return DisputeTypeErrors.NotFound;
         }
+
+        if (!disputeType.IsActive) return Unit.Value;
 
         var result = disputeType.Delete();
         if (result.IsFailure)

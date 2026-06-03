@@ -3,15 +3,12 @@ using MazadZone.Domain.Sellers.Events;
 
 namespace MazadZone.Domain.Sellers;
 
-public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditableEntity
+public sealed class Seller : AggregateRoot<UserId>, IAuditableEntity
 {
     private Seller() { } 
 
-    private Seller(
-        UserId id, 
-        string nationalId) : base(id)
+    private Seller(UserId id) : base(id)
     {
-        NationalId = nationalId;
         Rating = 0;
         ReviewsCount = 0;
         IsVerified = false;
@@ -27,7 +24,6 @@ public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditabl
     public DateTime CreatedOnUtc { get ; set ; }
     public DateTime? ModifiedOnUtc { get ; set ; }
 
-    public string NationalId { get; set;}
     public bool IsVerified { get; private set; }
 
     // Domain Logic: Update rating based on a new review
@@ -59,10 +55,8 @@ public sealed class Seller : AggregateRoot<UserId>, IVerifiableEntity, IAuditabl
         return Result.Success();
     }
 
-    public static Result<Seller> BecomeSeller(UserId bidderId,  string nationalId)
+    public static Result<Seller> BecomeSeller(UserId bidderId)
     {
-        if (string.IsNullOrWhiteSpace(nationalId)) return SellerErrors.InvalidNationalId;
-
-        return new Seller(bidderId, nationalId);
+        return new Seller(bidderId);
     }
 }

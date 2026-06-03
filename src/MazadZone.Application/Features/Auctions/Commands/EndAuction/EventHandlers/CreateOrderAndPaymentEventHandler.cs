@@ -10,6 +10,7 @@ using MazadZone.Domain.Repositories;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Users.ValueObjects;
 using System.Threading.Tasks.Dataflow;
+using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 
 namespace MazadZone.Application.Features.Auctions.EventHandlers;
 
@@ -54,7 +55,7 @@ public class CreateOrderAndPaymentEventHandler(
         _orderRepository.Add(order);
 
         // 3. payment  
-        var paymentResult = Payment.Create(order.Id, UserId.From(winningBid.BidderId.Value), winningBid.DepositAmount);
+        var paymentResult = Payment.Create(order.Id, UserId.From(winningBid.BidderId.Value), winningBid.DepositAmount, order.TotalAmount, MazadZone.Domain.Payments.PaymentConstants.DefaultPlatformFeePercentage);
 
         System.Console.WriteLine("\n\n\n\npaymentId: ", paymentResult.Value.Id.Value);
         System.Console.WriteLine("OrderId: ", paymentResult.Value.OrderId.Value);

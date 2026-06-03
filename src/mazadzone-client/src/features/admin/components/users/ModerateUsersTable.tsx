@@ -28,7 +28,7 @@ import {
   DROPDOWN_ITEMS
 } from "../../constants/moderate-users.constants";
 import { ModerateUsersPagination } from "./ModerateUsersPagination";
-import { useRestoreUser } from "../../api/user-mutations";
+import { useRestoreUser } from "../../api";
 
 import { SuspendUserDialog } from "./SuspendUserDialog";
 import { BanUserDialog } from "./BanUserDialog";

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Repositories;
+using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 
 namespace Tests.Application.Features.Users;
 

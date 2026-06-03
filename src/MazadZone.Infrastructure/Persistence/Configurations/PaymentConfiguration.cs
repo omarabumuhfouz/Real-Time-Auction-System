@@ -26,7 +26,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .IsRequired();
 
         builder.Property(p => p.UserId)
-            .HasConversion(new UserIdIdConverter())
+            .HasConversion(new UserIdConverter())
             .IsRequired();
 
         builder.ComplexProperty(p => p.CapturedHoldedAmount, money =>
@@ -59,6 +59,27 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             code => Currency.FromCode(code)
         )
         .IsRequired();
+        });
+
+        builder.ComplexProperty(p => p.GrossAmount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("GrossAmount").IsRequired();
+            money.Property(m => m.Currency).HasColumnName("GrossCurrency").HasMaxLength(3)
+                .HasConversion(currency => currency.Code, code => Currency.FromCode(code)).IsRequired();
+        });
+
+        builder.ComplexProperty(p => p.PlatformFee, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("PlatformFee").IsRequired();
+            money.Property(m => m.Currency).HasColumnName("PlatformFeeCurrency").HasMaxLength(3)
+                .HasConversion(currency => currency.Code, code => Currency.FromCode(code)).IsRequired();
+        });
+
+        builder.ComplexProperty(p => p.NetAmount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("NetAmount").IsRequired();
+            money.Property(m => m.Currency).HasColumnName("NetCurrency").HasMaxLength(3)
+                .HasConversion(currency => currency.Code, code => Currency.FromCode(code)).IsRequired();
         });
 
         builder.Property(p => p.Status)

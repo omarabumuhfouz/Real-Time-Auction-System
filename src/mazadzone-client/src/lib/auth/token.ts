@@ -51,7 +51,13 @@ export function isTokenExpired(token: string): boolean {
     const payload = token.split(".")[1];
     if (!payload) return true;
 
-    const decoded = JSON.parse(atob(payload)) as { exp?: number };
+    // Safely decode Base64URL
+    let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = base64.length % 4;
+    if (pad) {
+      base64 += "=".repeat(4 - pad);
+    }
+    const decoded = JSON.parse(atob(base64)) as { exp?: number };
     if (!decoded.exp) return true;
 
     // Add 30-second buffer to account for clock skew

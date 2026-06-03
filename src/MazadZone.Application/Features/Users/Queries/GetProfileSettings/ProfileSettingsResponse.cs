@@ -1,5 +1,3 @@
-using MazadZone.Application.Features.Bidders.DTOs;
-
 namespace MazadZone.Application.Features.Users.Queries.GetProfileSettings;
 
 public record ProfileSettingsResponse(
@@ -11,8 +9,11 @@ public record ProfileSettingsResponse(
     string City,
     string Street,
     string Building,
-    string Landmark
+    string Landmark,
+    string VerificationStatus,
+    string? ExtractedFullName,
+    string? VerificationRejectionReason
 )
 {
-    public static ProfileSettingsResponse Empty => new ProfileSettingsResponse(Guid.Empty, "", "", "", "","", "", "", "");
+    public static ProfileSettingsResponse Empty => new ProfileSettingsResponse(Guid.Empty, "", "", "", "", "", "", "", "", "", null, null);
 }

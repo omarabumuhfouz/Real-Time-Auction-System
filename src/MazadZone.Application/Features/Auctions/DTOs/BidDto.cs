@@ -4,7 +4,8 @@ namespace MazadZone.Application.Features.Auctions.DTOs;
 
 public sealed record BidDto(
     Guid BidderId,
+    string BidderName,
     decimal Amount,
-    int BidStatus, 
+    int BidStatus,
     DateTime Timestamp
 );

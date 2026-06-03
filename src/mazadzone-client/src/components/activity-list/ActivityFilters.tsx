@@ -60,12 +60,12 @@ export function ActivityFilters({
 
       <div className="w-48">
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full h-12 rounded-xl bg-white border-gray-200 text-gray-700 font-medium px-4 cursor-pointer text-base md:text-md">
+          <SelectTrigger className="w-full cursor-pointer">
             <SelectValue placeholder={sortPlaceholder} />
           </SelectTrigger>
-          <SelectContent className="rounded-xl border-gray-100 shadow-lg">
-            <SelectItem value="latest" className="text-base md:text-md">Latest</SelectItem>
-            <SelectItem value="oldest" className="text-base md:text-md">Oldest</SelectItem>
+          <SelectContent>
+            <SelectItem value="latest">Latest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
           </SelectContent>
         </Select>
       </div>

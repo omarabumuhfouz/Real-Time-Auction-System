@@ -28,7 +28,6 @@ export function AuctionDetailContent({
   auction,
 }: AuctionDetailContentProps) {
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(auction.isFavorite);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
@@ -55,12 +54,6 @@ export function AuctionDetailContent({
   // ---------------------------------------------------------------------------
 
   const handlePlaceBid = () => {
-    // Temporarily disabled check for testing the Place Bid Modal as a guest
-    // if (!isAuthenticated) {
-    //   router.push(ROUTES.AUTH.REGISTER);
-    //   return;
-    // }
-
     if (auction.isOwner) {
       router.push(`${ROUTES.AUCTIONS.DETAIL(auction.id)}/edit`);
       return;
@@ -69,28 +62,11 @@ export function AuctionDetailContent({
     setIsBidModalOpen(true);
   };
 
-  const handleShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: auction.title, url: window.location.href });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-      }
-    } catch (err) {
-      console.error("Failed to share:", err);
-    }
-  };
-
-  const handleFavoriteToggle = () => {
-    setIsFavorite((prev) => !prev);
-    // TODO: Persistence call
-  };
-
   return (
     <>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_520px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_520px]">
         {/* --- Left Column: Images & Technical Details --- */}
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <AuctionImageGallery images={auction.images} title={auction.title} />
 
           <ItemDetailsTab
@@ -103,13 +79,10 @@ export function AuctionDetailContent({
         </div>
 
         {/* --- Right Column: Core Info & Bidding --- */}
-        <div className="flex flex-col gap-[26px]">
+        <div className="flex flex-col gap-5">
           <AuctionMainInfo
             auction={auction}
-            isFavorite={isFavorite}
-            onFavoriteToggle={handleFavoriteToggle}
             onPlaceBid={handlePlaceBid}
-            onShare={handleShare}
           />
 
           <SellerInfo seller={seller} />
@@ -132,11 +105,7 @@ export function AuctionDetailContent({
         auctionId={auction.id}
         auctionTitle={auction.title}
         currentBid={auction.pricing.currentBid ?? auction.pricing.startingPrice}
-        minIncrement={
-          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 100 ? 5 :
-          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 1000 ? 50 :
-          (auction.pricing.currentBid ?? auction.pricing.startingPrice) < 10000 ? 100 : 250
-        }
+        minIncrement={auction.pricing.minimumIncrement ?? 10}
         isOpen={isBidModalOpen}
         onClose={() => setIsBidModalOpen(false)}
       />

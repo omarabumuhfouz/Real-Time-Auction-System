@@ -30,32 +30,42 @@ export const NotificationList = () => {
   const { data, isLoading, isError } = useGetNotifications(user?.id || "", currentPage, pageSize);
   const notifications = useNotificationStore((state) => state.notifications);
   const setNotifications = useNotificationStore((state) => state.setNotifications);
+  const decrementUnreadCount = useNotificationStore((state) => state.decrementUnreadCount);
+  const resetUnreadCount = useNotificationStore((state) => state.resetUnreadCount);
   const localMarkAsRead = useNotificationStore((state) => state.markAsRead);
   const localMarkAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+  const syncFromServer = useNotificationStore((state) => state.syncFromServer);
 
-  // Sync loaded React Query items to the Zustand store
+  // Sync loaded React Query items to the Zustand store.
+  // syncFromServer handles optimistic-guard logic internally:
+  //  - If an optimistic update is pending → merges (preserves live items).
+  //  - Otherwise → replaces entirely and recalculates unreadCount.
   useEffect(() => {
     if (data?.items) {
-      setNotifications(data.items);
+      syncFromServer(data.items);
     }
-  }, [data?.items, setNotifications]);
+  }, [data?.items, syncFromServer]);
 
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
 
   const handleMarkAllAsRead = () => {
-    // 1. Mutate backend
-    markAllAsRead.mutate();
-    // 2. Update local store instantly
+    // 1. Zero the badge instantly (synchronous)
+    resetUnreadCount();
+    // 2. Update the notification list in the store instantly
     localMarkAllAsRead();
+    // 3. Mutate backend in background
+    markAllAsRead.mutate();
   };
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.isRead) {
-      // 1. Mutate backend
-      markAsRead.mutate(notification.id);
-      // 2. Update local store instantly
+      // 1. Decrement badge instantly (synchronous)
+      decrementUnreadCount();
+      // 2. Mark as read in the store instantly
       localMarkAsRead(notification.id);
+      // 3. Mutate backend in background
+      markAsRead.mutate(notification.id);
     }
   };
 

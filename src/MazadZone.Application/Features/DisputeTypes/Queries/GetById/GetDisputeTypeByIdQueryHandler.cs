@@ -4,7 +4,7 @@ using MazadZone.Features.DisputeTypes.Queries.GetAll;
 namespace MazadZone.Features.DisputeTypes.Queries.GetById;
 
 
-internal sealed class GetDisputeTypeByIdQueryHandler : IQueryHandler<GetDisputeTypeByIdQuery, DisputeTypeDto>
+public sealed class GetDisputeTypeByIdQueryHandler : IQueryHandler<GetDisputeTypeByIdQuery, DisputeTypeDto>
 {
     private readonly IDisputeTypeQueries _repository;
     private readonly ILogger<GetDisputeTypeByIdQueryHandler> _logger;

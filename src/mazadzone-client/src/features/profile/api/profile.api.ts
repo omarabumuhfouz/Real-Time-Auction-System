@@ -1,6 +1,6 @@
 import { api } from "@/lib/api/client";
 import type { UserProfile, Address } from "../types/profile.types";
-import type { BidderProfileDto, ChangePasswordRequest } from "./profile.contracts";
+import type { BidderProfileDto, ChangePasswordRequest, ProfileSettingsDto } from "./profile.contracts";
 import { mapBidderProfileToUserProfile, mapBidderProfileToDefaultAddress } from "./profile.mappers";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -27,7 +27,7 @@ export async function fetchUserProfile(): Promise<UserProfile> {
     throw new Error("User is not authenticated");
   }
 
-  const response = await api.get<BidderProfileDto>(`/api/v1/bidders/${userId}`);
+  const response = await api.get<BidderProfileDto>(`/bidders/${userId}`);
 
   // Store a cached copy of the profile email in localStorage to check for updates
   if (typeof window !== "undefined") {
@@ -51,7 +51,7 @@ export async function updateUserProfile(input: Partial<UserProfile>): Promise<Us
   const lastEmail = typeof window !== "undefined" ? localStorage.getItem("mazadzone_last_fetched_email") : null;
   if (input.email && lastEmail && input.email !== lastEmail) {
     // Fire real backend ChangeEmailRequest
-    await api.put("/api/v1/users/email", {
+    await api.put("/users/email", {
       newEmail: input.email,
     });
 
@@ -90,7 +90,7 @@ export async function fetchAddresses(): Promise<Address[]> {
 
   let primaryAddress: Address | null = null;
   try {
-    const response = await api.get<BidderProfileDto>(`/api/v1/bidders/${userId}`);
+    const response = await api.get<BidderProfileDto>(`/bidders/${userId}`);
     primaryAddress = mapBidderProfileToDefaultAddress(response.data);
   } catch (error) {
     console.error("Failed to load primary address from backend profile:", error);
@@ -174,5 +174,17 @@ export async function removeAddress(id: string): Promise<void> {
  * Changes the user's password in the ASP.NET Core backend.
  */
 export async function changePassword(input: ChangePasswordRequest): Promise<void> {
-  await api.put("/api/v1/users/password", input);
+  await api.put("/users/password", input);
 }
+
+/**
+ * Fetches the user profile settings from the ASP.NET Core backend.
+ */
+export async function fetchProfileSettings(userId: string): Promise<ProfileSettingsDto> {
+  if (!userId) {
+    throw new Error("User ID is required to fetch profile settings");
+  }
+  const response = await api.get<ProfileSettingsDto>(`/users/users/${userId}/profile-settings`);
+  return response.data;
+}
+

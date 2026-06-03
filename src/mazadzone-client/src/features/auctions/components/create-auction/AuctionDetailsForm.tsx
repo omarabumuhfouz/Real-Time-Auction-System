@@ -12,9 +12,18 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ROUTES } from "@/config/routes.config";
-
-import { AuctionCategory, AuctionSubcategory, AuctionCondition } from "../../types/auction.types";
+import { AuctionCondition } from "../../types/auction.types";
+import { useGetCategoryTree } from "../../api/auction.queries";
+import { useGetProfileSettings } from "@/features/profile/api/profile.queries";
+import { useAuthStore } from "@/stores/auth.store";
 
 // Formats a standard float string to dot-separated thousands and decimal (e.g., "111111111.00" -> "111.111.111.00")
 const formatPriceOnBlur = (val: string): string => {
@@ -57,48 +66,51 @@ export function AuctionDetailsForm() {
   const {
     register,
     control,
-    watch,
     setValue,
     formState: { errors },
   } = useFormContext();
 
   const selectedCategory = useWatch({ name: "category", control });
 
-  // Pre-configured address list representing the user's registered addresses
+  // 1. Fetch dynamic categories tree from ASP.NET Core API
+  const { data: categoryTree } = useGetCategoryTree();
+
+  // 2. Fetch shipping location dynamically from active user's profile settings
+  const { user } = useAuthStore();
+  const { data: profileSettings } = useGetProfileSettings(user?.id || "");
+
+  // Format primary address safely
+  const primaryAddressStr = profileSettings
+    ? [profileSettings.city, profileSettings.street, profileSettings.building ? `Bldg ${profileSettings.building}` : ""]
+        .filter(Boolean)
+        .join(", ")
+    : "Amman, Jordan";
+
   const defaultAddresses = [
-    { id: "addr_1", label: "Primary: Amman, Jordan (Registered)", value: "Amman, Jordan" },
-    { id: "addr_2", label: "Work: Salt, Jordan", value: "Salt, Jordan" },
+    { id: "addr_1", label: `Primary: ${primaryAddressStr} (Registered)`, value: primaryAddressStr },
     { id: "custom", label: "+ Add Custom Shipping Location", value: "custom" }
   ];
 
-  // Initialize default shipping location
+  // Initialize/Sync default shipping location
   useEffect(() => {
-    setValue("shippingLocation", "Amman, Jordan");
-  }, [setValue]);
+    if (primaryAddressStr) {
+      setValue("shippingLocation", primaryAddressStr);
+    }
+  }, [primaryAddressStr, setValue]);
 
   // Sync address selection or navigate to profile editing
   const handleAddressSelectChange = (val: string) => {
     if (val === "custom") {
-      // Redirect to profile settings to let user add a verified address
       router.push(ROUTES.PROFILE.EDIT);
     } else {
       setValue("shippingLocation", val, { shouldValidate: true });
     }
   };
 
-  // Subcategory mapping dictionary
-  const subcategoriesByCategory: Record<string, string[]> = {
-    [AuctionCategory.TECH_ELECTRONICS]: ["Laptops", "Smartphones", "Cameras", "Others"],
-    [AuctionCategory.FASHION_STYLE]: ["Watches", "Shoes", "Accessories", "Others"],
-    [AuctionCategory.HOME_LIVING]: ["Furniture", "Decor", "Others"],
-    [AuctionCategory.MOTORS]: ["Cars", "Motorcycles", "Others"],
-    [AuctionCategory.COLLECTIBLES_ART]: ["Paintings", "Antiques", "Sculptures", "Others"],
-    [AuctionCategory.HOBBIES_LEISURE]: ["Books", "Musical Instruments", "Sports Equipment", "Others"]
-  };
-
-  const availableSubcategories = selectedCategory 
-    ? subcategoriesByCategory[selectedCategory] || ["Others"] 
-    : [];
+  // 3. Find selected category's subcategories
+  const currentCategoryNode = categoryTree?.find((c) => c.id === selectedCategory);
+  const subCategoriesList = currentCategoryNode?.subCategories || currentCategoryNode?.subcategories || [];
+  const hasSubcategories = subCategoriesList.length > 0;
 
   // Sync subcategory resetting if category changes
   useEffect(() => {
@@ -149,19 +161,22 @@ export function AuctionDetailsForm() {
           <Label htmlFor="condition" className="text-base font-bold text-foreground flex items-center gap-1">
             Condition of Item <span className="text-red-500">*</span>
           </Label>
-          <div className="relative">
-            <select
-              id="condition"
-              className="h-12 w-full appearance-none rounded-xl border border-input bg-input-background px-4 pr-10 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-foreground"
-              {...register("condition")}
-            >
-              <option value="" disabled>Select condition</option>
-              {Object.values(AuctionCondition).map((cond) => (
-                <option key={cond} value={cond}>{cond}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
-          </div>
+            <Controller
+              control={control}
+              name="condition"
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <SelectTrigger id="condition" className="w-full bg-input-background font-semibold h-12 text-base rounded-xl">
+                    <SelectValue placeholder="Select condition" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    {Object.values(AuctionCondition).map((cond) => (
+                      <SelectItem key={cond} value={cond}>{cond}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           {errors.condition && (
             <p className="text-xs text-red-500 font-bold">{errors.condition.message as string}</p>
           )}
@@ -192,19 +207,22 @@ export function AuctionDetailsForm() {
           <Label htmlFor="category" className="text-base font-bold text-foreground flex items-center gap-1">
             Category <span className="text-red-500">*</span>
           </Label>
-          <div className="relative">
-            <select
-              id="category"
-              className="h-12 w-full appearance-none rounded-xl border border-input bg-input-background px-4 pr-10 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-foreground"
-              {...register("category")}
-            >
-              <option value="" disabled>Select a category</option>
-              {Object.values(AuctionCategory).map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
-          </div>
+          <Controller
+            control={control}
+            name="category"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value || ""}>
+                <SelectTrigger id="category" className="w-full bg-input-background font-semibold h-12 text-base rounded-xl">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  {categoryTree?.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.category && (
             <p className="text-xs text-red-500 font-bold">{errors.category.message as string}</p>
           )}
@@ -215,22 +233,32 @@ export function AuctionDetailsForm() {
           <Label htmlFor="subcategory" className="text-base font-bold text-foreground flex items-center gap-1">
             Subcategory <span className="text-red-500">*</span>
           </Label>
-          <div className="relative">
-            <select
-              id="subcategory"
-              disabled={!selectedCategory}
-              className="h-12 w-full appearance-none rounded-xl border border-input bg-input-background px-4 pr-10 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-              {...register("subcategory")}
-            >
-              <option value="" disabled>
-                {selectedCategory ? "Select a subcategory" : "Select category first"}
-              </option>
-              {availableSubcategories.map((sub) => (
-                <option key={sub} value={sub}>{sub}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
-          </div>
+          <Controller
+            control={control}
+            name="subcategory"
+            render={({ field }) => (
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value || ""} 
+                disabled={!selectedCategory || !hasSubcategories}
+              >
+                <SelectTrigger id="subcategory" className="w-full bg-input-background font-semibold h-12 text-base rounded-xl">
+                  <SelectValue placeholder={
+                    !selectedCategory 
+                      ? "Select category first" 
+                      : !hasSubcategories 
+                      ? "No subcategories available" 
+                      : "Select a subcategory"
+                  } />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  {subCategoriesList.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.subcategory && (
             <p className="text-xs text-red-500 font-bold">{errors.subcategory.message as string}</p>
           )}
@@ -349,19 +377,19 @@ export function AuctionDetailsForm() {
             Shipping Location <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
-            <select
-              id="shippingAddressSelect"
-              onChange={(e) => handleAddressSelectChange(e.target.value)}
-              className="h-12 w-full appearance-none rounded-xl border border-input bg-input-background pl-11 pr-10 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-foreground"
-            >
-              {defaultAddresses.map((addr) => (
-                <option key={addr.id} value={addr.value}>
-                  {addr.label}
-                </option>
-              ))}
-            </select>
+            <Select onValueChange={handleAddressSelectChange} defaultValue={defaultAddresses[0]?.value}>
+              <SelectTrigger className="w-full bg-input-background font-semibold h-12 text-base rounded-xl pl-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card">
+                {defaultAddresses.map((addr) => (
+                  <SelectItem key={addr.id} value={addr.value}>
+                    {addr.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
           </div>
         </div>
         

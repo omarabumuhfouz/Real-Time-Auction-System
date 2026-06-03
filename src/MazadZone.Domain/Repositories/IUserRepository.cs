@@ -14,4 +14,5 @@ public interface IUserRepository : IGenericRepository<User,UserId>, IScopedServi
     Task<bool> IsBidderAsync(UserId userId, CancellationToken cancellationToken);
     Task<IReadOnlyList<User>> GetByIdsAsync(IEnumerable<UserId> ids, CancellationToken ct = default);
 
+
 }

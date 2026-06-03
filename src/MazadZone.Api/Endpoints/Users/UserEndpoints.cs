@@ -1,3 +1,5 @@
+using MazadZone.Api.Endpoints.Dashboard;
+
 namespace MazadZone.Api.Endpoints.Users;
 
 public static class UserEndpoints
@@ -23,6 +25,13 @@ public static class UserEndpoints
         GetProfileSettings.MapEndpoint(userGroup);
         CreateAdmin.MapEndpoint(userGroup);
         AddPaymentMethod.MapEndpoint(userGroup);
+        BulkActivate.MapEndpoint(userGroup);
+        BulkBan.MapEndpoint(userGroup);
+        BulkSuspend.MapEndpoint(userGroup);
+        ExportUsers.MapEndpoint(userGroup);
+        GetUsers.MapEndpoint(userGroup);
+        ExportSelectedUsers.MapEndpoint(userGroup);
+        VerifyIdentity.MapEndpoint(userGroup);
 
 
         // Map Auth Actions

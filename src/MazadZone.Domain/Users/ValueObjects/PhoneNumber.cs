@@ -17,7 +17,8 @@ public record PhoneNumber
 
         if (string.IsNullOrWhiteSpace(cleanNumber)) return PhoneNumberErrors.Empty;
 
-        if (cleanNumber.Length != UserConstants.PhoneNumberLength) return PhoneNumberErrors.InvalidLength;
+        if (cleanNumber.Length < UserConstants.PhoneNumberLength) return PhoneNumberErrors.InvalidLength;
+
 
         if (!cleanNumber.All(char.IsDigit)) return PhoneNumberErrors.InvalidFormat;
 

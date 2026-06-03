@@ -49,6 +49,11 @@ public static partial class MazadLogEvents
         public const int SuspensionNotificationSent = 1251;
         public const int SuspensionAuctionsCancelled = 1252;
         public const int SuspensionBidsRemoved = 1253;
+
+        // Verify Identity: 4060 - 4069
+        public const int VerifyIdentityAttempt = 4060;
+        public const int VerifyIdentitySuccess = 4061;
+        public const int VerifyIdentityRejected = 4062;
     }
 
     public static class Sellers
@@ -70,7 +75,8 @@ public static partial class MazadLogEvents
         public const int ProfileError = 1003;
         public const int BidderRetrieved = 1002;
         public const int BidderProfileUpdated = 1003;
-
+        public const int IdentityVerificationFailed = 1004;
+        public const int EmailConflict = 1005;
     }
 
     public static class Authentication
@@ -291,4 +297,4 @@ public static class DisputeTypes
     }
 
 
-}
+}
