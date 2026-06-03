@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AssistantPopover } from "@/features/assistant";
 
 /**
  * Main route group layout.
@@ -17,6 +18,8 @@ export default function MainLayout({
       <Header />
       <div className="flex-1">{children}</div>
       <Footer />
+      <AssistantPopover />
     </div>
   );
 }
+
