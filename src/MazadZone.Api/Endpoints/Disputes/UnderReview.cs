@@ -8,7 +8,7 @@ public static class UnderReview
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/{id:guid}/under-review", HandleAsync)
-        //  .RequireAuthorization(Policies.AdminOnly) 
+         .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Move a dispute to 'Under Review'")
            .WithDescription("Updates the status of an active dispute to 'Under Review' to indicate an administrator is actively investigating it. Returns a 409 Conflict if the dispute is already under Resolved")
            .Produces(StatusCodes.Status204NoContent)

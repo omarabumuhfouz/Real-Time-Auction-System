@@ -7,7 +7,7 @@ public static class GetAuctionActivityTrends
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/auctions/trends", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Get Auction & Bidding Trends (Chart Data)")
            .WithDescription("Retrieves totals, growth percentages, and grouped data points for rendering the Auction Activity dual-axis chart.")
            .Produces<AuctionActivityTrendsDto>(StatusCodes.Status200OK)

@@ -1,6 +1,4 @@
 using MazadZone.Application.Features.Sellers.Commands.Verify;
-using MazadZone.Domain.Sellers;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Sellers;
 
@@ -9,7 +7,7 @@ public static class Verify
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/verify", HandleAsync)
-        //    .RequireAuthorization("AdminPolicy")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Verify a seller's account")
            .WithDescription("Approves a pending seller profile, marking them as verified and granting them permission to create auctions or receive payouts. Returns a 409 Conflict if the seller is already verified.")
            .Produces(StatusCodes.Status204NoContent)

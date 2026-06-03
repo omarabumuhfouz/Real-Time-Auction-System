@@ -8,7 +8,7 @@ public static class GetStatistics
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/statistics", HandleAsync)
-           // .RequireAuthorization("AdminOnly") // Uncomment when auth is ready
+           .RequireAuthorization(Policies.AdminOnly) // Uncomment when auth is ready
            .WithSummary("Get dashboard summary statistics")
            .WithDescription("Retrieves totals and percentage changes for the admin dashboard cards based on a date range.")
            .Produces<DashboardStatsDto>(StatusCodes.Status200OK)

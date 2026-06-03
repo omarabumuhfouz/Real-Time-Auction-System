@@ -23,6 +23,7 @@ public static class OrderEndpoints
         Cancel.MapEndpoint(orderGroup);
                 AddFeedback.MapEndpoint(orderGroup);
         ReplyToFeedback.MapEndpoint(orderGroup);
+        GetBidderWonOrders.MapEndpoint(orderGroup);
 
         GetDetails.MapEndpoint(orderGroup);
         GetByWinningBid.MapEndpoint(orderGroup);

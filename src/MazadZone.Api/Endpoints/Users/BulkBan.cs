@@ -9,7 +9,7 @@ public static class BulkBan
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/bulk-ban", HandleAsync)
-           // .RequireAuthorization("AdminOnly")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Bulk ban multiple user accounts")
            .WithDescription("Suspends multiple user accounts simultaneously with a shared reason. If any single user fails validation, the entire bulk operation is aborted.")
            .Accepts<BulkBanUsersRequest>("application/json")

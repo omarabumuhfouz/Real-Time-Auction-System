@@ -8,7 +8,7 @@ public static class GetCategoryStatistics
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/category-statistics", HandleAsync)
-            // .RequireAuthorization("AdminPolicy")
+            .RequireAuthorization(Policies.AdminOnly)
             .WithSummary("Retrieve category statistics")
             .WithDescription("Retrieves aggregated analytical data across all categories, such as the total number of active auctions, total items sold, or engagement metrics. Useful for building dashboards and reporting features.")
             .Produces<IReadOnlyList<CategoryStatResponse>>(StatusCodes.Status200OK)

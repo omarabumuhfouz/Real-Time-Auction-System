@@ -7,7 +7,7 @@ public static class MakeRoot
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/make-root", HandleAsync)
-        //    .RequireAuthorization("AdminPolicy")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Promote a sub-category to a root category")
            .WithDescription("Detaches a sub-category from its parent, elevating it to a top-level (root) category. If the category is already a root category, this operation might return a 409 Conflict depending on your domain rules.")
            .Produces(StatusCodes.Status204NoContent)

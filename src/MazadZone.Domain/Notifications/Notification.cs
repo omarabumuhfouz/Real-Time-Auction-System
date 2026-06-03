@@ -59,10 +59,4 @@ public class Notification : AggregateRoot<NotificationId>, IAuditableEntity, ISo
         }
         return Result.Failure(NotificationErrors.AlreadyIsNotDeleted);
     }
-
-    public void Read()
-    {
-        if (IsRead) return;
-        IsRead = true;
-    }
 }

@@ -7,6 +7,7 @@ public static class ExportSelectedUsers
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/users/export/selected", HandleAsync)
+              .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Export specific users by IDs to CSV")
            .WithDescription("Accepts a JSON array of User IDs and generates a downloaded CSV file.")
            .Produces(StatusCodes.Status200OK, contentType: "text/csv")

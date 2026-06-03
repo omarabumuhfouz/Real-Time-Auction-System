@@ -9,7 +9,7 @@ public static class BulkSuspend
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/bulk-suspend", HandleAsync)
-           // .RequireAuthorization("AdminOnly")
+           .RequireAuthorization(Policies.AdminOnly )
            .WithSummary("Bulk suspend multiple user accounts")
            .WithDescription("Temporarily suspends multiple user accounts until the specified date with a shared reason. If any single user fails validation, the entire bulk operation is aborted.")
            .Accepts<BulkSuspendUsersRequest>("application/json")

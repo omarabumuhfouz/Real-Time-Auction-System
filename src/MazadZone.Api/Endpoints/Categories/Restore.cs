@@ -8,7 +8,7 @@ public static class Restore
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/restore", HandleAsync)
-           // .RequireAuthorization("AdminPolicy") 
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Restore a soft-deleted category")
            .WithDescription("Reactivates a previously soft-deleted category, making it visible again. Note: If the category's parent is currently soft-deleted, restoring this child might return a 409 Conflict depending on your domain rules.")
            .Produces(StatusCodes.Status204NoContent)
