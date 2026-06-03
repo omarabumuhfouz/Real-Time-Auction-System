@@ -22,7 +22,8 @@ public static class BidderHelper
             "Ahmad",                                         // SecondName
             "Ali",                                           // ThirdName
             "Abumuhfouz",                                    // LastName
-            new AddressDto("Jordan", "Amman", "Queen Rania St", "11118") // Address
+            new AddressDto("Jordan", "Amman", "Queen Rania St", "11118"), // Address
+            new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }           // IdentityCardImageBytes (dummy JPEG header)
         );
     }
 

@@ -12,7 +12,7 @@ public class GetPublicSellerProfileQueryHandlerTests : SellerBaseTest<GetPublicS
         var query = SellerHelper.CreateGetPublicSellerProfileQuery(); 
 
         // Simulate the Dapper query returning null
-        _sellerQueries.GetPublicProfileAsync(query.SellerId, Arg.Any<CancellationToken>())
+        _sellerQueries.GetSellerProfileSummaryAsync(query.SellerId, Arg.Any<CancellationToken>())
             .Returns((PublicSellerProfileResponse?)null);
 
         // Act
@@ -32,7 +32,7 @@ public class GetPublicSellerProfileQueryHandlerTests : SellerBaseTest<GetPublicS
         // Create a fake DTO response containing ONLY public-facing data
         var expectedResponse = SellerHelper.CreatePublicSellerProfileResponse() with { Id = query.SellerId.Value };
 
-        _sellerQueries.GetPublicProfileAsync(query.SellerId, Arg.Any<CancellationToken>())
+        _sellerQueries.GetSellerProfileSummaryAsync(query.SellerId, Arg.Any<CancellationToken>())
             .Returns(expectedResponse);
 
         // Act

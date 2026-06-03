@@ -14,8 +14,7 @@ public static class SellerHelper
     public static Seller CreateValidSeller()
     {
         return Seller.BecomeSeller(
-            UserId.New(),
-            "Test National Id"
+            UserId.New()
         ).Value;
     }
 
@@ -51,8 +50,7 @@ public static class SellerHelper
             TotalBidsPlaced: 50,
             AuctionParticipatedCount: 10,
             AuctionsWonCount: 5,
-            CompletedPurchasesCount: 5,
-            Feedbacks: [] // Or new List<FeedbackDto>() for C# 11 and below
+            CompletedPurchasesCount: 5
         );
     }
 

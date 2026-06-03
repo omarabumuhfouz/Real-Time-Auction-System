@@ -9,7 +9,7 @@
     <PackageReference Include="Bogus" Version="35.6.5" />
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageReference Include="Hangfire.Core" Version="1.8.23" />
     <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" />

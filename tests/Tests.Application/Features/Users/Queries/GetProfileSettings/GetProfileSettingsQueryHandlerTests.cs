@@ -27,7 +27,10 @@ public class GetProfileSettingsQueryHandlerTests : UserBaseTest<GetProfileSettin
             "Amman",
             "Rainbow Street",
             "Building 10",
-            "Near First Circle"
+            "Near First Circle",
+            "Verified",       // VerificationStatus
+            null,             // ExtractedFullName
+            null              // VerificationRejectionReason
         );
 
         _userQueries.GetProfileSettings(command.UserId, Arg.Any<CancellationToken>())
