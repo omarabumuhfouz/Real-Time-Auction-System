@@ -210,7 +210,7 @@ export function SuspendUserDialog({
             <Button
               type="submit"
               disabled={suspendMutation.isPending}
-              className="flex-1 font-bold px-4 py-2.5 h-11 text-xs cursor-pointer rounded-xl text-white flex items-center justify-center gap-1.5 bg-primary hover:bg-primary/95 text-primary-foreground border-transparent"
+              className="flex-1 font-bold px-4 py-2.5 h-11 text-xs cursor-pointer rounded-xl text-primary-foreground flex items-center justify-center gap-1.5 bg-primary hover:bg-primary/95 text-primary-foreground border-transparent"
             >
               {suspendMutation.isPending && <Loader2 className="size-4 animate-spin" />}
               Confirm Suspend
