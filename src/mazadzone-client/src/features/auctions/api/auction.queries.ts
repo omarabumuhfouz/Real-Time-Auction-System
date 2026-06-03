@@ -186,9 +186,9 @@ export function useGetAuctionsByCategory(category: AuctionCategory) {
 /**
  * Hook to get active auctions ending soon.
  */
-export function useGetClosingSoonAuctions(limit: number = 4) {
+export function useGetEndingSoonAuctions(limit: number = 4) {
   return useQuery<AuctionSummary[]>({
-    queryKey: [...auctionKeys.all, "closing-soon", limit],
+    queryKey: [...auctionKeys.all, "ending-soon", limit],
     queryFn: async () => {
       const raw = await getAuctions({
         Page: 1,

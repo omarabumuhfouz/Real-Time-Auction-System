@@ -6,7 +6,6 @@ import { AuctionCard, AuctionCardSkeleton } from "../auction-card";
 import { useGetSimilarAuctions } from "../../api";
 import type { AuctionCategory, AuctionSubcategory, AuctionSummary } from "../../types/auction.types";
 import { ROUTES } from "@/config/routes.config";
-import { cn } from "@/lib/utils";
 
 interface SimilarItemsProps {
   auctionId: string;
@@ -64,7 +63,6 @@ export function SimilarItems({ auctionId, category, subcategory }: SimilarItemsP
               <AuctionCard
                 key={auction.id}
                 auction={auction}
-                onFavoriteClick={() => {}} // TODO: Global favorite handler if needed
                 className="animate-in fade-in slide-in-from-bottom-3 duration-500"
               />
             ))}

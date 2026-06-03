@@ -32,7 +32,7 @@ export function AuctionSelectFilter({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="!w-52 !h-12 bg-card border-input rounded-xl gap-2.5 px-4 shadow-sm hover:border-primary/30 hover:bg-accent/20 transition-all group shrink-0">
+      <SelectTrigger className="hover:bg-accent/20 shadow-sm shrink-0">
         <div
           className={cn(
             "p-1.5 rounded-lg transition-colors",

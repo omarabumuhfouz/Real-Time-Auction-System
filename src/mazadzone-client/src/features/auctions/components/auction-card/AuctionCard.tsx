@@ -3,11 +3,12 @@
 import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Users, CircleDollarSign } from "lucide-react";
+import { Users, CircleDollarSign } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/config/routes.config";
 import { formatCurrency } from "@/utils/currency.utils";
+import { Badge } from "@/components/ui/badge";
 import { CountdownTimer } from "./CountdownTimer";
 import { PlaceBidButton } from "@/features/bidding";
 import { getAuctionImageFallback } from "../../utils/image.utils";
@@ -15,13 +16,10 @@ import type { AuctionCardProps } from "../../types/auction.types";
 
 const AuctionCardComponent = ({
   auction,
-  isFavorite,
-  onFavoriteClick,
   priority = false,
   className,
 }: AuctionCardProps) => {
   const { id, title, imageUrl, pricing, timing, isOwner, status } = auction;
-  const favorite = isFavorite ?? auction.isFavorite;
   const isUpcoming = status === "Upcoming";
   const isEnded = status === "Ended";
   const displayPrice = pricing.currentBid ?? pricing.startingPrice;
@@ -31,11 +29,21 @@ const AuctionCardComponent = ({
   return (
     <article
       className={cn(
-        "flex min-h-[416px] w-full min-w-[311px] flex-col rounded-[12px] border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md",
+        "flex min-h-[416px] w-full min-w-[311px] flex-col rounded-[12px] border border-border bg-card p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
         className,
       )}
     >
       <div className="relative h-[200px] w-full overflow-hidden rounded-[8px] bg-muted">
+        <Badge
+          className={cn(
+            "absolute right-3 top-3 z-10 font-bold px-2.5 py-1 text-[10px] uppercase shadow-sm select-none border-none",
+            status === "Active" && "bg-success text-success-foreground",
+            status === "Upcoming" && "bg-upcoming text-upcoming-foreground",
+            status === "Ended" && "bg-muted text-muted-foreground",
+          )}
+        >
+          {status}
+        </Badge>
         <Link
           href={auctionDetailsHref}
           className="group block h-full w-full"
@@ -54,24 +62,6 @@ const AuctionCardComponent = ({
             }}
           />
         </Link>
-
-        <button
-          type="button"
-          onClick={() => onFavoriteClick(id)}
-          className={cn(
-            "absolute right-3 top-3 z-10 flex size-10 items-center justify-center rounded-full transition-all",
-            favorite
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground/60 text-white hover:bg-foreground/80",
-          )}
-          aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
-          aria-pressed={favorite}
-        >
-          <Heart
-            className={cn("size-5", favorite && "fill-current")}
-            strokeWidth={2}
-          />
-        </button>
       </div>
 
       <Link href={auctionDetailsHref} className="mt-3 block">
@@ -103,34 +93,39 @@ const AuctionCardComponent = ({
                 className="size-3.5 text-muted-foreground"
                 aria-hidden="true"
               />
-              <span className="text-xs font-semibold text-foreground">
-                {pricing.bidCount > 0 ? "Current Bid:" : "Start Price:"}
+              <span className="text-xs font-semibold text-muted-foreground">
+                {isUpcoming ? "Starting Price:" : pricing.bidCount > 0 ? "Current Bid:" : "Start Price:"}
               </span>
             </div>
 
-            <span className={cn("text-lg font-bold text-primary", isEnded && "text-muted-foreground")}>
-              {formatCurrency(displayPrice)}
+            <span className={cn(
+              isUpcoming ? "text-lg font-bold text-foreground/90" : "text-xl font-extrabold text-primary",
+              isEnded && "text-muted-foreground"
+            )}>
+              {formatCurrency(isUpcoming ? pricing.startingPrice : displayPrice)}
             </span>
           </div>
 
-          <div className="flex flex-col items-end gap-0.5">
-            <div className="flex items-center gap-1">
-              <Users
-                className="size-3.5 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <span className="text-xs font-bold text-foreground">
-                {pricing.bidCount} {pricing.bidCount === 1 ? "BID" : "BIDS"}
-              </span>
-            </div>
+          {!isUpcoming && (
+            <div className="flex flex-col items-end gap-0.5">
+              <div className="flex items-center gap-1">
+                <Users
+                  className="size-3.5 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <span className="text-xs font-bold text-foreground">
+                  {pricing.bidCount} {pricing.bidCount === 1 ? "BID" : "BIDS"}
+                </span>
+              </div>
 
-            <Link
-              href={auctionDetailsHref}
-              className="text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-            >
-              View Bidders &rsaquo;
-            </Link>
-          </div>
+              <Link
+                href={auctionDetailsHref}
+                className="text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+              >
+                View Bidders &rsaquo;
+              </Link>
+            </div>
+          )}
         </div>
 
 

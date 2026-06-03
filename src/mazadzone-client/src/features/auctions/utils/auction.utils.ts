@@ -24,7 +24,7 @@ export function isAuctionEditable(status: AuctionStatus): boolean {
 export function getAuctionStatusLabel(status: AuctionStatus): string {
   const labels: Record<AuctionStatus, string> = {
     [AuctionStatus.UPCOMING]: "Upcoming",
-    [AuctionStatus.ACTIVE]: "Live",
+    [AuctionStatus.ACTIVE]: "Active",
     [AuctionStatus.ENDED]: "Ended",
   };
   return labels[status];

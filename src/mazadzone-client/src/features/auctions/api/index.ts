@@ -4,7 +4,7 @@ export {
   useGetAuctions,
   useGetAuctionById,
   useGetAuctionsByCategory,
-  useGetClosingSoonAuctions,
+  useGetEndingSoonAuctions,
   useGetUpcomingAuctions,
   useGetBidHistory,
   useGetSimilarAuctions,
