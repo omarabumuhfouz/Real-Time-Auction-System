@@ -1,6 +1,6 @@
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import {
-  ClosingSoonSection,
+  EndingSoonSection,
   HomeHero,
   BrowseCategoriesSection,
   UpcomingAuctionsSection,
@@ -12,8 +12,8 @@ export default function Page() {
       <HomeHero />
       
       <PageWrapper className="py-0">
-        {/* Closing Soon Section */}
-        <ClosingSoonSection />
+        {/* Ending Soon Section */}
+        <EndingSoonSection />
       </PageWrapper>
 
       {/* Browse Categories Section (Full-Bleed background) */}
