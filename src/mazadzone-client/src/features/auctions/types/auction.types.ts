@@ -164,8 +164,6 @@ export interface Seller extends AuthUser {
 
 export interface AuctionCardProps {
   auction: AuctionSummary;
-  isFavorite?: boolean;
-  onFavoriteClick: (auctionId: string) => void;
   priority?: boolean;
   className?: string;
 }

@@ -31,7 +31,7 @@ export function UserTrust({ data, isLoading }: UserTrustProps) {
   return (
     <div className="bg-card text-card-foreground border border-border rounded-xl p-5 md:p-6 flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-1.5 mb-6">
+      <div className="flex items-center gap-1.5 mb-5">
         <h3 className="text-base font-bold text-foreground">User Trust</h3>
         <span title="Funnel mapping and account standing statistics">
           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
@@ -39,7 +39,7 @@ export function UserTrust({ data, isLoading }: UserTrustProps) {
       </div>
 
       {/* 1. Funnel Steps Row - 2 Steps */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 items-center mb-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 items-center mb-5">
         {data.workflowSteps.map((stepItem, idx) => {
           const StepIcon = STEP_ICONS[stepItem.step] || UserPlus;
           return (
@@ -74,7 +74,7 @@ export function UserTrust({ data, isLoading }: UserTrustProps) {
       </div>
 
       {/* 2. Stacked Lower Layout for Narrow Column */}
-      <div className="flex flex-col gap-6 flex-1 justify-between">
+      <div className="flex flex-col gap-5 flex-1 justify-between">
         {/* Account Status Overview */}
         <div className="space-y-4">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">

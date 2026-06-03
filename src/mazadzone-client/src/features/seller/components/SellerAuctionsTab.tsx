@@ -14,10 +14,6 @@ export function SellerAuctionsTab({
   totalPages,
   onPageChange,
 }: SellerAuctionsTabProps) {
-  const handleFavoriteClick = (id: string) => {
-    // Handled locally or mock toggling in a real application
-  };
-
   if (auctions.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card py-16 text-center shadow-xs">
@@ -36,7 +32,6 @@ export function SellerAuctionsTab({
           <AuctionCard
             key={auction.id}
             auction={auction}
-            onFavoriteClick={handleFavoriteClick}
           />
         ))}
       </div>

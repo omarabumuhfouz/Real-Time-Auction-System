@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useUrlFilters } from "@/hooks/use-url-filters";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { AuctionCard, AuctionCardSkeleton } from "./auction-card";
@@ -20,8 +20,6 @@ import { AuctionFilters } from "../types/auction.types";
  * switch to real API calls when the backend is ready.
  */
 export function AuctionsPage() {
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-
   const { searchParams, setFilters } = useUrlFilters<AuctionFilters>();
 
   const filters = useMemo<AuctionFilters>(() => {
@@ -54,18 +52,6 @@ export function AuctionsPage() {
   const handlePageChange = useCallback((page: number) => {
     setFilters({ page } as Partial<AuctionFilters>);
   }, [setFilters]);
-
-  const handleFavoriteClick = useCallback((auctionId: string) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(auctionId)) {
-        next.delete(auctionId);
-      } else {
-        next.add(auctionId);
-      }
-      return next;
-    });
-  }, []);
 
   return (
     <PageWrapper>
@@ -135,8 +121,6 @@ export function AuctionsPage() {
                 <AuctionCard
                   key={auction.id}
                   auction={auction}
-                  isFavorite={favorites.has(auction.id)}
-                  onFavoriteClick={handleFavoriteClick}
                   priority={index < 4}
                 />
               ))}

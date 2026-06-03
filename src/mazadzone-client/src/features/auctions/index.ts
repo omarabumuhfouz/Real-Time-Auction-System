@@ -10,7 +10,7 @@ export { AuctionsPage } from "./components/auctions-page";
 export { AuctionDetailPage } from "./components/auction-detail";
 export { AuctionCard, AuctionCardSkeleton, CountdownTimer } from "./components/auction-card";
 export { AuctionFilterBar } from "./components/auction-filter-bar";
-export { ClosingSoonSection, HomeHero, BrowseCategoriesSection, UpcomingAuctionsSection } from "./components/Home-Sections";
+export { EndingSoonSection, HomeHero, BrowseCategoriesSection, UpcomingAuctionsSection } from "./components/Home-Sections";
 export { CreateAuctionPage } from "./components/create-auction/CreateAuctionPage";
 export { EditAuctionPage } from "./components/edit-auction/EditAuctionPage";
 export { AuctionPagination } from "./components/auction-pagination";
@@ -22,7 +22,7 @@ export {
   useGetAuctionById,
   useGetBidHistory,
   useGetAuctionsByCategory,
-  useGetClosingSoonAuctions,
+  useGetEndingSoonAuctions,
   useGetUpcomingAuctions,
   useGetSellerAuctions,
   useGetRootCategories,

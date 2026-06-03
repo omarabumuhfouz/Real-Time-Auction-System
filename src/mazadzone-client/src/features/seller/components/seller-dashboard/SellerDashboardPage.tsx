@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUrlFilters } from "@/hooks/use-url-filters";
-import { LayoutGrid, Plus, Loader2, Download, Gavel, Box, DollarSign } from "lucide-react";
+import { Plus, Loader2, Download, Gavel, Box, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/layout/page-wrapper";
+import { PageHeader } from "@/components/layout/page-header";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ROUTES } from "@/config/routes.config";
 import { useRequireRole } from "@/hooks/use-require-role";
 import {
@@ -20,10 +22,19 @@ import { SellerDashboardStats } from "./SellerDashboardStats";
 import { SellerAuctionsTable } from "./auctions/SellerAuctionsTable";
 import { SellerOrdersTable } from "./orders/SellerOrdersTable";
 import { SellerFinancialsTable } from "./financials/SellerFinancialsTable";
+import { cn } from "@/lib/utils";
+
+const TABS = [
+  { key: "auctions" as const, label: "Auctions", icon: Gavel },
+  { key: "orders" as const, label: "Orders", icon: Box },
+  { key: "financials" as const, label: "Financials", icon: DollarSign },
+] as const;
+
+type TabKey = (typeof TABS)[number]["key"];
 
 export function SellerDashboardPage() {
   const { searchParams, setFilters } = useUrlFilters<{ status: string; sortBy: string; page: number }>();
-  const [activeTab, setActiveTab] = useState<"auctions" | "orders" | "financials">("auctions");
+  const [activeTab, setActiveTab] = useState<TabKey>("auctions");
   
   // Local state for orders filtering to prevent URL clashes with auctions
   const [activeOrderStatus, setActiveOrderStatus] = useState<string>("All");
@@ -45,7 +56,7 @@ export function SellerDashboardPage() {
   const sortBy = searchParams.get("sortBy") || "EndTime";
   const tablePage = parseInt(searchParams.get("page") || "1", 10);
 
-  // 1. Fetch current page of seller auctions
+  // 1. Fetch current page of seller auctions for table display
   const {
     data: auctionsResponse,
     isLoading: isAuctionsLoading,
@@ -54,6 +65,15 @@ export function SellerDashboardPage() {
     PageSize: 5,
     Status: activeStatus === "All" ? undefined : activeStatus,
     SortBy: sortBy === "EndTime" ? "endDateUtc" : sortBy === "CreationDate" ? "creationDate" : sortBy,
+  });
+
+  // 1b. Fetch overall seller auctions summary metrics (stable unfiltered query for dashboard stats)
+  const {
+    data: statsAuctionsResponse,
+    isLoading: isStatsAuctionsLoading,
+  } = useGetSellerDashboardAuctions({
+    Page: 1,
+    PageSize: 1,
   });
 
   // 2. Fetch seller financials summary metrics
@@ -131,17 +151,17 @@ export function SellerDashboardPage() {
     );
   }
 
-  // Aggregate stats metrics
-  const activeCount = auctionsResponse?.activeAuctions || 0;
-  const pendingCount = auctionsResponse?.pending || 0;
-  const soldCount = auctionsResponse?.soldItems || 0;
-  const unsoldCount = auctionsResponse?.unsold || 0;
+  // Aggregate stats metrics (from stable, unfiltered queries to avoid filter resets)
+  const activeCount = statsAuctionsResponse?.activeAuctions || 0;
+  const pendingCount = statsAuctionsResponse?.pending || 0;
+  const soldCount = statsAuctionsResponse?.soldItems || 0;
+  const unsoldCount = statsAuctionsResponse?.unsold || 0;
   const totalOrdersCount = ordersResponse?.totalCount || financialsResponse?.completedOrdersCount || 0;
   const grossRevenue = financialsResponse?.totalGrossRevenue || 0;
   const platformFees = financialsResponse?.totalPlatformFees || 0;
   const netProfit = financialsResponse?.totalNetProfit || 0;
 
-  // Auctions calculations
+  // Auctions calculations (from current page/filtered query for table display)
   const auctionsList = auctionsResponse?.auctions || [];
   const totalCount = auctionsResponse?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / 5) || 1;
@@ -155,46 +175,36 @@ export function SellerDashboardPage() {
   const completedOrdersCount = allOrdersList.filter(o => o.orderStatus.toLowerCase() === "completed" || o.orderStatus.toLowerCase() === "success").length;
   const canceledOrdersCount = allOrdersList.filter(o => o.orderStatus.toLowerCase() === "canceled" || o.orderStatus.toLowerCase() === "refunded" || o.orderStatus.toLowerCase() === "cancelled").length;
 
-  const isStatsLoading = isAuctionsLoading || isFinancialsLoading || isOrdersLoading;
+  const isStatsLoading = isStatsAuctionsLoading || isFinancialsLoading || isOrdersLoading;
 
   return (
-    <PageWrapper className="py-8 px-4 md:px-6 bg-background min-h-screen">
-      <div className="max-w-[1600px] mx-auto w-full space-y-8 animate-fade-in">
+    <PageWrapper className="bg-background min-h-screen">
+      <DashboardShell>
         
         {/* Dashboard Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
-          <div className="flex items-center gap-4 text-left">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white dark:bg-card border border-border shadow-xs">
-              <LayoutGrid className="h-7 w-7 text-orange-500" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                Seller Dashboard
-              </h1>
-              <p className="text-sm text-muted-foreground font-medium mt-1">
-                Manage your auctions, orders, and earnings in one place.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 self-start md:self-auto">
-            <Button
-              variant="outline"
-              className="bg-white hover:bg-slate-50 dark:bg-card dark:hover:bg-accent/15 rounded-xl h-11 px-5 font-bold flex items-center justify-center gap-2 border-border/80 shadow-xs cursor-pointer"
-            >
-              <Download className="h-4.5 w-4.5 text-muted-foreground" />
-              Export All
-            </Button>
-            <Link href={ROUTES.SELLER.CREATE_AUCTION}>
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-all duration-200">
-                <Plus className="h-5 w-5" />
-                Create Auction
+        <PageHeader
+          title="Seller Dashboard"
+          subtitle="Manage your auctions, orders, and earnings in one place."
+          actions={
+            <>
+              <Button
+                variant="outline"
+                className="rounded-xl h-10 px-5 font-semibold flex items-center gap-2 cursor-pointer"
+              >
+                <Download className="h-4 w-4 text-muted-foreground" />
+                Export All
               </Button>
-            </Link>
-          </div>
-        </div>
+              <Link href={ROUTES.SELLER.CREATE_AUCTION}>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-10 px-5 rounded-xl flex items-center gap-2 cursor-pointer">
+                  <Plus className="h-4.5 w-4.5" />
+                  Create Auction
+                </Button>
+              </Link>
+            </>
+          }
+        />
 
-        {/* Section 1: Stats Grid */}
+        {/* Overview Metric Strip */}
         <SellerDashboardStats
           activeAuctions={activeCount}
           pending={pendingCount}
@@ -205,124 +215,101 @@ export function SellerDashboardPage() {
           isLoading={isStatsLoading}
         />
 
-        {/* Section 2: Tab System Container */}
+        {/* Tab Navigation + Content */}
         <div className="space-y-0">
-          {/* Custom Navigation Tab Headers */}
-          <div className="grid grid-cols-3 bg-white dark:bg-card border border-border/80 rounded-t-2xl rounded-b-none overflow-hidden shadow-xs border-b border-b-border/60">
-            {/* Auctions Tab */}
-            <button
-              onClick={() => setActiveTab("auctions")}
-              className={`flex items-center justify-center gap-2 py-4 text-base font-bold transition-all relative border-r border-border/50 cursor-pointer ${
-                activeTab === "auctions"
-                  ? "text-orange-500 bg-orange-500/5 dark:bg-orange-500/10"
-                  : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/5 dark:hover:bg-orange-500/10"
-              }`}
-            >
-              <Gavel className="h-5 w-5" />
-              <span>Auctions</span>
-              {activeTab === "auctions" && (
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-orange-500 z-10" />
-              )}
-            </button>
-
-            {/* Orders Tab */}
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`flex items-center justify-center gap-2 py-4 text-base font-bold transition-all relative border-r border-border/50 cursor-pointer ${
-                activeTab === "orders"
-                  ? "text-orange-500 bg-orange-500/5 dark:bg-orange-500/10"
-                  : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/5 dark:hover:bg-orange-500/10"
-              }`}
-            >
-              <Box className="h-5 w-5" />
-              <span>Orders</span>
-              {activeTab === "orders" && (
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-orange-500 z-10" />
-              )}
-            </button>
-
-            {/* Financials Tab */}
-            <button
-              onClick={() => setActiveTab("financials")}
-              className={`flex items-center justify-center gap-2 py-4 text-base font-bold transition-all relative cursor-pointer ${
-                activeTab === "financials"
-                  ? "text-orange-500 bg-orange-500/5 dark:bg-orange-500/10"
-                  : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/5 dark:hover:bg-orange-500/10"
-              }`}
-            >
-              <DollarSign className="h-5 w-5" />
-              <span>Financials</span>
-              {activeTab === "financials" && (
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-orange-500 z-10" />
-              )}
-            </button>
+          {/* Tab Headers */}
+          <div className="flex items-center border border-border bg-card rounded-xl gap-0 px-4 mb-6">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    "relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors cursor-pointer",
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" />
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Section 3: Tab Content Router */}
-          {activeTab === "auctions" && (
-            <SellerAuctionsTable
-              auctions={auctionsList}
-              totalCount={totalCount}
-              currentPage={tablePage}
-              totalPages={totalPages}
-              isLoading={isAuctionsLoading}
-              activeStatus={activeStatus}
-              sortBy={sortBy}
-              onStatusChange={handleStatusChange}
-              onSortChange={handleSortChange}
-              onPageChange={handlePageChange}
-              onDeleteAuction={handleDeleteAuction}
-              activeCount={activeCount}
-              pendingCount={pendingCount}
-              soldCount={soldCount}
-              unsoldCount={unsoldCount}
-            />
-          )}
+          {/* Tab Content */}
+          <div className="pt-0">
+            {activeTab === "auctions" && (
+              <SellerAuctionsTable
+                auctions={auctionsList}
+                totalCount={totalCount}
+                currentPage={tablePage}
+                totalPages={totalPages}
+                isLoading={isAuctionsLoading}
+                activeStatus={activeStatus}
+                sortBy={sortBy}
+                onStatusChange={handleStatusChange}
+                onSortChange={handleSortChange}
+                onPageChange={handlePageChange}
+                onDeleteAuction={handleDeleteAuction}
+                activeCount={activeCount}
+                pendingCount={pendingCount}
+                soldCount={soldCount}
+                unsoldCount={unsoldCount}
+              />
+            )}
 
-          {activeTab === "orders" && (
-            <SellerOrdersTable
-              orders={ordersTableResponse?.orders || []}
-              totalCount={ordersTableResponse?.totalCount || 0}
-              currentPage={orderPage}
-              totalPages={Math.ceil((ordersTableResponse?.totalCount || 0) / 5) || 1}
-              isLoading={isOrdersTableLoading}
-              activeStatus={activeOrderStatus}
-              sortBy={orderSortBy}
-              onStatusChange={(status) => {
-                setActiveOrderStatus(status);
-                setOrderPage(1);
-              }}
-              onSortChange={(sort) => {
-                setOrderSortBy(sort);
-                setOrderPage(1);
-              }}
-              onPageChange={setOrderPage}
-              allCount={allOrdersCount}
-              pendingCount={pendingOrdersCount}
-              shippedCount={shippedOrdersCount}
-              deliveredCount={deliveredOrdersCount}
-              completedCount={completedOrdersCount}
-              canceledCount={canceledOrdersCount}
-            />
-          )}
+            {activeTab === "orders" && (
+              <SellerOrdersTable
+                orders={ordersTableResponse?.orders || []}
+                totalCount={ordersTableResponse?.totalCount || 0}
+                currentPage={orderPage}
+                totalPages={Math.ceil((ordersTableResponse?.totalCount || 0) / 5) || 1}
+                isLoading={isOrdersTableLoading}
+                activeStatus={activeOrderStatus}
+                sortBy={orderSortBy}
+                onStatusChange={(status) => {
+                  setActiveOrderStatus(status);
+                  setOrderPage(1);
+                }}
+                onSortChange={(sort) => {
+                  setOrderSortBy(sort);
+                  setOrderPage(1);
+                }}
+                onPageChange={setOrderPage}
+                allCount={allOrdersCount}
+                pendingCount={pendingOrdersCount}
+                shippedCount={shippedOrdersCount}
+                deliveredCount={deliveredOrdersCount}
+                completedCount={completedOrdersCount}
+                canceledCount={canceledOrdersCount}
+              />
+            )}
 
-          {activeTab === "financials" && (
-            <SellerFinancialsTable
-              orders={completedOrdersResponse?.orders || []}
-              totalCount={completedOrdersResponse?.totalCount || financialsResponse?.completedOrdersCount || 0}
-              currentPage={financialsPage}
-              totalPages={Math.ceil((completedOrdersResponse?.totalCount || financialsResponse?.completedOrdersCount || 0) / 5) || 1}
-              isLoading={isFinancialsLoading || isCompletedOrdersLoading}
-              onPageChange={setFinancialsPage}
-              grossRevenue={grossRevenue}
-              platformFees={platformFees}
-              netProfit={netProfit}
-              completedCount={totalOrdersCount}
-            />
-          )}
+            {activeTab === "financials" && (
+              <SellerFinancialsTable
+                orders={completedOrdersResponse?.orders || []}
+                totalCount={completedOrdersResponse?.totalCount || financialsResponse?.completedOrdersCount || 0}
+                currentPage={financialsPage}
+                totalPages={Math.ceil((completedOrdersResponse?.totalCount || financialsResponse?.completedOrdersCount || 0) / 5) || 1}
+                isLoading={isFinancialsLoading || isCompletedOrdersLoading}
+                onPageChange={setFinancialsPage}
+                grossRevenue={grossRevenue}
+                platformFees={platformFees}
+                netProfit={netProfit}
+                completedCount={totalOrdersCount}
+              />
+            )}
+          </div>
         </div>
 
-      </div>
+      </DashboardShell>
     </PageWrapper>
   );
 }
