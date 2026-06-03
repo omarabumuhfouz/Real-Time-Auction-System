@@ -1,4 +1,5 @@
 using MazadZone.Application.Features.Bidders.Commands.Register;
+using MazadZone.Application.Services;
 using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users;
@@ -55,6 +56,15 @@ public class RegisterBidderCommandHandlerTests : BidderBaseTest<RegisterBidderCo
         _userRepository.IsEmailInUseAsync(Arg.Any<Email>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var extractionResult = new ExtractedIdData(
+            NationalId: command.NationalId,
+            Success: true,
+            ErrorMessage: null,
+            EnglishFullName: "John Doe",
+            ArabicFullName: "جون دو"
+        );
+        Dependency<IIdentityExtractionService>().ExtractDataAsync(Arg.Any<byte[]>()).Returns(extractionResult);
+
         // Act
         var result = await Handler.Handle(command, default);
 
@@ -77,6 +87,16 @@ public class RegisterBidderCommandHandlerTests : BidderBaseTest<RegisterBidderCo
         _tokenProvider.GenerateAccessToken(Arg.Any<User>()).Returns("mock_access_token");
         _tokenProvider.GenerateRefreshToken().Returns("mock_refresh_token");
         _tokenProvider.HashToken("mock_refresh_token").Returns("mock_hashed_refresh");
+
+        // Setup Identity Extraction
+        var extractionResult = new ExtractedIdData(
+            NationalId: command.NationalId,
+            Success: true,
+            ErrorMessage: null,
+            EnglishFullName: "John Doe",
+            ArabicFullName: "جون دو"
+        );
+        Dependency<IIdentityExtractionService>().ExtractDataAsync(Arg.Any<byte[]>()).Returns(extractionResult);
 
         // Set Traps for Capture & Assert
         User capturedUser = null!;
