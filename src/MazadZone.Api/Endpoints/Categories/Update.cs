@@ -10,7 +10,7 @@ public static class Update
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}", HandleAsync)
-        //    .RequireAuthorization("AdminPolicy")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Update category details")
            .WithDescription("Updates the name and description of an existing category. Returns a 409 Conflict if the new name is already taken by another category in the same hierarchy level, or if it violates other domain uniqueness rules.")
            .Accepts<UpdateCategoryRequest>("application/json")

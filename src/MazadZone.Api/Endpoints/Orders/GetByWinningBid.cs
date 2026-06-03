@@ -9,7 +9,7 @@ public static class GetByWinningBid
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/by-bid/{bidId:guid}", HandleAsync)
-           // .RequireAuthorization() // Highly recommended: You likely only want the buyer, seller, or admin to view these details
+           .RequireAuthorization()
            .WithName("GetOrderByWinningBid")
            .WithSummary("Retrieve an order by winning bid")
            .WithDescription("Fetches the complete details of an order associated with a specific winning bid ID. Returns a 404 Not Found if the bid does not exist or if no order has been created for it yet.")

@@ -8,7 +8,7 @@ public static class AddSubCategory
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/{parentId:guid}/sub-categories/{subCategoryId:guid}", HandleAsync)
-            // .RequireAuthorization("AdminPolicy") // Highly recommended: modifying category hierarchies is usually an admin task
+            .RequireAuthorization(Policies.AdminOnly) 
             .WithSummary("Link a sub-category to a parent category")
             .WithDescription("Establishes a hierarchical relationship by linking an existing sub-category to a parent category. Returns a conflict (409) if the relationship already exists, creates a circular dependency, or violates other domain rules.")
             .Produces(StatusCodes.Status204NoContent)

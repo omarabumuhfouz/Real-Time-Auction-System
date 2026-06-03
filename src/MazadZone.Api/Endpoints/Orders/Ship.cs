@@ -8,7 +8,7 @@ public static class Ship
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/ship", HandleAsync)
-           // .RequireAuthorization() // Highly recommended: Only the seller (or an admin) should be allowed to mark an order as shipped
+           .RequireAuthorization()
            .WithSummary("Mark an order as shipped")
            .WithDescription("Updates the status of an order to 'Shipped', indicating that the seller has dispatched the item to the buyer. Returns a 409 Conflict if the order is already shipped, canceled, or hasn't been confirmed/processed yet.")
            .Produces(StatusCodes.Status204NoContent)

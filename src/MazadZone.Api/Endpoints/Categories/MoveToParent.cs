@@ -10,7 +10,7 @@ public static class MoveToParent
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/move", HandleAsync)
-           // .RequireAuthorization("AdminPolicy")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Move a category to a new parent")
            .WithDescription("Relocates a category to a different parent. If 'newParentId' is provided as null, the category will be moved to the root level. This operation will return a 409 Conflict if the move creates a circular dependency (e.g., trying to move a parent into its own child category).")
            .Accepts<MoveToParentRequest>("application/json")

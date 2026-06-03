@@ -7,7 +7,7 @@ public static class GetUserTrustStatistics
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/user-trust", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Get User Trust Dashboard metrics")
            .WithDescription("Retrieves aggregate totals, account status percentages, and overall trust score for a specific period (excludes Admins).")
            .Produces<UserTrustStatsDto>(StatusCodes.Status200OK)

@@ -7,7 +7,7 @@ public static class GetUnverified
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/unverified", HandleAsync)
-        //    .RequireAuthorization("AdminPolicy")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Retrieve all unverified sellers")
            .WithDescription("Fetches a list of all seller profiles that are currently pending verification. This endpoint is typically consumed by administrative back-office dashboards to review and approve new sellers.")
            .Produces<IReadOnlyList<UnverifiedSellerSummaryResponse>>(StatusCodes.Status200OK)

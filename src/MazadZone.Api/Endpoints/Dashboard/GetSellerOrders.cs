@@ -11,7 +11,7 @@ public static class GetSellerOrders
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/orders", HandleAsync)
-        //    .RequireAuthorization(Policies.BidderOnly)
+           .RequireAuthorization(Policies.SellerOnly)
            .WithSummary("Get paginated orders for the Seller Dashboard")
            .WithDescription("Retrieves a paginated list of orders belonging to the authenticated seller. Use the optional 'status' query parameter (e.g., 'Pending', 'Shipped', or 'All') to filter the table.")
            .Produces<PagedList<OrderSummaryDto>>(StatusCodes.Status200OK)

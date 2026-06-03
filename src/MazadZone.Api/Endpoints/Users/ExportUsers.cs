@@ -8,7 +8,7 @@ public static class ExportUsers
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/users/export", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Export users to CSV")
            .WithDescription("Generates and downloads a CSV file of filtered users bypassing pagination limits.")
            .Produces(StatusCodes.Status200OK, contentType: "text/csv")

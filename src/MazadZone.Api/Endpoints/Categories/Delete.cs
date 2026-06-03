@@ -8,7 +8,7 @@ public static class Delete
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapDelete("/{id:guid}", HandleAsync)
-            // .RequireAuthorization("AdminPolicy") // Deleting categories is a destructive admin operation
+            .RequireAuthorization(Policies.AdminOnly) 
             .WithSummary("Delete a category")
             .WithDescription("Deletes a specific category and automatically cascades the deletion to its subcategories. This operation will fail with a 409 Conflict if the category, or any of its nested subcategories, are currently linked to active auctions.")
             .Produces(StatusCodes.Status204NoContent)

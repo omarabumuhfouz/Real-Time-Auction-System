@@ -1,5 +1,4 @@
 using MazadZone.Application.Features.Users.Commands.Ban;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace MazadZone.Api.Endpoints.Users;
 
@@ -10,7 +9,7 @@ public static class Ban
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/ban", HandleAsync)
-        //    .RequireAuthorization("AdminOnly")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Ban a user account")
            .WithDescription("Suspends a user's account, immediately preventing them from logging in, bidding, or managing auctions. A mandatory reason must be provided in the request body. Returns a 409 Conflict if the user is already banned or if domain rules prevent the ban (e.g., trying to ban another super-admin).")
            .Accepts<BanUserRequest>("application/json")

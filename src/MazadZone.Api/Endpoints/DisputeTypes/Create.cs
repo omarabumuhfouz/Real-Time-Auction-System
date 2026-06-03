@@ -15,7 +15,7 @@ public static class Create
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/", HandleAsync)
-        //    .RequireAuthorization(Policies.AdminOnly) 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Create a new Dispute Type")
            .WithDescription("Creates a new dispute type configuration for the system. Returns a 201 Created with the location of the new resource. Returns 400 Bad Request if the input data fails validation, or 409 Conflict if a domain rule is violated (e.g., duplicate name).")
            .Produces(StatusCodes.Status201Created)

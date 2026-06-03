@@ -9,7 +9,7 @@ public static class Suspend
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/suspend", HandleAsync)
-        //    .RequireAuthorization("AdminOnly")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Suspend a user account temporarily")
            .WithDescription("Temporarily suspends a user account until the specified 'Until' date, preventing them from logging in or participating in auctions. Both a reason and a future date must be provided. Returns a 409 Conflict if the user is already suspended or permanently banned.")
            .Accepts<SuspendUserRequest>("application/json")

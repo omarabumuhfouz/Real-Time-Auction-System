@@ -8,7 +8,7 @@ public static class GetTrendingRootCategories
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/categories/root/trending", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Get Trending Root Categories")
            .WithDescription("Retrieves statistics exclusively for top-level (root) categories based on active auction counts. Optionally bundles all remaining root categories into a single 'Other' bucket if the limit is exceeded.")
            .Produces<IReadOnlyList<CategoryStatResponse>>(StatusCodes.Status200OK)

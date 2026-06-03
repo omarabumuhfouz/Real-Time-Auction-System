@@ -7,7 +7,7 @@ public static class Verify
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/verify", HandleAsync)
-            // .RequireAuthorization("AdminPolicy") 
+            .RequireAuthorization(Policies.AdminOnly) 
             .WithSummary("Verify a bidder's identity")
             .WithDescription("Marks a specific bidder profile as verified. This operation updates the bidder's status and is typically restricted to administrative roles.")
             .Produces(StatusCodes.Status204NoContent)

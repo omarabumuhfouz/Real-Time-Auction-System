@@ -9,7 +9,7 @@ public static class BecomeSeller
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/{id:guid}/become-seller", HandleAsync)
-        //    .RequireAuthorization("BidderPolicy") 
+           .RequireAuthorization(Policies.BidderOnly) 
            .WithSummary("Promote a user to a seller")
            .WithDescription("Upgrades an existing bidder/user account to a seller profile by linking their bank account details. Returns a 409 Conflict if the user is already a registered seller.")
            .Produces<TokenDto>(StatusCodes.Status200OK)
