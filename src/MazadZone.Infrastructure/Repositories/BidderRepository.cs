@@ -21,7 +21,7 @@ public class BidderRepository : GenericRepository<Bidder, UserId>, IBidderReposi
         return await _context.Bidders
              .AsNoTracking()
              .Where(b => b.Id == bidderId)
-             .Select(b => b.NationalId)
+             .Select(b => b.Verification.NationalId)
              .FirstOrDefaultAsync();
     }
 
@@ -29,6 +29,6 @@ public class BidderRepository : GenericRepository<Bidder, UserId>, IBidderReposi
     {
         return await _context.Bidders
             .AsNoTracking()
-            .AnyAsync(b => b.NationalId == nationalId, cancellationToken);  
+            .AnyAsync(b => b.Verification.NationalId == nationalId, cancellationToken);  
     }
 }
