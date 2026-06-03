@@ -12,12 +12,8 @@ public static class EndAuction
             .WithName("EndAuction")
             .WithOpenApi()
             .WithSummary("Ends an auction")
-            .WithDescription("Manually ends an active auction before its scheduled end time. Triggers winner determination and order creation. **Requires Admin role.**")
-            .RequireAuthorization(Policies.AdminOnly)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden);
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<IResult> HandleAsync(

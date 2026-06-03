@@ -12,12 +12,8 @@ public static class CancelAuctionByAdmin
             .WithName("CancelAuctionByAdmin")
             .WithOpenApi()
             .WithSummary("Cancels an auction by admin")
-            .WithDescription("Admin override to forcefully cancel any auction regardless of its current state or seller. Used for policy violations or system-level cancellations. **Requires Admin role.**")
-            .RequireAuthorization(Policies.AdminOnly)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden);
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<IResult> HandleAsync(

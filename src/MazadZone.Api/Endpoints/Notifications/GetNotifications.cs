@@ -3,7 +3,7 @@ using MediatR;
 using MazadZone.Application.Features.Notifications.Queries.GetNotifications;
 using MazadZone.Application.Features.Notifications.Queries.DTOs;
 using MazadZone.Api.Contracts.Notifications;
-using MazadZone.Api.Infrastructure.Binding;
+using MazadZone.Api.Extensions;
 
 namespace MazadZone.Api.Endpoints.Notifications;
 
@@ -12,21 +12,15 @@ public static class GetNotifications
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/", HandleAsync)
-            .WithName("GetNotifications")
-            .WithOpenApi()
-            .WithSummary("Gets the authenticated user's notifications")
-            .WithDescription("Retrieves a paginated list of notifications belonging to the authenticated user, ordered by creation date (newest first). The user identity is taken from the JWT — no UserId parameter is accepted. **Requires authentication (any role).**")
-            .RequireAuthorization(Policies.Shared)
+            .WithSummary("Gets User Notifications")
+            .WithDescription("Retrieves paginated notifications for a specific user.")
             .Produces<NotificationsListDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<IResult> HandleAsync(
         [AsParameters] GetNotificationsRequest request,
-        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
@@ -37,7 +31,7 @@ public static class GetNotifications
 
         try
         {
-            var query = new GetNotificationsQuery(boundUserId.Value, request.PageNumber, request.PageSize);
+            var query = new GetNotificationsQuery(request.UserId, request.PageNumber, request.PageSize);
 
             var result = await sender.Send(query, cancellationToken);
 
@@ -46,9 +40,9 @@ public static class GetNotifications
                 errors => errors.ToProblem()
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return Results.Problem("An unexpected error occurred retrieving notifications.", statusCode: StatusCodes.Status500InternalServerError);
+            return Results.Problem(ex.ToString(), statusCode: StatusCodes.Status500InternalServerError);
         }
     }
 }
