@@ -82,6 +82,33 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
                 "The national ID extracted from the card does not match the provided national ID."));
         }
 
+        var enteredFullName = string.Join(" ", new[] { request.FirstName, request.SecondName, request.ThirdName, request.LastName }
+            .Where(p => !string.IsNullOrWhiteSpace(p)))
+            .Trim();
+
+        var cleanedEntered = System.Text.RegularExpressions.Regex.Replace(enteredFullName, @"\s+", " ").Trim();
+        var cleanedExtractedEng = System.Text.RegularExpressions.Regex.Replace(extractionResult.EnglishFullName ?? "", @"\s+", " ").Trim();
+        var cleanedExtractedAr = System.Text.RegularExpressions.Regex.Replace(extractionResult.ArabicFullName ?? "", @"\s+", " ").Trim();
+
+        bool nameMatches = false;
+        if (!string.IsNullOrEmpty(cleanedExtractedEng) && 
+            string.Equals(cleanedExtractedEng, cleanedEntered, StringComparison.OrdinalIgnoreCase))
+        {
+            nameMatches = true;
+        }
+        else if (!string.IsNullOrEmpty(cleanedExtractedAr) && 
+                 string.Equals(cleanedExtractedAr, cleanedEntered, StringComparison.OrdinalIgnoreCase))
+        {
+            nameMatches = true;
+        }
+
+        if (!nameMatches)
+        {
+            return Result.Failure<RegisterBidderDto>(Error.Validation(
+                "Identity.NameMismatch", 
+                $"The name on the identity card does not match the entered name: '{enteredFullName}'."));
+        }
+
         if(await _bidderRepository.IsNationalIdInUseAsync(request.NationalId, ct))
         {
             // _logger.LogNationalIdConflict(NationalIdErrorCodes.AlreadyInUse, request.NationalId);
@@ -105,9 +132,9 @@ public class RegisterBidderCommandHandler : ICommandHandler<RegisterBidderComman
 
         var newBidder = bidderResult.Value;
         
-        // Approve verification on the Bidder entity using strictly the extracted name
-        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName :
-                                !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName : 
+        // Approve verification on the Bidder entity using strictly the extracted name (preferring English first)
+        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName :
+                                !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName : 
                                 "Unknown (OCR Failed to read name)";
         newBidder.ApproveVerification(extractionResult.NationalId, extractedFullName);
 

@@ -60,8 +60,8 @@ public class RegisterBidderCommandHandlerTests : BidderBaseTest<RegisterBidderCo
             NationalId: command.NationalId,
             Success: true,
             ErrorMessage: null,
-            EnglishFullName: "John Doe",
-            ArabicFullName: "جون دو"
+            EnglishFullName: "Omar Ahmad Ali Abumuhfouz",
+            ArabicFullName: "عمر أحمد علي أبو محفوظ"
         );
         Dependency<IIdentityExtractionService>().ExtractDataAsync(Arg.Any<byte[]>()).Returns(extractionResult);
 
@@ -93,8 +93,8 @@ public class RegisterBidderCommandHandlerTests : BidderBaseTest<RegisterBidderCo
             NationalId: command.NationalId,
             Success: true,
             ErrorMessage: null,
-            EnglishFullName: "John Doe",
-            ArabicFullName: "جون دو"
+            EnglishFullName: "Omar Ahmad Ali Abumuhfouz",
+            ArabicFullName: "عمر أحمد علي أبو محفوظ"
         );
         Dependency<IIdentityExtractionService>().ExtractDataAsync(Arg.Any<byte[]>()).Returns(extractionResult);
 
