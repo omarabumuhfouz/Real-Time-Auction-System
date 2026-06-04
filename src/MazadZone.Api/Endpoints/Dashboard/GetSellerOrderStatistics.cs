@@ -1,4 +1,5 @@
 using MazadZone.Application.Features.Orders.Queries.GetSellerOrderStatistics;
+using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Dashboard;
 
@@ -16,12 +17,12 @@ public static class GetSellerOrderStatistics
     }
 
     private static async Task<IResult> HandleAsync(
-        // BoundUserId boundUserId,
-        UserId sellerId,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
-        var result = await sender.Send(new GetSellerOrderStatisticsQuery(sellerId), ct);
+        var result = await sender.Send(new GetSellerOrderStatisticsQuery(boundUserId.Value), ct);
+
 
         return result.Match(
             stats => Results.Ok(stats),
