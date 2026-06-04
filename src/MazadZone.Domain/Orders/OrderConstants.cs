@@ -11,5 +11,5 @@ public static class OrderConstants
     public const int MaxRating = 5;
     public const int MaxTransactionIdLength = 100;
     public const int MaxCurrencyCodeLength = 3;
-    public const int UnpaidOrderCancellationMinutes = 30;
+    public const int UnpaidOrderCancellationMinutes = 2;
 }

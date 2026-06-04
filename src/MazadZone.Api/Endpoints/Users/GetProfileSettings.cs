@@ -1,4 +1,5 @@
 using MazadZone.Application.Features.Users.Queries.GetProfileSettings;
+using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Users;
 
@@ -19,10 +20,17 @@ public static class GetProfileSettings
 
     private static async Task<IResult> HandleAsync(
         [FromRoute] UserId id,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
+        if (id != boundUserId.Value)
+        {
+            return Results.Forbid();
+        }
+
         var result = await sender.Send(new GetProfileSettingsQuery(id), ct);
+
 
         return result.Match(
             response => Results.Ok(response),

@@ -3,6 +3,7 @@ using MediatR;
 using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
 using MazadZone.Api.Contracts.Notifications;
 using MazadZone.Api.Extensions;
+using MazadZone.Api.Constants;
 
 namespace MazadZone.Api.Endpoints.Notifications;
 
@@ -11,6 +12,7 @@ public static class Create
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/", HandleAsync)
+            .RequireAuthorization(Policies.AdminOnly)
             .WithSummary("Creates a new Notification")
             .WithDescription("Creates a new notification for a user with title and message.")
             .Produces<Guid>(StatusCodes.Status201Created)
