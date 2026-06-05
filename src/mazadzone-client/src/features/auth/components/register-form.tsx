@@ -14,18 +14,23 @@ import { FileInputWithButton } from "@/components/ui/file-input-with-button";
 import { registerSchema, type RegisterFormValues } from "../validations/register.schema";
 import { ROUTES } from "@/config/routes.config";
 import { useRegisterMutation } from "../api";
+import { useNationalIdOcr } from "../hooks/useNationalIdOcr";
 
 /**
  * RegisterForm
  * The main registration form component for creating an account.
+ * When the user submits, the national card image is scanned via client-side OCR
+ * and the registration API request is sent in a single combined flow.
  */
 export function RegisterForm() {
   const registerMutation = useRegisterMutation();
+  const { ocrPhase, scanFile } = useNationalIdOcr();
 
   const {
     register,
     handleSubmit,
     control,
+    getValues,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -42,13 +47,33 @@ export function RegisterForm() {
     },
   });
 
+  const isScanning = ocrPhase === "scanning";
+  const isSubmitting = registerMutation.isPending || isScanning;
+
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      await registerMutation.mutateAsync(data);
+      let nationalId = data.nationalId;
+
+      // If a card image was uploaded, run OCR first and use the detected ID (if found)
+      const cardFile = data.nationalCardFile;
+      if (cardFile instanceof File && cardFile.type.startsWith("image/")) {
+        const detectedId = await scanFile(cardFile);
+        if (detectedId) {
+          nationalId = detectedId;
+        }
+      }
+
+      await registerMutation.mutateAsync({ ...data, nationalId });
     } catch (error) {
       console.error("Registration submission error:", error);
     }
   };
+
+  const submitLabel = isScanning
+    ? "Scanning ID..."
+    : registerMutation.isPending
+      ? "Signing up..."
+      : "Sign up";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full max-w-[600px] mx-auto px-4 lg:px-8 pt-20">
@@ -163,7 +188,9 @@ export function RegisterForm() {
               />
             )}
           />
-          {errors.nationalCardFile && <p className="text-xs text-red-500 mt-1">{errors.nationalCardFile.message?.toString()}</p>}
+          {errors.nationalCardFile && (
+            <p className="text-xs text-red-500 mt-1">{errors.nationalCardFile.message?.toString()}</p>
+          )}
         </div>
       </div>
 
@@ -193,10 +220,10 @@ export function RegisterForm() {
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={registerMutation.isPending}
-        className="w-full rounded-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-[15px] font-semibold  transition-colors"
+        disabled={isSubmitting}
+        className="w-full rounded-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-[15px] font-semibold transition-colors"
       >
-        {registerMutation.isPending ? "Signing up..." : "Sign up"}
+        {submitLabel}
       </Button>
 
       {/* Login Link */}
