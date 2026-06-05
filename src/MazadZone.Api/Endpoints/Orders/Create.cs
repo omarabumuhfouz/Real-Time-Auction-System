@@ -23,7 +23,7 @@ public static class Create
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/", HandleAsync)
+        app.MapPost("/", HandleAsync)
            .RequireAuthorization()
            .WithSummary("Create a new order")
            .WithDescription("Initiates a post-auction order transaction for the winning bidder. Requires the auction ID, the winning bid ID, and the shipping address. Returns a 409 Conflict if an order has already been created for this auction or if the provided bid was not the actual winner.")
