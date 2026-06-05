@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FilterBar } from "@/components/layout/filter-bar";
 import { AdminDisputeCategory, AdminDisputeStatus } from "../types/admin-disputes.types";
 
 interface AdminDisputesFiltersProps {
@@ -28,87 +29,98 @@ export function AdminDisputesFilters({
   setCategory,
 }: AdminDisputesFiltersProps) {
   return (
-    <div className="flex flex-col xl:flex-row gap-4 p-4 border border-border bg-card rounded-2xl items-start xl:items-center justify-between shadow-sm">
-      <div className="flex flex-wrap items-center gap-4 flex-1 w-full xl:w-auto">
-        <div className="relative w-full sm:w-[320px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search disputes by ID, order, auction, or user..."
-            className="pl-9 bg-card border-border h-10 w-full"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1 w-full sm:w-auto min-w-[160px]">
-          <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Dispute Status</span>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All Statuses">All Statuses</SelectItem>
-              {Object.values(AdminDisputeStatus).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-col gap-1 w-full sm:w-auto min-w-[160px]">
-          <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Category</span>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All Categories">All Categories</SelectItem>
-              {Object.values(AdminDisputeCategory).map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-col gap-1 w-full sm:w-auto min-w-[160px]">
-          <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Sort By</span>
-          <Select defaultValue="Submitted Date">
-            <SelectTrigger>
-              <SelectValue placeholder="Sort By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Submitted Date">Submitted Date</SelectItem>
-              <SelectItem value="Status">Status</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-col gap-1 w-full sm:w-[160px]">
-          <span className="text-[10px] font-bold text-foreground/80 px-1 uppercase tracking-wider">Submitted Date</span>
+    <FilterBar
+      search={
+        <div className="flex flex-col gap-1.5 w-full">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Search</span>
           <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black/70" />
             <Input
-              type="date"
-              className="h-10 pr-9 bg-card border-border text-foreground/80"
-              placeholder="Select date"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search disputes by ID, order, auction, or user..."
+              className="pl-9 h-9 w-full text-xs bg-white text-black border-transparent placeholder:text-black/50 focus-visible:ring-foreground/20 shadow-sm"
             />
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           </div>
         </div>
-      </div>
+      }
+      filters={
+        <>
+          {/* Dispute Status */}
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Dispute Status</span>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="h-9 w-full text-xs rounded-lg cursor-pointer">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All Statuses">All Statuses</SelectItem>
+                {Object.values(AdminDisputeStatus).map((s) => (
+                  <SelectItem key={s} value={s} className="cursor-pointer">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="flex items-center gap-3 w-full xl:w-auto justify-end mt-4 xl:mt-0">
-        <Button variant="outline" className="h-10 gap-2 font-bold px-4 hover:bg-muted text-foreground">
-          <Download className="size-4" />
-          Export
-        </Button>
-        <Button className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-6">
-          Bulk Actions
-        </Button>
-      </div>
-    </div>
+          {/* Category */}
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Category</span>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="h-9 w-full text-xs rounded-lg cursor-pointer">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All Categories">All Categories</SelectItem>
+                {Object.values(AdminDisputeCategory).map((c) => (
+                  <SelectItem key={c} value={c} className="cursor-pointer">
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sort By */}
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Sort By</span>
+            <Select defaultValue="Submitted Date">
+              <SelectTrigger className="h-9 w-full text-xs rounded-lg cursor-pointer">
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Submitted Date" className="cursor-pointer">Submitted Date</SelectItem>
+                <SelectItem value="Status" className="cursor-pointer">Status</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Submitted Date */}
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Submitted Date</span>
+            <div className="relative">
+              <Input
+                type="date"
+                className="h-9 text-xs bg-white text-black border-border pr-8"
+                placeholder="Select date"
+              />
+              <Calendar className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+        </>
+      }
+      actions={
+        <>
+          <Button variant="outline" className="h-9 px-4 text-xs font-semibold gap-2 border-border shadow-xs hover:bg-muted text-foreground">
+            <Download className="size-3.5" />
+            Export
+          </Button>
+          <Button className="h-9 px-6 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-colors">
+            Bulk Actions
+          </Button>
+        </>
+      }
+    />
   );
 }

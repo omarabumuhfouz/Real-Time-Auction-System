@@ -82,14 +82,7 @@ export function SellerDashboardPage() {
     isLoading: isFinancialsLoading,
   } = useGetSellerDashboardFinancials();
 
-  // 3. Fetch seller orders count
-  const {
-    data: ordersResponse,
-    isLoading: isOrdersLoading,
-  } = useGetSellerDashboardOrders({
-    Page: 1,
-    PageSize: 1,
-  });
+
 
   // 4. Fetch ALL seller orders to calculate capsule numbers dynamically
   const {
@@ -156,7 +149,6 @@ export function SellerDashboardPage() {
   const pendingCount = statsAuctionsResponse?.pending || 0;
   const soldCount = statsAuctionsResponse?.soldItems || 0;
   const unsoldCount = statsAuctionsResponse?.unsold || 0;
-  const totalOrdersCount = ordersResponse?.totalCount || financialsResponse?.completedOrdersCount || 0;
   const grossRevenue = financialsResponse?.totalGrossRevenue || 0;
   const platformFees = financialsResponse?.totalPlatformFees || 0;
   const netProfit = financialsResponse?.totalNetProfit || 0;
@@ -175,7 +167,7 @@ export function SellerDashboardPage() {
   const completedOrdersCount = allOrdersList.filter(o => o.orderStatus.toLowerCase() === "completed" || o.orderStatus.toLowerCase() === "success").length;
   const canceledOrdersCount = allOrdersList.filter(o => o.orderStatus.toLowerCase() === "canceled" || o.orderStatus.toLowerCase() === "refunded" || o.orderStatus.toLowerCase() === "cancelled").length;
 
-  const isStatsLoading = isStatsAuctionsLoading || isFinancialsLoading || isOrdersLoading;
+  const isStatsLoading = isStatsAuctionsLoading || isFinancialsLoading;
 
   return (
     <PageWrapper className="bg-background min-h-screen">
@@ -209,7 +201,6 @@ export function SellerDashboardPage() {
           activeAuctions={activeCount}
           pending={pendingCount}
           soldItems={soldCount}
-          totalOrders={totalOrdersCount}
           grossRevenue={grossRevenue}
           netProfit={netProfit}
           isLoading={isStatsLoading}
@@ -303,7 +294,7 @@ export function SellerDashboardPage() {
                 grossRevenue={grossRevenue}
                 platformFees={platformFees}
                 netProfit={netProfit}
-                completedCount={totalOrdersCount}
+                completedCount={financialsResponse?.completedOrdersCount || 0}
               />
             )}
           </div>
