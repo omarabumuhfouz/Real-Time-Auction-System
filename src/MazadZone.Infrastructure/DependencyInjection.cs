@@ -14,6 +14,8 @@ using MazadZone.Infrastructure.Persistence.Interceptors;
 using AuthService.Infrastructure.Backgrounds;
 using MazadZone.Infrastructure.Services;
 using MazadZone.Infrastructure.Common;
+using Quartz;
+using MazadZone.Infrastructure.BackgroundJobs;
 
 namespace MazadZone.Infrastructure;
 
@@ -31,6 +33,7 @@ public static class DependencyInjection
             .AddCachingServices(configuration)
             .AddBackgroundServices()
             .AddGeminiServices(configuration)
+            .AddQuartzJobs()
             .AddGoogleVisionServices();
 
         services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.GmailOptionsKey));
@@ -217,6 +220,36 @@ public static class DependencyInjection
                 using var stream = new System.IO.FileStream(credentialsPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
                 builder.GoogleCredential = Google.Apis.Auth.OAuth2.CredentialFactory.FromStream<Google.Apis.Auth.OAuth2.ServiceAccountCredential>(stream).ToGoogleCredential();
             }
+
+    private static IServiceCollection AddQuartzJobs(this IServiceCollection services)
+    {
+        services.AddQuartz(config =>
+        {
+            var shipmentJobKey = new JobKey(nameof(AutoShipmentJob));
+            config.AddJob<AutoShipmentJob>(shipmentJobKey)
+                  .AddTrigger(trigger => trigger
+                      .ForJob(shipmentJobKey)
+                      .WithIdentity($"{nameof(AutoShipmentJob)}-trigger")
+                      // Run every 2 minutes
+                      .WithCronSchedule("0 0/2 * * * ?")); 
+
+            var deliveryJobKey = new JobKey(nameof(AutoDeliveryJob));
+            config.AddJob<AutoDeliveryJob>(deliveryJobKey)
+                  .AddTrigger(trigger => trigger
+                      .ForJob(deliveryJobKey)
+                      .WithIdentity($"{nameof(AutoDeliveryJob)}-trigger")
+                      // Run every 2 minutes
+                      .WithCronSchedule("0 0/2 * * * ?"));
+        });
+
+        // Start Quartz as a background hosted service
+        services.AddQuartzHostedService(options =>
+        {
+            options.WaitForJobsToComplete = true;
+        });
+
+        return services;
+    }
 
             return builder.Build();
         });

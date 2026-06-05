@@ -24,6 +24,8 @@ public static class Create
 {
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
+        app.MapPost("/", HandleAsync)
+           .RequireAuthorization()
         app.MapPut("/", HandleAsync)
            .RequireAuthorization(Policies.BidderOnly)
            .WithSummary("Create a new order")

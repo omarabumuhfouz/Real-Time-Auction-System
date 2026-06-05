@@ -1,27 +1,33 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Repositories;
 
 namespace MazadZone.Application.Features.Orders.Commands.AddFeedback;
 public sealed class NotifySellerOnFeedbackLeftDomainEventHandler : INotificationHandler<FeedbackLeftDomainEvent>
 {
-    private readonly INotificationRepository _notificationService;
     private readonly ISellerRepository _sellerRepository;
+    private readonly ISender _sender;
 
-    public NotifySellerOnFeedbackLeftDomainEventHandler(INotificationRepository notificationService, ISellerRepository sellerRepository)
+    public NotifySellerOnFeedbackLeftDomainEventHandler(ISellerRepository sellerRepository, ISender sender)
     {
-        _notificationService = notificationService;
         _sellerRepository = sellerRepository;
+        _sender = sender;
     }
 
     public async Task Handle(FeedbackLeftDomainEvent notification, CancellationToken ct)
     {
         var seller = await _sellerRepository.GetByAuctionIdAsync(notification.AuctionId, ct);
         if (seller is null) return;
-        
-        await _notificationService.NotifySellerAsync(
-            seller.Id.Value, 
-            "New Feedback Received",
-            $"You received a {notification.Rating}-star review!", 
-            ct);
+
+        var title = "New Feedback Received";
+        var message = $"You received a {notification.Rating}-star review!";
+
+        await _sender.Send(new CreateNotificationCommand(
+                                            seller.Id,
+                                            NotificationMethods.ReceiveNotification,
+                                            title,
+                                            message
+                                    ));
     }
 }

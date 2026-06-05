@@ -1,3 +1,5 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Repositories;
 
@@ -9,12 +11,11 @@ namespace MazadZone.Application.Features.Orders.Commands.Ship;
 public sealed class NotifyBidderOnOrderShippedDomainEventHandler 
     : INotificationHandler<OrderShippedDomainEvent>
 {
-    private readonly INotificationRepository _notificationService;
+    private readonly ISender _sender;
 
-    public NotifyBidderOnOrderShippedDomainEventHandler(
-        INotificationRepository notificationService)
+    public NotifyBidderOnOrderShippedDomainEventHandler(ISender sender)
     {
-        _notificationService = notificationService;
+        _sender = sender;
     }
 
     public async Task Handle(OrderShippedDomainEvent notification, CancellationToken ct)
@@ -28,9 +29,12 @@ public sealed class NotifyBidderOnOrderShippedDomainEventHandler
 You can track your package details in your 'My Won Auctions' dashboard. We hope you enjoy your purchase!";
 
         // 4. Send the notification to the Bidder
-        await _notificationService.NotifyBidderAsync(
-            notification.BidderId.Value, 
-            title, 
-            message);
+        await _sender.Send(new CreateNotificationCommand(
+                                    notification.BidderId,
+                                    NotificationMethods.ReceiveNotification,
+                                    title,
+                                    message
+                            ));
+
     }
 }

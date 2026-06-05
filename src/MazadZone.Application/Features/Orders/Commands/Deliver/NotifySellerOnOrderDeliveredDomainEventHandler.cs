@@ -1,3 +1,5 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Repositories;
 using MediatR;
@@ -10,15 +12,15 @@ namespace MazadZone.Application.Features.Orders.Commands.Deliver;
 public sealed class NotifySellerOnOrderDeliveredDomainEventHandler 
     : INotificationHandler<OrderDeliveredDomainEvent>
 {
-    private readonly INotificationRepository _notificationService;
     private readonly ISellerRepository _sellerRepository;
+    private readonly ISender _sender;
 
     public NotifySellerOnOrderDeliveredDomainEventHandler(
-        INotificationRepository notificationService,
-        ISellerRepository sellerRepository)
+        ISellerRepository sellerRepository,
+        ISender sender)
     {
-        _notificationService = notificationService;
         _sellerRepository = sellerRepository;
+        _sender = sender;
     }
 
     public async Task Handle(OrderDeliveredDomainEvent notification, CancellationToken ct)
@@ -35,10 +37,12 @@ public sealed class NotifySellerOnOrderDeliveredDomainEventHandler
                         
 The delivery is officially complete. The funds will be released to your account according to the platform's payout schedule. Keep an eye out for feedback from the bidder!";
 
-        // 5. Send notification to the Seller
-        await _notificationService.NotifySellerAsync(
-            seller.Id.Value, 
-            title, 
-            message);
+        await _sender.Send(new CreateNotificationCommand(
+                            seller.Id,
+                            NotificationMethods.ReceiveNotification,
+                            title,
+                            message
+                    ));
+
     }
 }
