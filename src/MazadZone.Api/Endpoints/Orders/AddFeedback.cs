@@ -13,7 +13,7 @@ public static class AddFeedback
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/{id:guid}/feedback", HandleAsync)
-        //    .RequireAuthorization()
+           .RequireAuthorization(Policies.BidderOnly)
            .WithSummary("Add feedback to a delivered order")
            .WithDescription("Allows a buyer to submit a rating and comment for a completed/delivered order. Returns a 409 Conflict if the order is not yet delivered, or if feedback has already been submitted for this order.")
            .Accepts<AddFeedbackRequest>("application/json")

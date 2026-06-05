@@ -9,7 +9,7 @@ public static class ReplyToFeedback
     public static void MapEndpoint(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/orders/{orderId:guid}/feedback/reply", HandleAsync)
-           // .RequireAuthorization() // Highly recommended: Only the seller of this specific order should be able to reply
+           .RequireAuthorization(Policies.SellerOnly) 
            .WithName("ReplyToOrderFeedback")
            .WithSummary("Reply to order feedback")
            .WithDescription("Allows a seller to publicly reply to feedback left by a buyer on a specific completed order. Returns a 404 if the order is not found, and a 409 Conflict if no feedback exists yet or if a reply has already been submitted.")

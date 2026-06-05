@@ -5,6 +5,7 @@ using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Bidders.DTOs;
 using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Features.Users.Queries.GetProfileSettings;
+using MazadZone.Application.Features.Users.Queries.GetPaymentMethods;
 using MazadZone.Application.Features.Users.Queries.GetUserGrowthTrends;
 using MazadZone.Application.Features.Users.Queries.GetUserTrustStats;
 using MazadZone.Application.Services;
@@ -87,6 +88,31 @@ public class UserQueries : ResilientRepository, IUserQueries
         return await ExecuteResilientAsync(connection =>
                connection.QueryFirstOrDefaultAsync<ProfileSettingsResponse>(sql, new { UserId = userId.Value })
         );
+    }
+
+    public async Task<IReadOnlyList<PaymentMethodResponse>> GetPaymentMethodsAsync(UserId userId, CancellationToken ct)
+    {
+        const string sql = @"
+            SELECT 
+                Id,
+                Last4Digits,
+                ExpiryMonth,
+                ExpiryYear,
+                CardholderName,
+                Brand,
+                IsDefault,
+                CreatedOnUtc
+            FROM PaymentMethods
+            WHERE UserId = @UserId
+            ORDER BY IsDefault DESC, CreatedOnUtc DESC;
+        ";
+
+        return await ExecuteResilientAsync(async connection =>
+        {
+            var command = new CommandDefinition(sql, new { UserId = userId.Value }, cancellationToken: ct);
+            var results = await connection.QueryAsync<PaymentMethodResponse>(command);
+            return results.ToList().AsReadOnly();
+        });
     }
 
     public async Task<PagedList<UserDto>?> GetUsersAsync(UserFilterParams filter, CancellationToken ct)

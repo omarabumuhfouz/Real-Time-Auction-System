@@ -4,6 +4,8 @@ using MazadZone.Application.Features.Bidders.Queries.GetMyBids;
 using MazadZone.Domain.Bidders;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using MazadZone.Api.Infrastructure.Binding;
+using MazadZone.Api.Constants;
 
 namespace MazadZone.Api.Endpoints.Bidders;
 
@@ -12,13 +14,16 @@ public static class GetMyBids
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/my-bids", HandleAsync)
+           .RequireAuthorization(Policies.BidderOnly)
            .WithName("GetMyBids")
            .WithOpenApi()
-           .Produces<PagedList<MyBidAuctionDto>>(StatusCodes.Status200OK);
+           .Produces<PagedList<MyBidAuctionDto>>(StatusCodes.Status200OK)
+           .ProducesProblem(StatusCodes.Status401Unauthorized)
+           .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     private static async Task<IResult> HandleAsync(
-        [FromQuery] UserId bidderId,
+        BoundUserId bidderId,
         [FromQuery] int? page,
         [FromQuery] int? pageSize,
         [FromQuery] string? query,
@@ -30,7 +35,7 @@ public static class GetMyBids
         CancellationToken ct)
     {
         var getMyBidsQuery = new GetMyBidsQuery(
-            bidderId,
+            bidderId.Value,
             page ?? 1,
             pageSize ?? 12,
             query,
@@ -43,3 +48,4 @@ public static class GetMyBids
         return result.Match(onValue: value => Results.Ok(value), onError: e => e.ToProblem());
     }
 }
+

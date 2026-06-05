@@ -7,7 +7,7 @@ public static class NotifyUser
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/notify", HandleAsync)
-            // .RequireAuthorization(Policies.AdminOnly)
+            .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Send an email notification to a user")
            .WithDescription("Sends an email using the standard system HTML template. Requires a valid UserId, Title, and Message.")
            .Produces(StatusCodes.Status204NoContent)

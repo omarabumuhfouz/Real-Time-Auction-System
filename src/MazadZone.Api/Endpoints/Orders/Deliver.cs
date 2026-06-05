@@ -8,7 +8,7 @@ public static class Deliver
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/deliver", HandleAsync)
-           // .RequireAuthorization() // Highly recommended: Only the seller, an admin, or a shipping provider should mark this as delivered
+           .RequireAuthorization()
            .WithSummary("Mark an order as delivered")
            .WithDescription("Updates the status of an order to 'Delivered'. This state transition typically finalizes the transaction and unlocks the buyer's ability to leave feedback. Returns a 409 Conflict if the order is already delivered, has been canceled, or hasn't been shipped/processed yet.")
            .Produces(StatusCodes.Status204NoContent)

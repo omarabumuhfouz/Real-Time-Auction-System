@@ -16,6 +16,7 @@ public static class ExportSelectedDisputes
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/export/selected", HandleAsync)
+              .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Export specific disputes by IDs to CSV")
            .WithDescription("Accepts a JSON array of Dispute IDs and generates a downloaded CSV file.")
            .Produces(StatusCodes.Status200OK, contentType: "text/csv")

@@ -1,10 +1,5 @@
 using MazadZone.Application.Features.Bidders.Commands.Register;
 using MazadZone.Application.Features.Bidders.DTOs;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using MediatR;
 
 namespace MazadZone.Api.Endpoints.Bidders;
 

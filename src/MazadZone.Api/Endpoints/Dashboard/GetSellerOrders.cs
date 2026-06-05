@@ -11,7 +11,7 @@ public static class GetSellerOrders
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/orders", HandleAsync)
-        //    .RequireAuthorization(Policies.BidderOnly)
+           .RequireAuthorization(Policies.SellerOnly)
            .WithSummary("Get paginated orders for the Seller Dashboard")
            .WithDescription("Retrieves a paginated list of orders belonging to the authenticated seller. Use the optional 'status' query parameter (e.g., 'Pending', 'Shipped', or 'All') to filter the table.")
            .Produces<PagedList<OrderSummaryDto>>(StatusCodes.Status200OK)
@@ -22,8 +22,7 @@ public static class GetSellerOrders
     }
 
     private static async Task<IResult> HandleAsync(
-        //  BoundUserId sellerId,
-        UserId sellerId,
+        BoundUserId sellerId,
         [FromServices] ISender sender,
         CancellationToken ct,
         [FromQuery] string? status,
@@ -31,7 +30,7 @@ public static class GetSellerOrders
         [FromQuery] int pageSize = 10)
 
     {
-        var result = await sender.Send(new GetSellerOrdersQuery(sellerId, status, page, pageSize), ct);
+        var result = await sender.Send(new GetSellerOrdersQuery(sellerId.Value, status, page, pageSize), ct);
 
         return result.Match(
             data => Results.Ok(data),
