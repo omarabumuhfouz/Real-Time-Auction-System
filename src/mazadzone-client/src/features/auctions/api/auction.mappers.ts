@@ -164,7 +164,6 @@ export function convertLocalToUtcIsoString(localDateTimeStr: string): string {
  */
 export function mapCreateAuctionInputToRequest(
   input: CreateAuctionInput,
-  sellerId: string,
 ): CreateAuctionRequest {
   const addressParts = (input.shippingLocation || "Amman, Main St, 1").split(",");
   const city = addressParts[0]?.trim() || "Amman";
@@ -172,7 +171,6 @@ export function mapCreateAuctionInputToRequest(
   const building = addressParts[2]?.trim()?.replace(/Bldg\s+/i, "") || "1";
 
   return {
-    sellerId,
     shippingAddress: {
       city,
       street,
