@@ -1,8 +1,9 @@
 "use client";
-
+import { useState, useEffect, useRef } from "react";
+import { z } from "zod";
 import { Minus, Plus, MapPin, CreditCard, Home, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/utils/currency.utils";
+import { formatCurrency, formatPriceOnBlur, unformatPriceOnFocus } from "@/utils/currency.utils";
 import type { DeliveryAddress, SavedPaymentMethod } from "../../types/place-bid.types";
 
 export interface PlaceBidStepProps {
@@ -33,18 +34,161 @@ export function PlaceBidStep({
   onCancel,
 }: PlaceBidStepProps) {
   const minBid = currentBid + minIncrement;
+  const [isFocused, setIsFocused] = useState(false);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleIncrement = () => {
-    onBidAmountChange(bidAmount + minIncrement);
-  };
+  // Timers and state tracking refs to avoid stale closures in hold logic
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const bidAmountRef = useRef(bidAmount);
+  const minIncrementRef = useRef(minIncrement);
+  const minBidRef = useRef(minBid);
+  const isFocusedRef = useRef(isFocused);
 
-  const handleDecrement = () => {
-    if (bidAmount - minIncrement >= minBid) {
-      onBidAmountChange(bidAmount - minIncrement);
+  useEffect(() => {
+    bidAmountRef.current = bidAmount;
+  }, [bidAmount]);
+
+  useEffect(() => {
+    minIncrementRef.current = minIncrement;
+  }, [minIncrement]);
+
+  useEffect(() => {
+    minBidRef.current = minBid;
+  }, [minBid]);
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
+
+  // Sync state if bidAmount prop changes from external buttons (plus/minus) or initialization
+  useEffect(() => {
+    if (!isFocused) {
+      setInputValue(formatPriceOnBlur(String(bidAmount)));
+    }
+    validateBidAmount(bidAmount);
+  }, [bidAmount, isFocused]);
+
+  const validateBidAmount = (amount: number) => {
+    const bidSchema = z
+      .number()
+      .min(minBid, {
+        message: `Bid amount must be at least ${minBid.toFixed(2)} JD (Current Bid + Min. Increment)`,
+      });
+
+    const result = bidSchema.safeParse(amount);
+    if (!result.success) {
+      setValidationError(result.error.issues[0].message);
+      return false;
+    } else {
+      setValidationError(null);
+      return true;
     }
   };
 
-  const isContinueDisabled = !selectedAddress || !selectedPayment || bidAmount < minBid;
+  const handleIncrement = () => {
+    const nextAmount = Math.round(bidAmountRef.current + minIncrementRef.current);
+    onBidAmountChange(nextAmount);
+    if (isFocusedRef.current) {
+      setInputValue(nextAmount.toFixed(2));
+    } else {
+      setInputValue(formatPriceOnBlur(String(nextAmount)));
+    }
+  };
+
+  const handleDecrement = () => {
+    const nextAmount = Math.round(bidAmountRef.current - minIncrementRef.current);
+    if (nextAmount >= minBidRef.current) {
+      onBidAmountChange(nextAmount);
+      if (isFocusedRef.current) {
+        setInputValue(nextAmount.toFixed(2));
+      } else {
+        setInputValue(formatPriceOnBlur(String(nextAmount)));
+      }
+    }
+  };
+
+  const startHold = (action: "increment" | "decrement") => {
+    stopHold();
+    
+    // Fire initial action immediately
+    if (action === "increment") {
+      handleIncrement();
+    } else {
+      handleDecrement();
+    }
+
+    timerRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        if (action === "increment") {
+          handleIncrement();
+        } else {
+          handleDecrement();
+        }
+      }, 75);
+    }, 400);
+  };
+
+  const stopHold = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => stopHold();
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/[^0-9.]/g, "");
+    
+    // Prevent multiple dots
+    const parts = val.split(".");
+    if (parts.length > 2) {
+      val = parts[0] + "." + parts.slice(1).join("");
+    }
+    if (parts[1] && parts[1].length > 2) {
+      val = parts[0] + "." + parts[1].slice(0, 2);
+    }
+    
+    setInputValue(val);
+
+    const parsed = Math.round(parseFloat(val));
+    if (!isNaN(parsed)) {
+      onBidAmountChange(parsed);
+      validateBidAmount(parsed);
+    } else {
+      setValidationError("Please enter a valid bid amount");
+    }
+  };
+
+  const handleInputFocus = () => {
+    setIsFocused(true);
+    setInputValue(unformatPriceOnFocus(inputValue));
+  };
+
+  const handleInputBlur = () => {
+    setIsFocused(false);
+    const parsed = Math.round(parseFloat(inputValue));
+    if (isNaN(parsed) || parsed < minBid) {
+      onBidAmountChange(minBid);
+      setInputValue(formatPriceOnBlur(String(minBid)));
+      setValidationError(null);
+    } else {
+      setInputValue(formatPriceOnBlur(String(parsed)));
+      onBidAmountChange(parsed);
+      validateBidAmount(parsed);
+    }
+  };
+
+  const isContinueDisabled = !selectedAddress || !selectedPayment || bidAmount < minBid || !!validationError;
 
   return (
     <div className="space-y-6 text-left">
@@ -80,7 +224,14 @@ export function PlaceBidStep({
         <div className="flex items-center gap-3 w-full">
           <button
             type="button"
-            onClick={handleDecrement}
+            onMouseDown={() => startHold("decrement")}
+            onMouseUp={stopHold}
+            onMouseLeave={stopHold}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              startHold("decrement");
+            }}
+            onTouchEnd={stopHold}
             disabled={bidAmount <= minBid}
             className="h-12 w-12 rounded-xl border border-border flex items-center justify-center bg-muted/10 hover:bg-muted active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer text-foreground font-bold"
             aria-label="Decrease bid"
@@ -88,23 +239,40 @@ export function PlaceBidStep({
             <Minus className="h-5 w-5 stroke-[2.5]" />
           </button>
           
-          <div className="flex-1 h-12 bg-muted/5 border border-border rounded-xl flex items-center justify-center font-bold text-2xl text-foreground select-none">
-            {formatCurrency(bidAmount)}
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              className="h-12 w-full bg-input-background border border-border rounded-xl text-center font-bold text-2xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary pl-8 pr-4"
+            />
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground pointer-events-none">
+              JD
+            </span>
           </div>
 
           <button
             type="button"
-            onClick={handleIncrement}
+            onMouseDown={() => startHold("increment")}
+            onMouseUp={stopHold}
+            onMouseLeave={stopHold}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              startHold("increment");
+            }}
+            onTouchEnd={stopHold}
             className="h-12 w-12 rounded-xl border border-border flex items-center justify-center bg-muted/10 hover:bg-muted active:scale-95 transition-all cursor-pointer text-primary hover:text-primary/80 font-bold"
             aria-label="Increase bid"
           >
             <Plus className="h-5 w-5 stroke-[2.5]" />
           </button>
         </div>
-        {bidAmount < minBid && (
-          <p className="text-xs text-red-500 font-semibold flex items-center justify-center gap-1 mt-1">
+        {validationError && (
+          <p className="text-xs text-red-500 font-bold flex items-center justify-center gap-1 mt-1 animate-fade-in">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            Minimum bid required is {formatCurrency(minBid)}
+            {validationError}
           </p>
         )}
       </div>
