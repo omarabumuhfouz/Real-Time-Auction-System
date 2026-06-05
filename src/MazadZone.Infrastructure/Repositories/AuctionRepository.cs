@@ -21,14 +21,14 @@ public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctio
         return await _context.Set<Auction>()
             .Include(a => a.Item)
             .Include(a => a.Bids)
-            .FirstOrDefaultAsync(x => x.Id.Value == id.Value, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public async Task<Auction?> GetByIdWithBidsAsync(AuctionId id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<Auction>()
             .Include(a => a.Bids)
-            .FirstOrDefaultAsync(x => x.Id.Value == id.Value, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public async Task<int> CancelAllActiveBySellerIdAsync(
@@ -37,7 +37,7 @@ public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctio
         CancellationToken ct)
     {
         return await _context.Auctions
-        .Where(a => a.SellerId.Value == sellerId && a.Status == AuctionStatus.Active)
+        .Where(a => a.SellerId == UserId.Load(sellerId) && a.Status == AuctionStatus.Active)
         .ExecuteUpdateAsync(s => s
             .SetProperty(a => a.Status, AuctionStatus.Cancelled),
         // .SetProperty(a => a.CancellationReason, reason)
@@ -71,9 +71,9 @@ public class AuctionRepository :  GenericRepository<Auction, AuctionId>, IAuctio
         CancellationToken cancellationToken = default)
     {
         return await _context.Set<Auction>()
-            .Where(a => a.Id.Value == auctionId.Value)
+            .Where(a => a.Id == auctionId)
             .SelectMany(a => a.Bids)
-            .AnyAsync(b => b.BidderId.Value == bidderId.Value && b.Id.Value != excludeBidId.Value, cancellationToken);
+            .AnyAsync(b => b.BidderId == bidderId && b.Id != excludeBidId, cancellationToken);
     }
 
 

@@ -32,7 +32,9 @@ export function MetricStrip({
         "grid auto-rows-fr border border-border rounded-xl bg-card overflow-hidden",
         items.length <= 4
           ? "grid-cols-2 md:grid-cols-4"
-          : "grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
+          : items.length === 5
+            ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
+            : "grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
         className,
       )}
     >
@@ -50,11 +52,15 @@ export function MetricStrip({
               // Remove bottom border on last row
               items.length <= 4
                 ? "[&:nth-last-child(-n+4)]:border-b-0 md:[&:nth-last-child(-n+4)]:border-b-0"
-                : "[&:nth-last-child(-n+2)]:border-b-0 md:[&:nth-last-child(-n+3)]:border-b-0 xl:[&:nth-last-child(-n+6)]:border-b-0",
+                : items.length === 5
+                  ? "[&:nth-last-child(-n+2)]:border-b-0 md:[&:nth-last-child(-n+2)]:border-b-0 xl:[&:nth-last-child(-n+5)]:border-b-0"
+                  : "[&:nth-last-child(-n+2)]:border-b-0 md:[&:nth-last-child(-n+3)]:border-b-0 xl:[&:nth-last-child(-n+6)]:border-b-0",
               // Fix right border on row ends
               items.length <= 4
                 ? "even:border-r-0 md:[&:nth-child(4n)]:border-r-0 md:even:border-r"
-                : "even:border-r-0 md:[&:nth-child(3n)]:border-r-0 md:even:border-r xl:[&:nth-child(3n)]:border-r xl:[&:nth-child(6n)]:border-r-0",
+                : items.length === 5
+                  ? "even:border-r-0 md:[&:nth-child(3n)]:border-r-0 md:even:border-r xl:[&:nth-child(3n)]:border-r xl:[&:nth-child(5n)]:border-r-0"
+                  : "even:border-r-0 md:[&:nth-child(3n)]:border-r-0 md:even:border-r xl:[&:nth-child(3n)]:border-r xl:[&:nth-child(6n)]:border-r-0",
             )}
           >
             <div className="flex items-center justify-between gap-2">
@@ -115,7 +121,9 @@ function MetricStripSkeleton({
         "grid auto-rows-fr border border-border rounded-xl bg-card overflow-hidden",
         count <= 4
           ? "grid-cols-2 md:grid-cols-4"
-          : "grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
+          : count === 5
+            ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
+            : "grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
         className,
       )}
     >

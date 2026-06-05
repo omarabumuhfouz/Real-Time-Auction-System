@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { FilterBar } from "@/components/layout/filter-bar";
 import type { UseModerateUsersFilters } from "../../api";
 import type { ModerateUserRole, ModerateUserStatus } from "../../types/admin.types";
 
@@ -62,23 +63,24 @@ export function ModerateUsersFilters({
   }, [localSearch, filters.search, onFilterChange]);
 
   return (
-    <div className="bg-card text-card-foreground border border-border rounded-xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
-
-      {/* Left side: Search and Selects */}
-      <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-        {/* Search */}
-        <div className="relative w-full md:w-80 lg:w-96">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-black/70" />
-          <Input
-            type="text"
-            placeholder="Search users by name or email..."
-            className="pl-9 h-9 w-full text-xs bg-white text-black border-transparent placeholder:text-black/50 focus-visible:ring-foreground/20 shadow-sm"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-          />
+    <FilterBar
+      search={
+        <div className="flex flex-col gap-1.5 w-full">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Search</span>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-black/70" />
+            <Input
+              type="text"
+              placeholder="Search users by name or email..."
+              className="pl-9 h-9 w-full text-xs bg-white text-black border-transparent placeholder:text-black/50 focus-visible:ring-foreground/20 shadow-sm"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+            />
+          </div>
         </div>
-
-        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+      }
+      filters={
+        <>
           {/* Role */}
           <div className="flex flex-col gap-1.5 min-w-[120px]">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Role</span>
@@ -86,7 +88,7 @@ export function ModerateUsersFilters({
               value={filters.role}
               onValueChange={(val) => onFilterChange({ role: val as ModerateUserRole | "All Roles", page: 1 })}
             >
-              <SelectTrigger className="cursor-pointer">
+              <SelectTrigger className="cursor-pointer h-9 w-full text-xs rounded-lg">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
@@ -105,7 +107,7 @@ export function ModerateUsersFilters({
               value={filters.status}
               onValueChange={(val) => onFilterChange({ status: val as ModerateUserStatus | "All Statuses", page: 1 })}
             >
-              <SelectTrigger className="cursor-pointer">
+              <SelectTrigger className="cursor-pointer h-9 w-full text-xs rounded-lg">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -124,7 +126,7 @@ export function ModerateUsersFilters({
               value={filters.sortBy}
               onValueChange={(val) => onFilterChange({ sortBy: val, page: 1 })}
             >
-              <SelectTrigger className="cursor-pointer">
+              <SelectTrigger className="cursor-pointer h-9 w-full text-xs rounded-lg">
                 <SelectValue placeholder="Date Joined" />
               </SelectTrigger>
               <SelectContent>
@@ -140,52 +142,52 @@ export function ModerateUsersFilters({
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Joined Date</span>
             <Input
               type="date"
-              className="h-9 text-xs bg-background border-border text-muted-foreground"
+              className="h-9 text-xs bg-white text-black border-border"
               placeholder="Select date"
             />
           </div>
-        </div>
-      </div>
+        </>
+      }
+      actions={
+        <>
+          <Button
+            variant="outline"
+            className="h-9 px-4 text-xs font-semibold gap-2 border-border shadow-xs"
+            onClick={onExport}
+            disabled={isExporting}
+          >
+            {isExporting ? <Spinner size="sm" className="text-foreground" /> : <Download className="h-3.5 w-3.5" />}
+            Export All
+          </Button>
 
-      {/* Right side: Actions */}
-      <div className="flex items-center gap-3 self-end md:self-auto w-full md:w-auto justify-end mt-2 md:mt-0 pt-2 md:pt-0">
-        <Button
-          variant="outline"
-          className="h-9 px-4 text-xs font-semibold gap-2 border-border shadow-xs"
-          onClick={onExport}
-          disabled={isExporting}
-        >
-          {isExporting ? <Spinner size="sm" className="text-foreground" /> : <Download className="h-3.5 w-3.5" />}
-          Export All
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              className="h-9 px-4 text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-colors"
-              disabled={!hasSelection}
-            >
-              Bulk Actions {hasSelection && `(${selectedIds.length})`}
-              <ChevronDown className="h-3.5 w-3.5 opacity-80" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card text-foreground border-border" sideOffset={5}>
-            <DropdownMenuItem className="text-xs cursor-pointer text-success-foreground" onClick={onBulkActivate}>
-              Activate Selected
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs cursor-pointer text-muted-foreground" onClick={onBulkSuspend}>
-              Suspend Selected
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs text-destructive focus:text-destructive cursor-pointer" onClick={onBulkBan}>
-              Ban Selected
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs font-semibold cursor-pointer border-t border-border mt-1 pt-1" onClick={onExport}>
-              Export Selected
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="h-9 px-4 text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs transition-colors"
+                disabled={!hasSelection}
+              >
+                Bulk Actions {hasSelection && `(${selectedIds.length})`}
+                <ChevronDown className="h-3.5 w-3.5 opacity-80" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-card text-foreground border-border" sideOffset={5}>
+              <DropdownMenuItem className="text-xs cursor-pointer text-success-foreground" onClick={onBulkActivate}>
+                Activate Selected
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs cursor-pointer text-muted-foreground" onClick={onBulkSuspend}>
+                Suspend Selected
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs text-destructive focus:text-destructive cursor-pointer" onClick={onBulkBan}>
+                Ban Selected
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs font-semibold cursor-pointer border-t border-border mt-1 pt-1" onClick={onExport}>
+                Export Selected
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      }
+    />
   );
 }
 

@@ -92,9 +92,39 @@ public class VerifyIdentityCommandHandler : ICommandHandler<VerifyIdentityComman
             return Result.Failure<Unit>(Error.Validation("Identity.InvalidNationalIdFormat", reason));
         }
 
-        // Update bidder verification status to Verified using strictly the extracted name
-        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName :
-                                !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName : 
+        // Verify name matches entered name case-insensitively
+        var enteredFullName = user.FullName.GetDisplayName();
+        var cleanedEntered = Regex.Replace(enteredFullName ?? "", @"\s+", " ").Trim();
+        var cleanedExtractedEng = Regex.Replace(extractionResult.EnglishFullName ?? "", @"\s+", " ").Trim();
+        var cleanedExtractedAr = Regex.Replace(extractionResult.ArabicFullName ?? "", @"\s+", " ").Trim();
+
+        bool nameMatches = false;
+        if (!string.IsNullOrEmpty(cleanedExtractedEng) && 
+            string.Equals(cleanedExtractedEng, cleanedEntered, StringComparison.OrdinalIgnoreCase))
+        {
+            nameMatches = true;
+        }
+        else if (!string.IsNullOrEmpty(cleanedExtractedAr) && 
+                 string.Equals(cleanedExtractedAr, cleanedEntered, StringComparison.OrdinalIgnoreCase))
+        {
+            nameMatches = true;
+        }
+
+        if (!nameMatches)
+        {
+            var reason = $"The name on the identity card does not match your profile name: '{enteredFullName}'.";
+            VerifyIdentityLogs.LogRejected(_logger, request.UserId, reason);
+            
+            bidder.RejectVerification(reason);
+            _bidderRepository.Update(bidder);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            
+            return Result.Failure<Unit>(Error.Validation("Identity.NameMismatch", reason));
+        }
+
+        // Update bidder verification status to Verified using strictly the extracted name (preferring English first)
+        var extractedFullName = !string.IsNullOrWhiteSpace(extractionResult.EnglishFullName) ? extractionResult.EnglishFullName :
+                                !string.IsNullOrWhiteSpace(extractionResult.ArabicFullName) ? extractionResult.ArabicFullName : 
                                 "Unknown (OCR Failed to read name)";
         bidder.ApproveVerification(extractionResult.NationalId, extractedFullName);
         _bidderRepository.Update(bidder);

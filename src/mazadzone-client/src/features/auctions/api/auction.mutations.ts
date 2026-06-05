@@ -31,8 +31,7 @@ export function useCreateAuction() {
 
   return useMutation<string, ApiError, CreateAuctionInput>({
     mutationFn: async (input: CreateAuctionInput) => {
-      const sellerId = user?.id || "seller-id-placeholder";
-      const requestDto = mapCreateAuctionInputToRequest(input, sellerId);
+      const requestDto = mapCreateAuctionInputToRequest(input);
       console.log("Create Auction Request DTO payload being sent to API:", requestDto);
       return createAuction(requestDto);
     },

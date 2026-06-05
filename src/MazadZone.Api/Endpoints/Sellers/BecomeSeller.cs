@@ -1,5 +1,6 @@
 using MazadZone.Application.Features.Authentication.DTOs;
 using MazadZone.Application.Features.Sellers.Commands.BecomeSeller;
+using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Sellers;
 
@@ -22,10 +23,17 @@ public static class BecomeSeller
 
     private static async Task<IResult> HandleAsync(
         [FromRoute] UserId id,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
+        if (id != boundUserId.Value)
+        {
+            return Results.Forbid();
+        }
+
         var result = await sender.Send(new BecomeSellerCommand(id), ct);
+
 
         return result.Match(
             value => Results.Ok(value),

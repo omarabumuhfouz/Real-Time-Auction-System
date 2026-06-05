@@ -11,7 +11,6 @@ export const notificationsApi = {
   ): Promise<NotificationResponse> => {
     const response = await api.get<NotificationsListDto>("/notifications", {
       params: { 
-        UserId: userId, 
         PageNumber: page, 
         PageSize: pageSize,
         t: Date.now(), // Prevent browser caching
@@ -50,7 +49,6 @@ export const notificationsApi = {
     // Retrieve the first page of notifications and compute count locally
     const response = await api.get<NotificationsListDto>("/notifications", {
       params: { 
-        UserId: userId, 
         PageNumber: 1, 
         PageSize: 100,
         t: Date.now(), // Prevent browser caching

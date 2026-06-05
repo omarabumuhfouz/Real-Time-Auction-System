@@ -4,6 +4,7 @@ using MazadZone.Application.Features.Notifications.Queries.GetNotifications;
 using MazadZone.Application.Features.Notifications.Queries.DTOs;
 using MazadZone.Api.Contracts.Notifications;
 using MazadZone.Api.Extensions;
+using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Notifications;
 
@@ -21,6 +22,7 @@ public static class GetNotifications
 
     private static async Task<IResult> HandleAsync(
         [AsParameters] GetNotificationsRequest request,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
@@ -31,7 +33,8 @@ public static class GetNotifications
 
         try
         {
-            var query = new GetNotificationsQuery(request.UserId, request.PageNumber, request.PageSize);
+            var query = new GetNotificationsQuery(boundUserId.Value, request.PageNumber, request.PageSize);
+
 
             var result = await sender.Send(query, cancellationToken);
 

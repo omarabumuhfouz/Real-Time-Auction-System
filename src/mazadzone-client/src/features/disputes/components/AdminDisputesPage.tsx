@@ -103,7 +103,7 @@ export function AdminDisputesPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col gap-8 w-full max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
       {/* Header section */}
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold tracking-tight text-foreground font-mono uppercase">

@@ -18,7 +18,7 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
 
     public Task<User?> GetByEmailAsync(Email email, CancellationToken ct)
     {
-        return _context.Users.FirstOrDefaultAsync(u => u.Email.Equals(email), ct);
+        return _context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
     }
 
     public Task<User?> GetByIdWithTokensAsync(UserId id, CancellationToken ct)
@@ -51,7 +51,7 @@ public class UserRepository : GenericRepository<User,UserId>, IUserRepository
 
     public Task<bool> IsEmailInUseAsync(Email email, CancellationToken ct)
     {
-        return _context.Users.AsNoTracking().AnyAsync(u => u.Email.Equals(email), ct);
+        return _context.Users.AsNoTracking().AnyAsync(u => u.Email == email, ct);
     }
 
     public async Task<bool> IsUserSellerAsync(UserId userId, CancellationToken cancellationToken)

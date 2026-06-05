@@ -18,7 +18,6 @@ export interface MyBidAuctionDto {
 }
 
 export interface GetMyBidsQueryParams {
-  bidderId: string;
   page?: number;
   pageSize?: number;
   query?: string;
@@ -29,7 +28,6 @@ export interface GetMyBidsQueryParams {
 }
 
 export interface PlaceBidRequestDto {
-  bidderId: string;
   methodId: string;
   amount: number;
 }

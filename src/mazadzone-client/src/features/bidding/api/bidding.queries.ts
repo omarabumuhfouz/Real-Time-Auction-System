@@ -40,7 +40,7 @@ export const useGetMyBids = (
   return useQuery<BidActivityResponse>({
     queryKey: biddingKeys.myBids(userId, params),
     queryFn: async () => {
-      const raw = await fetchMyBids(userId, params);
+      const raw = await fetchMyBids(params);
       return {
         items: raw.items.map(mapMyBidAuctionDtoToBidActivity),
         page: raw.pageNumber,
@@ -65,12 +65,10 @@ export const usePlaceBid = () => {
 
   return useMutation<PlaceBidResponse, Error, PlaceBidRequest>({
     mutationFn: async (request: PlaceBidRequest) => {
-      const bidderId = user?.id || "bidder-id-placeholder";
       const methodId = request.paymentMethodId || "pm-mock-1";
 
       // Call the real backend REST POST endpoint
       await placeBidApi(request.auctionId, {
-        bidderId,
         methodId,
         amount: request.bidAmount,
       });

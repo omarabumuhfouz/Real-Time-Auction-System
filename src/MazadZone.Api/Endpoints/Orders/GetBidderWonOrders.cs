@@ -1,6 +1,7 @@
 using MazadZone.Api.Constants;
 using MazadZone.Application.Common.Paging;
 using MazadZone.Application.Features.Orders.Queries.GetBidderWonOrders;
+using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Orders;
 
@@ -19,15 +20,15 @@ public static class GetBidderWonOrders
     }
 
     private static async Task<IResult> HandleAsync(
-        // BoundUserId boundUserId,
-        UserId bidderId ,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken ct,
         [FromQuery] string? status,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var result = await sender.Send(new GetBidderWonOrdersQuery(bidderId, status, page, pageSize), ct);
+        var result = await sender.Send(new GetBidderWonOrdersQuery(boundUserId.Value, status, page, pageSize), ct);
+
 
         return result.Match(
             data => Results.Ok(data),

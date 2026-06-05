@@ -17,7 +17,8 @@ public static class NotificationEndpoints
         var notificationGroup = app.MapGroup("api/v{version:apiVersion}/notifications")
                            .WithApiVersionSet(versionSet)
                            .MapToApiVersion(1, 0)
-                           .WithTags("Notifications");
+                           .WithTags("Notifications")
+                           .RequireAuthorization();
 
         Create.MapEndpoint(notificationGroup);
         GetNotifications.MapEndpoint(notificationGroup);

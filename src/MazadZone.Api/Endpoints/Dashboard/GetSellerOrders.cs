@@ -22,8 +22,7 @@ public static class GetSellerOrders
     }
 
     private static async Task<IResult> HandleAsync(
-        //  BoundUserId sellerId,
-        UserId sellerId,
+        BoundUserId sellerId,
         [FromServices] ISender sender,
         CancellationToken ct,
         [FromQuery] string? status,
@@ -31,7 +30,7 @@ public static class GetSellerOrders
         [FromQuery] int pageSize = 10)
 
     {
-        var result = await sender.Send(new GetSellerOrdersQuery(sellerId, status, page, pageSize), ct);
+        var result = await sender.Send(new GetSellerOrdersQuery(sellerId.Value, status, page, pageSize), ct);
 
         return result.Match(
             data => Results.Ok(data),
