@@ -15,7 +15,6 @@ const MY_BIDS_SORT_BY = "CreationDate";
  * Fetches the user's active/ended bid activities.
  */
 export async function fetchMyBids(
-  bidderId: string,
   params: {
     filter?: string;
     sortBy?: string;
@@ -27,7 +26,6 @@ export async function fetchMyBids(
     "/bidders/my-bids",
     {
       params: {
-        bidderId,
         page: params.page ?? 1,
         pageSize: params.pageSize ?? 5,
         tab: params.filter === "All" ? undefined : params.filter,

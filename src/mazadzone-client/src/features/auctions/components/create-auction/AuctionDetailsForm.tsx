@@ -12,6 +12,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -25,41 +26,7 @@ import { useGetCategoryTree } from "../../api/auction.queries";
 import { useGetProfileSettings } from "@/features/profile/api/profile.queries";
 import { useAuthStore } from "@/stores/auth.store";
 
-// Formats a standard float string to dot-separated thousands and decimal (e.g., "111111111.00" -> "111.111.111.00")
-const formatPriceOnBlur = (val: string): string => {
-  if (!val) return "";
-  
-  // Clean all non-digit and non-dot characters
-  const cleanVal = val.replace(/[^0-9.]/g, "");
-  
-  let [integerPart, decimalPart] = cleanVal.split(".");
-  
-  // Format integer part with dots every 3 digits
-  integerPart = integerPart.replace(/\D/g, "");
-  if (!integerPart) integerPart = "0";
-  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  
-  // Format decimal part to exactly 2 digits
-  if (decimalPart === undefined) {
-    decimalPart = "00";
-  } else {
-    decimalPart = decimalPart.replace(/\D/g, "").slice(0, 2).padEnd(2, "0");
-  }
-  
-  return `${formattedInteger}.${decimalPart}`;
-};
-
-// Strips the thousand-separator dots so the user can edit the value cleanly (e.g., "111.111.111.00" -> "111111111.00")
-const unformatPriceOnFocus = (val: string): string => {
-  if (!val) return "";
-  const parts = val.split(".");
-  if (parts.length <= 1) return val;
-  
-  const integerPart = parts.slice(0, -1).join("");
-  const decimalPart = parts[parts.length - 1];
-  
-  return `${integerPart}.${decimalPart}`;
-};
+import { formatPriceOnBlur, unformatPriceOnFocus } from "@/utils/currency.utils";
 
 export function AuctionDetailsForm() {
   const router = useRouter();
@@ -79,37 +46,22 @@ export function AuctionDetailsForm() {
   const { user } = useAuthStore();
   const { data: profileSettings } = useGetProfileSettings(user?.id || "");
 
-  // Format primary address safely
-  const primaryAddressStr = profileSettings
+  const primaryAddressStr = (profileSettings
     ? [profileSettings.city, profileSettings.street, profileSettings.building ? `Bldg ${profileSettings.building}` : ""]
         .filter(Boolean)
         .join(", ")
-    : "Amman, Jordan";
-
-  const defaultAddresses = [
-    { id: "addr_1", label: `Primary: ${primaryAddressStr} (Registered)`, value: primaryAddressStr },
-    { id: "custom", label: "+ Add Custom Shipping Location", value: "custom" }
-  ];
+    : "").trim() || "Amman, Jordan";
 
   // Initialize/Sync default shipping location
   useEffect(() => {
     if (primaryAddressStr) {
-      setValue("shippingLocation", primaryAddressStr);
+      setValue("shippingLocation", primaryAddressStr, { shouldValidate: true });
     }
   }, [primaryAddressStr, setValue]);
 
-  // Sync address selection or navigate to profile editing
-  const handleAddressSelectChange = (val: string) => {
-    if (val === "custom") {
-      router.push(ROUTES.PROFILE.EDIT);
-    } else {
-      setValue("shippingLocation", val, { shouldValidate: true });
-    }
-  };
-
   // 3. Find selected category's subcategories
   const currentCategoryNode = categoryTree?.find((c) => c.id === selectedCategory);
-  const subCategoriesList = currentCategoryNode?.subCategories || currentCategoryNode?.subcategories || [];
+  const subCategoriesList = currentCategoryNode?.subCategories || currentCategoryNode?.subcategories || currentCategoryNode?.children || [];
   const hasSubcategories = subCategoriesList.length > 0;
 
   // Sync subcategory resetting if category changes
@@ -370,27 +322,38 @@ export function AuctionDetailsForm() {
         </div>
       </div>
 
-      {/* Shipping Location Address Selector */}
+      {/* Shipping Location Address */}
       <div className="space-y-4 text-left">
         <div className="space-y-2">
-          <Label htmlFor="shippingAddressSelect" className="text-base font-bold text-foreground flex items-center gap-1">
+          <Label htmlFor="shippingLocation" className="text-base font-bold text-foreground flex items-center gap-1">
             Shipping Location <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
-            <Select onValueChange={handleAddressSelectChange} defaultValue={defaultAddresses[0]?.value}>
-              <SelectTrigger className="w-full bg-input-background font-semibold h-12 text-base rounded-xl pl-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card">
-                {defaultAddresses.map((addr) => (
-                  <SelectItem key={addr.id} value={addr.value}>
-                    {addr.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              id="shippingLocation"
+              type="text"
+              readOnly
+              value={primaryAddressStr}
+              placeholder="Retrieving your registered address..."
+              className="h-12 rounded-xl border border-input bg-muted/65 text-muted-foreground pl-11 focus-visible:ring-0 focus-visible:outline-none w-full cursor-not-allowed select-none font-medium"
+            />
             <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none stroke-[2.2]" />
           </div>
+        </div>
+
+        {/* Note for the seller */}
+        <div className="text-xs text-muted-foreground bg-muted/30 border border-border p-3.5 rounded-xl flex flex-col gap-2">
+          <span className="font-semibold text-foreground">Note for Sellers:</span>
+          <span>Your shipping location is automatically set to your registered primary address. If you wish to change your shipping location, you must update your address in your profile settings.</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-fit font-bold text-xs mt-0.5 cursor-pointer"
+            onClick={() => router.push(ROUTES.PROFILE.VIEW)}
+          >
+            Edit Address in Profile Settings
+          </Button>
         </div>
         
         {errors.shippingLocation && (

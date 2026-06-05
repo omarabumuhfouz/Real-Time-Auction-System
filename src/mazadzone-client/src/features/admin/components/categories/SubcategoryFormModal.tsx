@@ -19,12 +19,13 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { Subcategory } from "../../types/category.types";
 import { useCreateSubcategory, useUpdateSubcategory } from "../../api";
+import { useAppToast } from "@/lib/toast/app-toast";
 
 const subcategorySchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, { message: "Name must be at least 2 characters long." })
+    .min(3, { message: "Name must be at least 3 characters long." })
     .max(50, { message: "Name cannot exceed 50 characters." }),
   slug: z
     .string()
@@ -37,8 +38,8 @@ const subcategorySchema = z.object({
   description: z
     .string()
     .trim()
-    .max(250, { message: "Description cannot exceed 250 characters." })
-    .optional(),
+    .min(1, { message: "Description is required." })
+    .max(250, { message: "Description cannot exceed 250 characters." }),
   isActive: z.boolean(),
 });
 
@@ -59,6 +60,7 @@ export function SubcategoryFormModal({
 }: SubcategoryFormModalProps) {
   const createMutation = useCreateSubcategory();
   const updateMutation = useUpdateSubcategory();
+  const appToast = useAppToast();
   const isEdit = !!subcategory;
 
   const {
@@ -123,15 +125,18 @@ export function SubcategoryFormModal({
           id: subcategory.id,
           data: values,
         });
+        appToast.success("Subcategory Updated", "Subcategory has been updated successfully.");
       } else {
         await createMutation.mutateAsync({
           ...values,
           parentCategoryId,
         });
+        appToast.success("Subcategory Created", "New subcategory has been created successfully.");
       }
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save subcategory:", err);
+      appToast.fromApiError(err, "Failed to save subcategory. Please try again.");
     }
   };
 
@@ -191,7 +196,7 @@ export function SubcategoryFormModal({
           {/* Description Field */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="sub-description" className="text-sm font-bold text-foreground">
-              Description
+              Description <span className="text-destructive">*</span>
             </Label>
             <textarea
               id="sub-description"

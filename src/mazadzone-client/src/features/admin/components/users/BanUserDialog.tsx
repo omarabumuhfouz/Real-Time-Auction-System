@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,6 +40,7 @@ export function BanUserDialog({
   user,
 }: BanUserDialogProps) {
   const banMutation = useBanUser();
+  const submitLockRef = useRef(false);
 
   const {
     register,
@@ -67,6 +68,10 @@ export function BanUserDialog({
   if (!user) return null;
 
   const handleFormSubmit = async (values: BanFormValues) => {
+    if (banMutation.isPending || submitLockRef.current) return;
+
+    submitLockRef.current = true;
+
     try {
       await banMutation.mutateAsync({
         userId: user.id,
@@ -75,6 +80,8 @@ export function BanUserDialog({
       onClose();
     } catch (err) {
       console.error(`Failed to ban user ${user.id}:`, err);
+    } finally {
+      submitLockRef.current = false;
     }
   };
 

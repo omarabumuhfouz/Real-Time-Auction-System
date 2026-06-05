@@ -6,16 +6,15 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
-  PlusCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { ROUTES } from "@/config/routes.config";
-import { useAuthStore } from "@/stores/auth.store";
 import { useRequireRole } from "@/hooks/use-require-role";
 import { AppAlert } from "@/components/feedback/app-alert";
 import { useAppToast } from "@/lib/toast/app-toast";
+import type { ApiError } from "@/types/api.types";
 
 import { useCreateAuction } from "../../api/auction.mutations";
 import { AuctionCategory, AuctionSubcategory, AuctionCondition } from "../../types/auction.types";
@@ -38,7 +37,6 @@ interface ImagePreview {
 
 export function CreateAuctionPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
   const { mutateAsync: createAuction, isPending } = useCreateAuction();
   const appToast = useAppToast();
 
@@ -52,25 +50,6 @@ export function CreateAuctionPage() {
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  // Hardcode user override so the developer can always test it as a logged-in Seller!
-  const effectiveUser = user || {
-    id: "usr_mock_123",
-    fullName: "Graduation Project Tester",
-    email: "tester@mazadzone.com",
-    role: "seller"
-  };
-
-  if (isAuthLoading || !isAuthorized) {
-    return (
-      <PageWrapper className="flex items-center justify-center min-h-[70vh]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground font-semibold">Verifying credentials...</p>
-        </div>
-      </PageWrapper>
-    );
-  }
 
   const methods = useForm<CreateAuctionFormValues>({
     resolver: zodResolver(createAuctionSchema),
@@ -104,6 +83,17 @@ export function CreateAuctionPage() {
       imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
     };
   }, [imagePreviews]);
+
+  if (isAuthLoading || !isAuthorized) {
+    return (
+      <PageWrapper className="flex items-center justify-center min-h-[70vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground font-semibold">Verifying credentials...</p>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   // Handler for adding files
   const handleFilesSelected = (files: FileList) => {
@@ -147,7 +137,7 @@ export function CreateAuctionPage() {
       const cleanStr = dateTimeStr.trim();
       const parts = cleanStr.split(/[T ]/);
       const datePart = parts[0].replace(/-/g, "/"); // Convert to yyyy/mm/dd
-      let timePart = parts[1] || "00:00";
+      const timePart = parts[1] || "00:00";
       
       const hasPm = /pm/i.test(cleanStr);
       const hasAm = /am/i.test(cleanStr);
@@ -176,9 +166,7 @@ export function CreateAuctionPage() {
 
     try {
       // 1. Generate a unique folder ID for the auction images
-      auctionFolderId = typeof crypto?.randomUUID === "function" 
-        ? crypto.randomUUID() 
-        : Math.random().toString(36).substring(2, 15);
+      auctionFolderId = crypto.randomUUID();
 
       // 2. Upload the images to our dynamic Route Handler
       const uploadFormData = new FormData();
@@ -228,7 +216,8 @@ export function CreateAuctionPage() {
       setTimeout(() => {
         router.push(ROUTES.SELLER.AUCTIONS);
       }, 1500);
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Partial<ApiError>;
       console.error("Auction creation failed:", {
         message: err.message,
         statusCode: err.statusCode,

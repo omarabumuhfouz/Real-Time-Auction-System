@@ -12,9 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   useGetAddresses,
-  useCreateAddress,
   useUpdateAddress,
-  useDeleteAddress,
   useGetProfile,
 } from "../api/profile.queries";
 import type { Address } from "../types/profile.types";
@@ -23,42 +21,14 @@ export function AddressBook() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState<Address | null>(null);
 
-  // States for Delete Confirmation Modal
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [addressToDeleteId, setAddressToDeleteId] = useState<string | null>(null);
-
   const { data: profile } = useGetProfile();
 
   const { data: addresses = [], isLoading, isError, refetch } = useGetAddresses();
-  const createMutation = useCreateAddress();
   const updateMutation = useUpdateAddress();
-  const deleteMutation = useDeleteAddress();
-
-  const handleAddClick = () => {
-    setAddressToEdit(null);
-    setIsDialogOpen(true);
-  };
 
   const handleEditClick = (address: Address) => {
     setAddressToEdit(address);
     setIsDialogOpen(true);
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setAddressToDeleteId(id);
-    setIsDeleteConfirmOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!addressToDeleteId) return;
-    try {
-      await deleteMutation.mutateAsync(addressToDeleteId);
-    } catch (err) {
-      console.error("Failed to delete address:", err);
-    } finally {
-      setIsDeleteConfirmOpen(false);
-      setAddressToDeleteId(null);
-    }
   };
 
   const handleDialogClose = () => {
@@ -73,8 +43,6 @@ export function AddressBook() {
           id: addressToEdit.id,
           updates: values,
         });
-      } else {
-        await createMutation.mutateAsync(values);
       }
       handleDialogClose();
     } catch (err) {
@@ -98,20 +66,13 @@ export function AddressBook() {
     );
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = updateMutation.isPending;
 
   return (
     <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
       {/* Header Row */}
       <div className="flex items-center justify-between border-b border-border/60 pb-5 mb-6">
         <h2 className="text-xl font-bold text-foreground">Address Book</h2>
-        <Button
-          type="button"
-          onClick={handleAddClick}
-          className="font-semibold px-4 py-2 h-auto text-sm cursor-pointer shadow-xs"
-        >
-          Add New Address
-        </Button>
       </div>
 
       {/* Address List */}
@@ -123,15 +84,7 @@ export function AddressBook() {
       ) : addresses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground border border-dashed border-border rounded-lg bg-muted/10">
           <MapPin className="size-8 text-muted-foreground/50 mb-2" />
-          <p className="text-sm font-medium">No addresses saved yet.</p>
-          <Button
-            type="button"
-            onClick={handleAddClick}
-            variant="link"
-            className="mt-2 text-xs font-bold text-primary hover:underline cursor-pointer h-auto p-0"
-          >
-            Add your first address
-          </Button>
+          <p className="text-sm font-medium">No registered address found.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -182,22 +135,13 @@ export function AddressBook() {
                   <Pencil className="size-3.5" />
                   <span>Edit</span>
                 </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleDeleteClick(address.id)}
-                  variant="outline"
-                  className="gap-1.5 px-3 py-1.5 h-auto text-xs font-bold text-destructive hover:bg-destructive/5 hover:border-destructive/20"
-                >
-                  <Trash2 className="size-3.5" />
-                  <span>Delete</span>
-                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Address Edit/Create Modal */}
+      {/* Address Edit Modal */}
       <AddressDialog
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
@@ -205,45 +149,6 @@ export function AddressBook() {
         onSubmit={handleDialogSubmit}
         isPending={isPending}
       />
-
-      {/* Delete Confirmation Modal */}
-      <Dialog
-        open={isDeleteConfirmOpen}
-        onOpenChange={(open) => !open && setIsDeleteConfirmOpen(false)}
-      >
-        <DialogContent className="max-w-md bg-card border-border p-6 shadow-lg rounded-xl gap-0">
-          <DialogHeader className="border-b border-border pb-4 mb-4">
-            <DialogTitle className="text-lg font-bold text-foreground">
-              Delete Address
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <p className="text-sm text-muted-foreground">
-              Are you sure you want to delete this address? This action cannot be undone.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 mt-6">
-            <Button
-              type="button"
-              onClick={handleConfirmDelete}
-              disabled={deleteMutation.isPending}
-              className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold px-4 py-2.5 h-auto text-sm cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              {deleteMutation.isPending && <Loader2 className="size-4 animate-spin" />}
-              Delete
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setIsDeleteConfirmOpen(false)}
-              disabled={deleteMutation.isPending}
-              variant="outline"
-              className="flex-1 font-semibold px-4 py-2.5 h-auto text-sm cursor-pointer"
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

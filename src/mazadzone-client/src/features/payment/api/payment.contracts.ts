@@ -15,6 +15,6 @@ export interface AddPaymentMethodResponse {
   expiryYear: number;
   cardholderName: string;
   brand: number;
-  gatewayToken: string;
   isDefault: boolean;
+  createdOnUtc: string;
 }

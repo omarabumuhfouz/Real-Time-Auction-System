@@ -3,9 +3,7 @@ import {
   fetchUserProfile,
   updateUserProfile,
   fetchAddresses,
-  createAddress,
   updateAddress,
-  removeAddress,
   changePassword,
   fetchProfileSettings,
 } from "./profile.api";
@@ -65,20 +63,6 @@ export function useGetAddresses() {
 }
 
 /**
- * Mutation to add a new address.
- */
-export function useCreateAddress() {
-  const queryClient = useQueryClient();
-
-  return useMutation<Address, Error, Omit<Address, "id">>({
-    mutationFn: createAddress,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: profileKeys.addresses() });
-    },
-  });
-}
-
-/**
  * Mutation to modify an existing address.
  */
 export function useUpdateAddress() {
@@ -86,20 +70,6 @@ export function useUpdateAddress() {
 
   return useMutation<Address, Error, { id: string; updates: Partial<Address> }>({
     mutationFn: ({ id, updates }) => updateAddress(id, updates),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: profileKeys.addresses() });
-    },
-  });
-}
-
-/**
- * Mutation to delete an address.
- */
-export function useDeleteAddress() {
-  const queryClient = useQueryClient();
-
-  return useMutation<void, Error, string>({
-    mutationFn: removeAddress,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: profileKeys.addresses() });
     },

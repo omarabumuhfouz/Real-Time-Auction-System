@@ -4,7 +4,7 @@
  */
 
 import type { UserProfile, Address } from "../types/profile.types";
-import type { BidderProfileDto } from "./profile.contracts";
+import type { BidderProfileDto, ProfileSettingsDto } from "./profile.contracts";
 
 /**
  * Maps a backend BidderProfileDto to a presentation UserProfile ViewModel.
@@ -36,3 +36,19 @@ export function mapBidderProfileToDefaultAddress(dto: BidderProfileDto): Address
     isDefault: true,
   };
 }
+
+/**
+ * Maps a backend profile settings' primary address to the standard Address ViewModel.
+ */
+export function mapProfileSettingsToDefaultAddress(dto: ProfileSettingsDto): Address {
+  return {
+    id: "primary",
+    title: "Primary Address",
+    streetAddress: dto.street || "Street",
+    building: dto.building || "1",
+    landmark: dto.landmark || undefined,
+    city: dto.city || "Amman",
+    isDefault: true,
+  };
+}
+

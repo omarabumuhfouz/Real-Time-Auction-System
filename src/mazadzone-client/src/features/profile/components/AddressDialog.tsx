@@ -89,7 +89,7 @@ export function AddressDialog({
       <DialogContent className="max-w-md bg-card border-border p-6 shadow-lg rounded-xl gap-0">
         <DialogHeader className="border-b border-border pb-4 mb-5">
           <DialogTitle className="text-xl font-bold text-foreground">
-            {isEditing ? "Edit Address" : "Add New Address"}
+            Edit Address
           </DialogTitle>
         </DialogHeader>
 
@@ -145,7 +145,7 @@ export function AddressDialog({
               className="flex-1 font-semibold px-4 py-2.5 h-auto text-sm cursor-pointer flex items-center justify-center gap-1.5"
             >
               {isPending && <Loader2 className="size-4 animate-spin" />}
-              {isEditing ? "Edit Address" : "Add Address"}
+              Save Changes
             </Button>
             <Button
               type="button"

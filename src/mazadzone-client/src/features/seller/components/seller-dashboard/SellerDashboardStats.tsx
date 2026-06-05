@@ -1,13 +1,12 @@
 "use client";
 
-import { Gavel, Clock, ShoppingBag, Box, DollarSign, Percent } from "lucide-react";
+import { Gavel, Clock, ShoppingBag, DollarSign, Percent } from "lucide-react";
 import { MetricStrip, type MetricStripItem } from "@/components/ui/metric-strip";
 
 interface SellerDashboardStatsProps {
   activeAuctions: number;
   pending: number;
   soldItems: number;
-  totalOrders: number;
   grossRevenue: number;
   netProfit: number;
   isLoading?: boolean;
@@ -17,7 +16,6 @@ export function SellerDashboardStats({
   activeAuctions,
   pending,
   soldItems,
-  totalOrders,
   grossRevenue,
   netProfit,
   isLoading = false,
@@ -52,13 +50,7 @@ export function SellerDashboardStats({
       icon: ShoppingBag,
       iconClassName: "text-blue-500",
     },
-    {
-      label: "Total Orders",
-      value: formatValue(totalOrders),
-      subtext: "All orders",
-      icon: Box,
-      iconClassName: "text-purple-500",
-    },
+
     {
       label: "Gross Revenue",
       value: formatValue(grossRevenue, true),

@@ -4,7 +4,6 @@ export {
   useGetProfile,
   useUpdateProfile,
   useGetAddresses,
-  useCreateAddress,
   useChangePassword,
   useGetProfileSettings,
 } from "./api";

@@ -42,7 +42,6 @@ export const useGetMyOrders = (
     queryKey: orderKeys.list({ userId, ...params }),
     queryFn: async () => {
       const raw = await searchOrders({
-        UserId: userId,
         Status: params.filter === "All" ? undefined : params.filter,
         PageSize: params.pageSize ?? 5,
         PageNumber: params.page ?? 1,
