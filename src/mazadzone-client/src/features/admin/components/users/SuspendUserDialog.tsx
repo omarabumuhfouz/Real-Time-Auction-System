@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -52,6 +52,7 @@ export function SuspendUserDialog({
   user,
 }: SuspendUserDialogProps) {
   const suspendMutation = useSuspendUser();
+  const submitLockRef = useRef(false);
 
   const {
     register,
@@ -81,6 +82,10 @@ export function SuspendUserDialog({
   if (!user) return null;
 
   const handleFormSubmit = async (values: SuspendFormValues) => {
+    if (suspendMutation.isPending || submitLockRef.current) return;
+
+    submitLockRef.current = true;
+
     try {
       const formattedUntil = values.until ? new Date(values.until).toISOString() : undefined;
       await suspendMutation.mutateAsync({
@@ -91,6 +96,8 @@ export function SuspendUserDialog({
       onClose();
     } catch (err) {
       console.error(`Failed to suspend user ${user.id}:`, err);
+    } finally {
+      submitLockRef.current = false;
     }
   };
 

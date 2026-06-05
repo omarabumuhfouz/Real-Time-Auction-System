@@ -53,7 +53,7 @@ export function useGetAuctions(filters?: AuctionFilters) {
             resolvedCategoryId = matchedCat.id;
 
             if (filters.subcategory && (filters.subcategory as string) !== "all") {
-              const subList = matchedCat.subCategories || matchedCat.subcategories || [];
+              const subList = matchedCat.subCategories || matchedCat.subcategories || matchedCat.children || [];
               const matchedSub = subList.find(
                 (s) => s.name.toLowerCase() === filters.subcategory?.toLowerCase()
               );

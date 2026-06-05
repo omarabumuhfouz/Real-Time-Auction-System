@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using MazadZone.Api.Infrastructure.Binding;
 
 namespace MazadZone.Api.Endpoints.Users;
 
@@ -27,13 +28,20 @@ public static class VerifyIdentity
     private static async Task<IResult> HandleAsync(
         [FromRoute] UserId id,
         IFormFile file,
+        BoundUserId boundUserId,
         [FromServices] ISender sender,
         CancellationToken ct)
     {
+        if (id != boundUserId.Value)
+        {
+            return Results.Forbid();
+        }
+
         if (file is null || file.Length == 0)
         {
             return Results.BadRequest("An image file of the identity card is required.");
         }
+
 
         // Enforce 5MB upload size limit to prevent Buffer Overflow or DoS attacks
         if (file.Length > 5 * 1024 * 1024)

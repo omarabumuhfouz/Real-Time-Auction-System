@@ -25,6 +25,7 @@ public static class UserEndpoints
         GetProfileSettings.MapEndpoint(userGroup);
         CreateAdmin.MapEndpoint(userGroup);
         AddPaymentMethod.MapEndpoint(userGroup);
+        GetPaymentMethods.MapEndpoint(userGroup);
         BulkActivate.MapEndpoint(userGroup);
         BulkBan.MapEndpoint(userGroup);
         BulkSuspend.MapEndpoint(userGroup);

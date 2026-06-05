@@ -1,0 +1,21 @@
+# Ignore build output folders (Crucial to prevent "not found" or mismatch errors)
+**/bin/
+**/obj/
+
+# Ignore IDE and source control configurations
+.dockerignore
+.git/
+.gitignore
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# Ignore operating system artifacts
+**/.DS_Store
+Thumbs.db
+
+# Ignore local environment settings
+**/appsettings.Development.json
+**/appsettings.Local.json

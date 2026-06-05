@@ -32,8 +32,7 @@ public static class DependencyInjection
             .AddHangfireServices(configuration)
             .AddCachingServices(configuration)
             .AddBackgroundServices()
-            .AddGeminiServices(configuration)
-            .AddQuartzJobs();
+            .AddGeminiServices(configuration);
 
         services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.GmailOptionsKey));
 
@@ -207,36 +206,6 @@ public static class DependencyInjection
         return services;
     }
 
-
-    private static IServiceCollection AddQuartzJobs(this IServiceCollection services)
-    {
-        services.AddQuartz(config =>
-        {
-            var shipmentJobKey = new JobKey(nameof(AutoShipmentJob));
-            config.AddJob<AutoShipmentJob>(shipmentJobKey)
-                  .AddTrigger(trigger => trigger
-                      .ForJob(shipmentJobKey)
-                      .WithIdentity($"{nameof(AutoShipmentJob)}-trigger")
-                      // Run every 2 minutes
-                      .WithCronSchedule("0 0/2 * * * ?")); 
-
-            var deliveryJobKey = new JobKey(nameof(AutoDeliveryJob));
-            config.AddJob<AutoDeliveryJob>(deliveryJobKey)
-                  .AddTrigger(trigger => trigger
-                      .ForJob(deliveryJobKey)
-                      .WithIdentity($"{nameof(AutoDeliveryJob)}-trigger")
-                      // Run every 2 minutes
-                      .WithCronSchedule("0 0/2 * * * ?"));
-        });
-
-        // Start Quartz as a background hosted service
-        services.AddQuartzHostedService(options =>
-        {
-            options.WaitForJobsToComplete = true;
-        });
-
-        return services;
-    }
 
 
 }

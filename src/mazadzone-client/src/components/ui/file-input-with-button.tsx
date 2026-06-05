@@ -1,19 +1,22 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { IdCard } from "lucide-react";
+import { IdCard, Loader2 } from "lucide-react";
 
 export interface FileInputWithButtonProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   onFileSelect?: (file: File | null) => void;
+  /** Show a spinner inside the upload button while OCR or another async process runs */
+  isProcessing?: boolean;
 }
 
 /**
  * FileInputWithButton
  * A custom file input styled like a standard text input but with an inline "Upload" button.
  * Used globally for single file uploads that need to fit within standard form grids.
+ * Supports an `isProcessing` state to indicate async work (e.g. OCR scanning).
  */
 export const FileInputWithButton = React.forwardRef<HTMLInputElement, FileInputWithButtonProps>(
-  ({ className, onFileSelect, placeholder = "Upload your national id", ...props }, ref) => {
+  ({ className, onFileSelect, placeholder = "Upload your national id", isProcessing = false, ...props }, ref) => {
     const inputRef = React.useRef<HTMLInputElement | null>(null);
     const [fileName, setFileName] = React.useState<string | null>(null);
 
@@ -31,7 +34,9 @@ export const FileInputWithButton = React.forwardRef<HTMLInputElement, FileInputW
     );
 
     const handleButtonClick = () => {
-      inputRef.current?.click();
+      if (!isProcessing) {
+        inputRef.current?.click();
+      }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +51,7 @@ export const FileInputWithButton = React.forwardRef<HTMLInputElement, FileInputW
     };
 
     return (
-      <div 
+      <div
         className={cn(
           "relative flex items-center h-12 w-full rounded-full border border-input bg-input-background transition-colors",
           "focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
@@ -61,14 +66,15 @@ export const FileInputWithButton = React.forwardRef<HTMLInputElement, FileInputW
           onChange={handleFileChange}
           className="hidden"
           accept="image/*,.pdf"
+          disabled={isProcessing || props.disabled}
         />
-        
+
         {/* Visual wrapper mimicking standard input contents */}
         <div className="flex items-center w-full h-full pl-4 pr-1">
           <div className="text-muted-foreground mr-3">
             <IdCard className="h-5 w-5" />
           </div>
-          
+
           <div className="flex-1 truncate text-sm text-muted-foreground">
             {fileName ? <span className="text-foreground">{fileName}</span> : placeholder}
           </div>
@@ -76,9 +82,22 @@ export const FileInputWithButton = React.forwardRef<HTMLInputElement, FileInputW
           <button
             type="button"
             onClick={handleButtonClick}
-            className="h-10 px-6 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition-colors"
+            disabled={isProcessing}
+            className={cn(
+              "h-10 px-6 rounded-full text-sm font-medium transition-colors flex items-center gap-2",
+              isProcessing
+                ? "bg-primary/60 text-primary-foreground cursor-not-allowed"
+                : "bg-primary hover:bg-primary/90 text-primary-foreground"
+            )}
           >
-            upload
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Scanning…</span>
+              </>
+            ) : (
+              "Upload"
+            )}
           </button>
         </div>
       </div>

@@ -3,10 +3,17 @@ import { z } from "zod";
 /**
  * Zod schema for the "Create Account" registration form.
  * Handles client-side validation before API submission.
+ * The mapper splits fullName and address into the individual fields required by the backend contract.
  */
 export const registerSchema = z
   .object({
-    fullName: z.string().min(15, "Full Name must be at least 20 characters"),
+    fullName: z
+      .string()
+      .min(15, "Full Name must be at least 15 characters")
+      .refine(
+        (val) => val.trim().split(/\s+/).length >= 4,
+        "Full Name must consist of at least 4 parts (First, Second, Third, and Last name)"
+      ),
     email: z.string().email("Please enter a valid email address"),
     password: z
       .string()
@@ -18,7 +25,7 @@ export const registerSchema = z
     phoneNumber: z.string().min(10, "Please enter a valid phone number"),
     address: z.string().min(5, "Please enter your full address"),
     nationalId: z.string().min(10, "Please enter a valid national ID"),
-    // The national card image is optional
+    // The national card image is optional — used client-side for OCR only, never sent to the backend
     nationalCardFile: z.any().optional(),
     agreeToTerms: z.boolean().refine((val) => val === true, "You must agree to the Terms and Privacy Policy"),
   })

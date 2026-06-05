@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "radix-ui";
 import { useGetAddresses, useGetProfile } from "@/features/profile";
 import { cn } from "@/lib/utils";
@@ -52,15 +52,15 @@ export function PlaceBidModal({
       const defaultAddr = profileAddresses.find((a) => a.isDefault) || profileAddresses[0] || null;
       const mappedAddr = defaultAddr
         ? {
-            id: defaultAddr.id,
-            label: defaultAddr.title,
-            fullName: profile?.fullName || "",
-            phoneNumber: profile?.phoneNumber || "",
-            streetAddress: defaultAddr.streetAddress,
-            building: defaultAddr.building,
-            city: defaultAddr.city,
-            isDefault: defaultAddr.isDefault,
-          }
+          id: defaultAddr.id,
+          label: defaultAddr.title,
+          fullName: profile?.fullName || "",
+          phoneNumber: profile?.phoneNumber || "",
+          streetAddress: defaultAddr.streetAddress,
+          building: defaultAddr.building,
+          city: defaultAddr.city,
+          isDefault: defaultAddr.isDefault,
+        }
         : null;
 
       // Fetch default payment method
@@ -130,12 +130,15 @@ export function PlaceBidModal({
         <DialogContent
           className={cn(
             "w-full bg-card border-border p-6 shadow-xl rounded-xl gap-0 z-50 focus-visible:outline-none transition-all duration-200",
-            currentStep === "place-bid" ? "max-w-lg" : "max-w-md"
+            currentStep === "place-bid" ? "sm:max-w-xl" : "sm:max-w-lg"
           )}
           showCloseButton={currentStep !== "success"}
         >
           <VisuallyHidden.Root>
             <DialogTitle>Place Bid Dialog</DialogTitle>
+            <DialogDescription>
+              Configure and place a bid on the selected auction listing.
+            </DialogDescription>
           </VisuallyHidden.Root>
           {/* Step 1: Place Bid Form */}
           {currentStep === "place-bid" && (
