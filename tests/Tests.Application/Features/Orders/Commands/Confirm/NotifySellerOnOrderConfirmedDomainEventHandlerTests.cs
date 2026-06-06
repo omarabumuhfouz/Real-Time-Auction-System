@@ -1,4 +1,7 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Features.Orders.Commands.Confirm;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Sellers;
 using Tests.Application.Features.Sellers;
 
@@ -19,10 +22,8 @@ public class NotifySellerOnOrderConfirmedDomainEventHandlerTests : OrderBaseTest
         // Act
         await Handler.Handle(domainEvent, default);
 
-        // Assert
-        // Verify we safely aborted without throwing an exception or sending a bad notification
-        await _notificationRepository.DidNotReceiveWithAnyArgs()
-            .NotifySellerAsync(default!, default!, default!, default);
+        // Assert - Verify that _sender was never called to send any command
+        await _sender.DidNotReceiveWithAnyArgs().Send(Arg.Any<object>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -38,13 +39,12 @@ public class NotifySellerOnOrderConfirmedDomainEventHandlerTests : OrderBaseTest
         // Act
         await Handler.Handle(domainEvent, default);
 
-        // Assert
-
-        // Verify the notification was sent to the right seller, with the right title, 
-        await _notificationRepository.Received(1).NotifySellerAsync(
-            expectedSeller.Id.Value,
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+        // Assert - Verify the correct command type and targeted seller ID
+        await _sender.Received(1).Send(
+            Arg.Is<CreateNotificationCommand>(c => 
+                c.UserId == expectedSeller.Id &&
+                c.Method == NotificationMethods.ReceiveNotification
+            ), 
             Arg.Any<CancellationToken>()
         );
     }

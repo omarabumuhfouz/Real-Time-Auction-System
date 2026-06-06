@@ -1,7 +1,7 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Features.Orders.Commands.AddFeedback;
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Orders;
-using MazadZone.Domain.Orders.Events;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Sellers;
 using Tests.Application.Features.Sellers;
 
@@ -14,7 +14,6 @@ public class NotifySellerOnFeedbackLeftDomainEventHandlerTests : OrderBaseTest<N
     {
         // Arrange
         var domainEvent = OrderHelper.CreateFeedbackLeftEvent();
-
         var expectedSeller = SellerHelper.CreateValidSeller();
 
         _sellerRepository.GetByAuctionIdAsync(domainEvent.AuctionId, Arg.Any<CancellationToken>())
@@ -23,12 +22,12 @@ public class NotifySellerOnFeedbackLeftDomainEventHandlerTests : OrderBaseTest<N
         // Act
         await Handler.Handle(domainEvent, default);
 
-        // Assert
-        // Verify the notification service was called exactly once with the exact mapped parameters
-        await _notificationRepository.Received(1).NotifySellerAsync(
-            expectedSeller.Id.Value,
-            Arg.Any<string>(), 
-            Arg.Any<string>(),
+        // Assert - Target the correct command type and properties
+        await _sender.Received(1).Send(
+            Arg.Is<CreateNotificationCommand>(c => 
+                c.UserId == expectedSeller.Id &&
+                c.Method == NotificationMethods.ReceiveNotification
+            ), 
             Arg.Any<CancellationToken>()
         );
     }
@@ -36,7 +35,7 @@ public class NotifySellerOnFeedbackLeftDomainEventHandlerTests : OrderBaseTest<N
     [Fact]
     public async Task Handle_SellerNotFound_SkipsNotification()
     {
-        // Arrange
+       // Arrange
         var domainEvent = OrderHelper.CreateFeedbackLeftEvent();
 
         // Simulate database returning null
@@ -44,12 +43,9 @@ public class NotifySellerOnFeedbackLeftDomainEventHandlerTests : OrderBaseTest<N
             .Returns((Seller?)null);
 
         // Act
-        // Because of your guard clause, this will execute silently and safely.
         await Handler.Handle(domainEvent, default);
 
-        // Assert
-        // Verify we aborted before trying to send a notification to a null ID
-        await _notificationRepository.DidNotReceiveWithAnyArgs()
-            .NotifySellerAsync(default!, default!, default!, default);
+        // Assert - Properly clear arguments to completely ensure no call was attempted
+        await _sender.DidNotReceiveWithAnyArgs().Send(Arg.Any<object>(), Arg.Any<CancellationToken>());
     }
 }

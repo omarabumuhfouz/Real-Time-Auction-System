@@ -1,9 +1,9 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Features.Orders.Commands.Create;
-using MazadZone.Domain.Auctions;
-using MazadZone.Domain.Bidders;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Orders.Events;
-using MazadZone.Domain.Users.ValueObjects;
 
 namespace Tests.Application.Features.Orders.Events;
 
@@ -20,11 +20,13 @@ public class NotifyBidderOnOrderCreatedDomainEventHandlerTests : OrderBaseTest<N
         // Act
         await Handler.Handle(domainEvent, default);
 
-        // Assert
-        await _notificationRepository.Received(1).NotifyBidderAsync(
-            domainEvent.BidderId.Value,
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<CancellationToken>());
+        // Assert - Verify the correct command type and its internal data
+        await _sender.Received(1).Send(
+            Arg.Is<CreateNotificationCommand>(c => 
+                c.UserId == domainEvent.BidderId &&
+                c.Method == NotificationMethods.ReceiveNotification
+            ), 
+            Arg.Any<CancellationToken>()
+        );
     }
 }

@@ -10,10 +10,17 @@ namespace MazadZone.Infrastructure.Scheduling;
 
 public class HangfireAuctionJobScheduler : IAuctionJobScheduler
 {
+    private readonly IBackgroundJobClient _backgroundJobClient;
+
+    public HangfireAuctionJobScheduler(IBackgroundJobClient backgroundJobClient)
+    {
+        _backgroundJobClient = backgroundJobClient;
+    }
+
     public void ScheduleAuctionClosing(Guid auctionId, DateTimeOffset closeAt)
     {
         // Hangfire will generate deffird task
-        BackgroundJob.Schedule<ISender>(
+        _backgroundJobClient.Schedule<ISender>(
             mediator => mediator.Send(new EndAuctionCommand(AuctionId.From(auctionId)), default),
             closeAt
         );
@@ -21,7 +28,7 @@ public class HangfireAuctionJobScheduler : IAuctionJobScheduler
 
     public void ScheduleAuctionStarting(Guid auctionId, DateTimeOffset startAt)
     {
-        BackgroundJob.Schedule<ISender>(
+        _backgroundJobClient.Schedule<ISender>(
             mediator => mediator.Send(new ActivateAuctionCommand(AuctionId.From(auctionId)), default),
             startAt
         );

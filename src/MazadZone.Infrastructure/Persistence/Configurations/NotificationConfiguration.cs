@@ -45,10 +45,11 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
         builder.HasQueryFilter(n => !n.IsDeleted);
 
         builder.HasIndex(n => new { n.UserId, n.IsRead });
-        
+
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(n => n.UserId)
+            .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

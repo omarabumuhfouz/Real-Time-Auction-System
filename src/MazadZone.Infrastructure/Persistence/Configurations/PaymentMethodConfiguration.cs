@@ -55,5 +55,11 @@ public sealed class PaymentMethodConfiguration : IEntityTypeConfiguration<Paymen
         // Index to speed up per-user queries
         builder.HasIndex(pm => pm.UserId)
             .HasDatabaseName("IX_PaymentMethods_UserId");
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(pm => pm.UserId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
     }
 }
