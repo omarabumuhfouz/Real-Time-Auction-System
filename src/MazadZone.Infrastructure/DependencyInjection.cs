@@ -211,7 +211,7 @@ public static class DependencyInjection
         {
             var builder = new Google.Cloud.Vision.V1.ImageAnnotatorClientBuilder();
             
-            var credentialsPath = @"C:\Users\anon\Downloads\mazadzonevestion-63efa229c4ad.json";
+            var credentialsPath = @"/home/hlany/Graduation Project/mazadzonevestion-63efa229c4ad.json";
             if (System.IO.File.Exists(credentialsPath))
             {
                 using var stream = new System.IO.FileStream(credentialsPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
