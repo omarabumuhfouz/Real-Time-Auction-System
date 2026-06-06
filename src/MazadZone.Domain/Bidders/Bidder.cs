@@ -8,15 +8,17 @@ namespace MazadZone.Domain.Bidders;
 public sealed class Bidder : AggregateRoot<UserId>, IAuditableEntity, IVerifiableEntity
 {
     public IReadOnlyCollection<AuctionId> UnpaidAuctions => _unpaidAuctions;
+    public IReadOnlyCollection<Address> Addresses => _addresses;
 
     private Bidder() { } 
     private Bidder(UserId id, string nationalId, Address defaultShippingAddress) : base(id)
     {
-        DefaultShippingAddress = defaultShippingAddress;
+        _addresses = new List<Address> { defaultShippingAddress };
         Verification = new BidderVerification(nationalId);
     }
 
-    public Address DefaultShippingAddress { get; private set; }
+    private List<Address> _addresses = new();
+    public Address DefaultShippingAddress => _addresses.FirstOrDefault(a => a.IsDefault);
 
     public int CompletedPurchasesCount { get; private set; }
     public int AuctionsWonCount { get; private set; }
@@ -59,7 +61,11 @@ public sealed class Bidder : AggregateRoot<UserId>, IAuditableEntity, IVerifiabl
 
     public Result UpdateShippingAddress(Address newAddress)
     {
-        DefaultShippingAddress = newAddress;
+        var addressIndex = _addresses.FindIndex(a => a.Equals(newAddress));
+        if (addressIndex == -1) return BidderErrors.AddressMissing;
+
+        _addresses[addressIndex] = newAddress;
+
         return Result.Success();
     }
 
