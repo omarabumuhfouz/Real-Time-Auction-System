@@ -74,6 +74,7 @@ public sealed class DisputeConfiguration : IEntityTypeConfiguration<Dispute>
                     // Otherwise, let EF Core create a hidden "shadow" key:
                     imageBuilder.HasKey("Id");
 
+
                     // 4. Configure the actual properties inside your Image class (e.g., Url)
                     // imageBuilder.Property(i => i.Url).IsRequired().HasMaxLength(2048);
                 });

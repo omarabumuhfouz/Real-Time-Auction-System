@@ -1,7 +1,6 @@
 using MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Users.Errors;
 using MazadZone.Domain.Users.Events;
-using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Domain.ValueObjects;
 using MazadZone.Domain.Users.Entities;
 using MazadZone.Domain.Users.Enums;

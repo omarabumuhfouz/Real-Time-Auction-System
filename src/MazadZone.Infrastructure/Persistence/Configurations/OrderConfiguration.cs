@@ -58,7 +58,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         .HasColumnName("Currency")
         .HasMaxLength(OrderConstants.MaxCurrencyCodeLength)
         .HasConversion(
-            currency => currency.Code, 
+            currency => currency.Code,
             code => Currency.FromCode(code)
         ) // 👈 REPLACED .HasConversion<string>()
         .IsRequired();
@@ -84,8 +84,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
               .HasForeignKey<Dispute>(d => d.OrderId)
               .IsRequired(false)
               .OnDelete(DeleteBehavior.Cascade);
-
-
 
               builder.Ignore(o => o.IsDisputable);
               builder.Ignore(o => o.CanLeaveFeedback);

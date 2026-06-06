@@ -26,7 +26,6 @@ public static class Create
     {
         app.MapPost("/", HandleAsync)
            .RequireAuthorization()
-        app.MapPut("/", HandleAsync)
            .RequireAuthorization(Policies.BidderOnly)
            .WithSummary("Create a new order")
            .WithDescription("Initiates a post-auction order transaction for the winning bidder. Requires the auction ID, the winning bid ID, and the shipping address. Returns a 409 Conflict if an order has already been created for this auction or if the provided bid was not the actual winner.")
