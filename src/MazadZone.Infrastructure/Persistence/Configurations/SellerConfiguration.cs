@@ -1,3 +1,4 @@
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Sellers;
 using MazadZone.Domain.Users;
 using MazadZone.Infrastructure.Common.Constants;
@@ -31,8 +32,10 @@ internal sealed class SellerConfiguration : IEntityTypeConfiguration<Seller>
         builder.Property(s => s.CreatedOnUtc).IsRequired();
         builder.Property(s => s.ModifiedOnUtc).IsRequired(false);
 
-        builder.HasOne<User>()
-        .WithOne()
+    
+
+        builder.HasOne<Bidder>()
+            .WithOne()
         .HasForeignKey<Seller>(s => s.Id)
         .IsRequired()
         .OnDelete(DeleteBehavior.Restrict);

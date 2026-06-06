@@ -1,7 +1,6 @@
 using AuthService.Domain.Constants;
-using MazadZone.Domain.Shared.ValueObjects;
+using MazadZone.Domain.Bidders;
 using MazadZone.Domain.Users;
-using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Infrastructure.Common.Constants;
 using MazadZone.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
