@@ -25,8 +25,21 @@ export const registerSchema = z
     phoneNumber: z.string().min(10, "Please enter a valid phone number"),
     address: z.string().min(5, "Please enter your full address"),
     nationalId: z.string().min(10, "Please enter a valid national ID"),
-    // The national card image is optional — used client-side for OCR only, never sent to the backend
-    nationalCardFile: z.any().optional(),
+    nationalCardFile: z
+      .any()
+      .refine((file) => file instanceof File, "National card image is required")
+      .refine(
+        (file) =>
+          file instanceof File &&
+          (file.type === "image/jpeg" ||
+            file.type === "image/png" ||
+            file.type === "image/jpg"),
+        "Only JPG, JPEG, and PNG images are permitted"
+      )
+      .refine(
+        (file) => file instanceof File && file.size <= 5 * 1024 * 1024,
+        "File size must not exceed 5MB"
+      ),
     agreeToTerms: z.boolean().refine((val) => val === true, "You must agree to the Terms and Privacy Policy"),
   })
   .refine((data) => data.password === data.confirmPassword, {

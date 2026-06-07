@@ -8,6 +8,7 @@ import { useAppToast } from "@/lib/toast/app-toast";
 import { useAuthStore } from "@/stores/auth.store";
 import { APP_CONFIG } from "@/config/app.config";
 import type { Notification, NotificationType } from "../types/notification.types";
+import { triggerWinDialogFromNotification } from "../store/win-dialog.store";
 
 /**
  * Maps a domain NotificationType to a semantic FeedbackType for toast coloring.
@@ -170,6 +171,11 @@ export function useRealtimeNotifications(userId: string | undefined): void {
           // 4. Display a rich toast notification to the user
           const feedbackType = getFeedbackType(type);
           appToast.show(feedbackType, titleText, messageText);
+
+          // If the user won an auction, show the celebration Win Dialog
+          if (type === "auction_won") {
+            triggerWinDialogFromNotification(notification);
+          }
 
           // 5. Delayed background refetch (3s) to silently align with database
           //    after the backend has had time to commit the write.

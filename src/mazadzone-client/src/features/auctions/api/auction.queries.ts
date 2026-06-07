@@ -28,6 +28,7 @@ import {
   mapFiltersToQueryParams,
   mapAuctionsListDtoToSummary,
   mapAuctionDtoToSummary,
+  mapBackendConditionToAuctionCondition,
 } from "./auction.mappers";
 
 // Re-export query keys
@@ -50,12 +51,18 @@ export function useGetAuctions(filters?: AuctionFilters) {
             (c) => c.name.toLowerCase() === filters.category?.toLowerCase()
           );
           if (matchedCat) {
-            resolvedCategoryId = matchedCat.id;
-
             if (filters.subcategory && (filters.subcategory as string) !== "all") {
               const subList = matchedCat.subCategories || matchedCat.subcategories || matchedCat.children || [];
+              const subQuery = filters.subcategory?.toLowerCase() || "";
               const matchedSub = subList.find(
-                (s) => s.name.toLowerCase() === filters.subcategory?.toLowerCase()
+                (s) => {
+                  const sName = s.name.toLowerCase();
+                  if (sName === subQuery) return true;
+                  if (sName.includes(subQuery)) return true;
+                  if (subQuery.includes(sName)) return true;
+                  if (subQuery.startsWith("other") && sName.startsWith("other")) return true;
+                  return false;
+                }
               );
               if (matchedSub) {
                 resolvedCategoryId = matchedSub.id;
@@ -126,7 +133,7 @@ export function useGetAuctionById(id: string) {
           const listResponse = await getAuctions({ SearchTerm: raw.itemTitle, PageSize: 5, Page: 1 });
           const matchedDto = listResponse.items.find((item) => item.id === id);
           if (matchedDto) {
-            summary.condition = (matchedDto.itemStatus as any) || "New";
+            summary.condition = mapBackendConditionToAuctionCondition(matchedDto.itemStatus);
             summary.conditionDescription = matchedDto.condtion || "";
           }
         } catch (err) {

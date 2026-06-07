@@ -35,6 +35,16 @@ export interface OrderSummaryDto {
   canLeaveFeedback: boolean;
 }
 
+export interface WonOrderSummaryDto {
+  orderId: string;
+  itemTitle: string;
+  finalBidAmount: number;
+  orderDate: string;
+  sellerId: string;
+  sellerName: string;
+  status: string;
+}
+
 export interface CreateOrderRequest {
   auctionId: string;
   bidderId: string;
@@ -54,12 +64,28 @@ export interface SearchOrdersQueryParams {
   PageNumber?: number;
 }
 
+export interface GetWonOrdersQueryParams {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export interface PagedListOfOrderSummaryDto {
   pageNumber: number;
   pageSize: number;
   totalPages?: number;
   totalCount: number;
   items: OrderSummaryDto[];
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+}
+
+export interface PagedListOfWonOrderSummaryDto {
+  pageNumber: number;
+  pageSize: number;
+  totalPages?: number;
+  totalCount: number;
+  items: WonOrderSummaryDto[];
   hasPreviousPage?: boolean;
   hasNextPage?: boolean;
 }

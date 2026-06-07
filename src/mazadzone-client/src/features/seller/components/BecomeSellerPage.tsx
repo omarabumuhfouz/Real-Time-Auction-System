@@ -34,12 +34,13 @@ import { decodeJwtToken } from "@/features/auth/api/auth.mappers";
 
 export function BecomeSellerPage() {
   const router = useRouter();
+  const [shouldSkipSellerGuard, setShouldSkipSellerGuard] = useState(false);
 
   const { isAuthorized, isLoading: isAuthLoading } = useRequireRole(["bidder"], {
     redirectToUnauthorized: ROUTES.SELLER.AUCTIONS,
-    unauthorizedMessage: "You are already registered as a seller.",
+    unauthorizedMessage: "Your account is already a seller account. Redirecting you to your seller area.",
     loginMessage: "Please log in to apply for seller privileges.",
-    bypassTesting: false, // Keep bypass testing for local development/testing
+    bypassTesting: shouldSkipSellerGuard,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +82,7 @@ export function BecomeSellerPage() {
 
     setPayoutError(null);
     setIsLoading(true);
+    setShouldSkipSellerGuard(true);
 
     try {
       console.log("Transmitting seller credentials to backend:", {
@@ -324,6 +326,7 @@ export function BecomeSellerPage() {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onSavePayout={handlePayoutSave}
+        selectedPaymentMethodId={payoutDetails?.paymentMethodId}
         mode="payout"
       />
     </PageWrapper>

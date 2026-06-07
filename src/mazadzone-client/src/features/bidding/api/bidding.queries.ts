@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyBids, placeBid as placeBidApi } from "./bidding.api";
 import { biddingKeys } from "./bidding.keys";
 import { mapMyBidAuctionDtoToBidActivity } from "./bidding.mappers";
+import { paymentKeys, useGetSavedPaymentMethods as useGetPaymentSavedMethods } from "@/features/payment";
 import type {
   PlaceBidRequest,
   PlaceBidResponse,
@@ -65,7 +66,18 @@ export const usePlaceBid = () => {
 
   return useMutation<PlaceBidResponse, Error, PlaceBidRequest>({
     mutationFn: async (request: PlaceBidRequest) => {
-      const methodId = request.paymentMethodId || "pm-mock-1";
+      if (!request.paymentMethodId) {
+        throw new Error("A saved payment method is required to place a bid.");
+      }
+
+      const methodId = request.paymentMethodId;
+      const savedPaymentMethods =
+        queryClient.getQueryData<import("@/features/payment").SavedPaymentMethod[]>(
+          paymentKeys.savedMethods(),
+        ) ?? [];
+      const selectedPaymentMethod =
+        savedPaymentMethods.find((method) => method.id === methodId) ??
+        savedPaymentMethods[0];
 
       // Call the real backend REST POST endpoint
       await placeBidApi(request.auctionId, {
@@ -91,15 +103,16 @@ export const usePlaceBid = () => {
           isDefault: true,
         },
         paymentMethod: {
-          id: methodId,
-          cardType: "VISA",
-          lastFourDigits: "4242",
-          expiryDate: "12/26",
+          id: selectedPaymentMethod?.id || methodId,
+          cardType: selectedPaymentMethod?.cardType || "UNKNOWN",
+          lastFourDigits: selectedPaymentMethod?.lastFourDigits || "0000",
+          expiryDate: selectedPaymentMethod?.expiryDate || "00/00",
           cardholderName:
+            selectedPaymentMethod?.cardholderName ||
             request.paymentDetails?.cardholderName ||
             user?.fullName ||
             "Omar Ahmad",
-          isDefault: true,
+          isDefault: selectedPaymentMethod?.isDefault || false,
         },
         placedAt: new Date().toISOString(),
       };
@@ -114,19 +127,6 @@ export const usePlaceBid = () => {
   });
 };
 
-import type { SavedPaymentMethod } from "../types/place-bid.types";
-
-/**
- * Hook to retrieve the user's saved payment methods.
- * Note: Simulates local payment options since payment-methods is local to bid flows.
- */
 export const useGetSavedPaymentMethods = () => {
-  return useQuery<SavedPaymentMethod[]>({
-    queryKey: biddingKeys.savedPaymentMethods(),
-    queryFn: async () => {
-      const mockSavedMethods: SavedPaymentMethod[] = [];
-      return mockSavedMethods;
-    },
-  });
+  return useGetPaymentSavedMethods();
 };
-

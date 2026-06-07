@@ -1,27 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, MapPin, Loader2 } from "lucide-react";
+import { Pencil, MapPin, Loader2 } from "lucide-react";
 import { AddressDialog } from "./AddressDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   useGetAddresses,
   useUpdateAddress,
-  useGetProfile,
+  useGetProfileSettings,
 } from "../api/profile.queries";
 import type { Address } from "../types/profile.types";
+import { useAuthStore } from "@/stores/auth.store";
 
 export function AddressBook() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState<Address | null>(null);
 
-  const { data: profile } = useGetProfile();
+  const { user } = useAuthStore();
+  const { data: profileSettings } = useGetProfileSettings(user?.id || "");
 
   const { data: addresses = [], isLoading, isError, refetch } = useGetAddresses();
   const updateMutation = useUpdateAddress();
@@ -108,11 +104,11 @@ export function AddressBook() {
               {/* User details (Full name & Phone) */}
               <div className="flex flex-col gap-0.5 mt-0.5">
                 <span className="text-sm font-semibold text-foreground/90">
-                  {profile?.fullName}
+                  {profileSettings?.fullName ?? "Not provided"}
                 </span>
-                {profile?.phoneNumber && (
+                {profileSettings?.phoneNumber && (
                   <span className="text-xs text-muted-foreground">
-                    {profile.phoneNumber}
+                    {profileSettings.phoneNumber}
                   </span>
                 )}
               </div>
@@ -121,7 +117,7 @@ export function AddressBook() {
               <p className="text-sm leading-relaxed text-muted-foreground mt-0.5">
                 {address.streetAddress}, {address.building}
                 {address.landmark && `, ${address.landmark}`}
-                {`, ${address.city}, Saudi Arabia`}
+                {`, ${address.city}`}
               </p>
 
               {/* Action Buttons Row */}
