@@ -53,12 +53,11 @@ export async function registerBidder(
   formData.append("secondName", request.secondName);
   formData.append("thirdName", request.thirdName);
   formData.append("lastName", request.lastName);
-  formData.append("city", request.address.city);
-  formData.append("street", request.address.street);
-  formData.append("building", request.address.building);
-  formData.append("landmark", request.address.landmark);
-
-  // Note: We are purposely NOT sending a file/image here for testing.
+  formData.append("city", request.city);
+  formData.append("street", request.street);
+  formData.append("building", request.building);
+  formData.append("landmark", request.landmark);
+  formData.append("file", request.file);
 
   const response = await api.post<RegisterBidderDto>(
     "/api/v1/bidders/register",

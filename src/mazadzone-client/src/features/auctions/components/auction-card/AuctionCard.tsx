@@ -19,7 +19,7 @@ const AuctionCardComponent = ({
   priority = false,
   className,
 }: AuctionCardProps) => {
-  const { id, title, imageUrl, pricing, timing, isOwner, status } = auction;
+  const { id, title, imageUrl, pricing, timing, isOwner, status, condition } = auction;
   const isUpcoming = status === "Upcoming";
   const isEnded = status === "Ended";
   const displayPrice = pricing.currentBid ?? pricing.startingPrice;
@@ -73,11 +73,19 @@ const AuctionCardComponent = ({
         </h3>
       </Link>
 
-      <div className="mt-auto pt-3">
-        <div className="mt-2">
-          <CountdownTimer 
+      <div >
+        <div className="flex justify-end mb-1">
+          <Badge
+            variant="default"
+            className="h-5 text-[9px] px-1.5 font-bold uppercase tracking-wider select-none"
+          >
+            {condition}
+          </Badge>
+        </div>
+        <div>
+          <CountdownTimer
             startDate={timing.startDate}
-            endDate={timing.endDate} 
+            endDate={timing.endDate}
             status={status}
             label={isUpcoming ? "UPCOMING IN" : undefined}
           />

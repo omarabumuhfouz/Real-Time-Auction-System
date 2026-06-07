@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AssistantPopover } from "@/features/assistant";
+import { WinDialog } from "@/features/notifications";
 
 /**
  * Main route group layout.
@@ -19,6 +20,7 @@ export default function MainLayout({
       <div className="flex-1">{children}</div>
       <Footer />
       <AssistantPopover />
+      <WinDialog />
     </div>
   );
 }

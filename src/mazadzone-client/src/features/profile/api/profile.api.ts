@@ -1,10 +1,8 @@
 import { api } from "@/lib/api/client";
 import type { UserProfile, Address } from "../types/profile.types";
 import type { BidderProfileDto, ChangePasswordRequest, ProfileSettingsDto } from "./profile.contracts";
-import { mapBidderProfileToUserProfile, mapBidderProfileToDefaultAddress, mapProfileSettingsToDefaultAddress } from "./profile.mappers";
+import { mapBidderProfileToUserProfile, mapProfileSettingsToDefaultAddress } from "./profile.mappers";
 import { useAuthStore } from "@/stores/auth.store";
-
-
 
 /**
  * Fetches the user profile details from the ASP.NET Core backend.
@@ -70,13 +68,17 @@ export async function updateUserProfile(input: Partial<UserProfile>): Promise<Us
 }
 
 /**
- /**
  * Fetches the user's address book list, returning the primary registered address.
  */
-export async function fetchAddresses(): Promise<Address[]> {
+export async function fetchAddresses(userId?: string): Promise<Address[]> {
+  const activeUserId = userId || useAuthStore.getState().user?.id;
+  if (!activeUserId) {
+    throw new Error("User is not authenticated");
+  }
+
   let primaryAddress: Address | null = null;
   try {
-    const response = await api.get<ProfileSettingsDto>("/users/me/profile-settings");
+    const response = await api.get<ProfileSettingsDto>(`/users/users/${activeUserId}/profile-settings`);
     primaryAddress = mapProfileSettingsToDefaultAddress(response.data);
   } catch (error) {
     console.error("Failed to load primary address from backend profile settings:", error);
@@ -116,8 +118,11 @@ export async function changePassword(input: ChangePasswordRequest): Promise<void
  * Fetches the user profile settings from the ASP.NET Core backend.
  */
 export async function fetchProfileSettings(userId?: string): Promise<ProfileSettingsDto> {
-  const response = await api.get<ProfileSettingsDto>("/users/me/profile-settings");
+  const activeUserId = userId || useAuthStore.getState().user?.id;
+  if (!activeUserId) {
+    throw new Error("User is not authenticated");
+  }
+
+  const response = await api.get<ProfileSettingsDto>(`/users/users/${activeUserId}/profile-settings`);
   return response.data;
 }
-
-

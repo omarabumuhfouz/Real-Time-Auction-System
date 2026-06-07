@@ -27,10 +27,14 @@ export function useBecomeSeller() {
       }
 
       // Map Stripe credit card inputs to the backend's expected bankAccountNumber property
-      const bankAccountNumber = input.payoutDetails.cardNumber?.replace(/\s/g, "") || "123456789";
+      const bankAccountNumber =
+        input.payoutDetails.lastFourDigits ||
+        input.payoutDetails.cardNumber?.replace(/\D/g, "") ||
+        "123456789";
 
       const response = await api.post<BecomeSellerResponse>(`/api/v1/sellers/${userId}/become-seller`, {
         bankAccountNumber,
+        paymentMethodId: input.payoutDetails.paymentMethodId,
       });
       return response.data;
     },

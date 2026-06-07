@@ -58,7 +58,7 @@ export function useUpdateProfile() {
 export function useGetAddresses() {
   return useQuery<Address[]>({
     queryKey: profileKeys.addresses(),
-    queryFn: fetchAddresses,
+    queryFn: () => fetchAddresses(),
   });
 }
 

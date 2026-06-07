@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "radix-ui";
+import { useGetSavedPaymentMethods } from "@/features/payment";
 import { useGetAddresses, useGetProfile } from "@/features/profile";
-import { useGetSavedPaymentMethods } from "@/features/bidding";
 import { cn } from "@/lib/utils";
 import { useCompleteOrderPayment } from "../../api";
-import type { CheckoutState, CheckoutAddress, CheckoutPaymentMethod } from "../../types/checkout.types";
+import type {
+  CheckoutAddress,
+  CheckoutPaymentMethod,
+  CheckoutPaymentResponse,
+} from "../../types/checkout.types";
 
 import { AddressSelectStep } from "@/features/profile";
 import { PaymentMethodDrawer } from "@/features/payment";
@@ -44,114 +48,94 @@ export function CompletePaymentModal({
   const depositAmount = finalBid * 0.1;
   const amountDue = finalBid * 0.9;
 
-  // Orchestrated flow state
-  const [flowState, setFlowState] = useState<CheckoutState>({
-    step: "details",
-    orderId,
-    orderNumber,
-    finalBid,
-    title,
-    imageUrl,
-    depositAmount,
-    amountDue,
-    selectedAddress: null,
-    selectedPayment: null,
-    paymentResponse: null,
-  });
-
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
+  const [step, setStep] = useState<"details" | "choose-address" | "review" | "success">("details");
+  const [selectedAddressOverride, setSelectedAddressOverride] = useState<
+    CheckoutAddress | null | undefined
+  >(undefined);
+  const [selectedPaymentOverride, setSelectedPaymentOverride] = useState<
+    CheckoutPaymentMethod | null | undefined
+  >(undefined);
+  const [paymentResponse, setPaymentResponse] = useState<CheckoutPaymentResponse | null>(null);
 
-  // Sync defaults when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const defaultAddr = profileAddresses.find((a) => a.isDefault) || profileAddresses[0] || null;
-      const mappedAddr = defaultAddr
-        ? {
-            id: defaultAddr.id,
-            label: defaultAddr.title,
-            fullName: profile?.fullName || "",
-            phoneNumber: profile?.phoneNumber || "",
-            streetAddress: defaultAddr.streetAddress,
-            building: defaultAddr.building,
-            city: defaultAddr.city,
-            isDefault: defaultAddr.isDefault,
-          }
-        : null;
+  const defaultAddressSource =
+    profileAddresses.find((address) => address.isDefault) || profileAddresses[0] || null;
+  const defaultSelectedAddress: CheckoutAddress | null = defaultAddressSource
+    ? {
+        id: defaultAddressSource.id,
+        label: defaultAddressSource.title,
+        fullName: profile?.fullName || "",
+        phoneNumber: profile?.phoneNumber || "",
+        streetAddress: defaultAddressSource.streetAddress,
+        building: defaultAddressSource.building,
+        city: defaultAddressSource.city,
+        isDefault: defaultAddressSource.isDefault,
+      }
+    : null;
 
-      const defaultPayment = savedPaymentMethods.find((p) => p.isDefault) || savedPaymentMethods[0] || null;
-      const mappedPayment = defaultPayment
-        ? {
-            id: defaultPayment.id,
-            cardType: defaultPayment.cardType,
-            lastFourDigits: defaultPayment.lastFourDigits || "4242",
-            expiryDate: defaultPayment.expiryDate,
-            cardholderName: defaultPayment.cardholderName,
-            isDefault: defaultPayment.isDefault,
-          }
-        : null;
+  const defaultPaymentSource =
+    savedPaymentMethods.find((paymentMethod) => paymentMethod.isDefault) ||
+    savedPaymentMethods[0] ||
+    null;
+  const defaultSelectedPayment: CheckoutPaymentMethod | null = defaultPaymentSource
+    ? {
+        id: defaultPaymentSource.id,
+        cardType: defaultPaymentSource.cardType,
+        lastFourDigits: defaultPaymentSource.lastFourDigits,
+        expiryDate: defaultPaymentSource.expiryDate,
+        cardholderName: defaultPaymentSource.cardholderName,
+        isDefault: defaultPaymentSource.isDefault,
+      }
+    : null;
 
-      setFlowState({
-        step: "details",
-        orderId,
-        orderNumber,
-        finalBid,
-        title,
-        imageUrl,
-        depositAmount,
-        amountDue,
-        selectedAddress: mappedAddr,
-        selectedPayment: mappedPayment,
-        paymentResponse: null,
-      });
-    }
-  }, [isOpen, orderId, orderNumber, finalBid, title, imageUrl, profileAddresses, savedPaymentMethods]);
+  const selectedAddress =
+    selectedAddressOverride === undefined
+      ? defaultSelectedAddress
+      : selectedAddressOverride;
+  const selectedPayment =
+    selectedPaymentOverride === undefined
+      ? defaultSelectedPayment
+      : selectedPaymentOverride;
 
   const handleClose = () => {
+    setStep("details");
+    setSelectedAddressOverride(undefined);
+    setSelectedPaymentOverride(undefined);
+    setPaymentResponse(null);
+    setIsPaymentSheetOpen(false);
     onClose();
   };
 
   const handleSelectAddress = (address: CheckoutAddress) => {
-    setFlowState((prev) => ({
-      ...prev,
-      selectedAddress: address,
-      step: "details",
-    }));
+    setSelectedAddressOverride(address);
+    setStep("details");
   };
 
   const handleSavePaymentMethod = (paymentMethod: CheckoutPaymentMethod) => {
-    setFlowState((prev) => ({
-      ...prev,
-      selectedPayment: paymentMethod,
-    }));
+    setSelectedPaymentOverride(paymentMethod);
     setIsPaymentSheetOpen(false);
   };
 
   const handlePaymentSubmit = async () => {
-    if (!flowState.selectedAddress || !flowState.selectedPayment) return;
+    if (!selectedAddress || !selectedPayment) return;
 
     try {
       const response = await completePaymentMutation.mutateAsync({
-        orderId: flowState.orderId,
-        addressId: flowState.selectedAddress.id,
-        paymentMethodId: flowState.selectedPayment.id,
+        orderId,
+        addressId: selectedAddress.id,
+        paymentMethodId: selectedPayment.id,
       });
 
-      setFlowState((prev) => ({
-        ...prev,
-        paymentResponse: {
-          ...response,
-          // Map to verify types align
-          deliveryAddress: prev.selectedAddress!,
-          paymentMethod: prev.selectedPayment!,
-        },
-        step: "success",
-      }));
+      setPaymentResponse({
+        ...response,
+        deliveryAddress: selectedAddress,
+        paymentMethod: selectedPayment,
+      });
+      setStep("success");
     } catch (err) {
       console.error("Failed to complete order payment:", err);
     }
   };
-
-  const currentStep = flowState.step;
 
   return (
     <>
@@ -159,63 +143,63 @@ export function CompletePaymentModal({
         <DialogContent
           className={cn(
             "w-full bg-card border-border p-6 shadow-xl rounded-xl gap-0 z-50 focus-visible:outline-none transition-all duration-200 text-left",
-            currentStep === "details" ? "max-w-lg" : "max-w-md"
+            step === "details" ? "max-w-lg" : "max-w-md"
           )}
-          showCloseButton={currentStep !== "success"}
+          showCloseButton={step !== "success"}
         >
           <VisuallyHidden.Root>
             <DialogTitle>Complete Order Payment Dialog</DialogTitle>
           </VisuallyHidden.Root>
 
           {/* Step 1: Details summary */}
-          {currentStep === "details" && (
+          {step === "details" && (
             <OrderDetailsStep
-              orderNumber={flowState.orderNumber}
-              title={flowState.title}
-              imageUrl={flowState.imageUrl}
-              finalBid={flowState.finalBid}
-              depositAmount={flowState.depositAmount}
-              amountDue={flowState.amountDue}
-              selectedAddress={flowState.selectedAddress}
-              selectedPayment={flowState.selectedPayment}
-              onChangeAddress={() => setFlowState((prev) => ({ ...prev, step: "choose-address" }))}
+              orderNumber={orderNumber}
+              title={title}
+              imageUrl={imageUrl}
+              finalBid={finalBid}
+              depositAmount={depositAmount}
+              amountDue={amountDue}
+              selectedAddress={selectedAddress}
+              selectedPayment={selectedPayment}
+              onChangeAddress={() => setStep("choose-address")}
               onAddPayment={() => setIsPaymentSheetOpen(true)}
-              onContinue={() => setFlowState((prev) => ({ ...prev, step: "review" }))}
+              onContinue={() => setStep("review")}
               onCancel={handleClose}
             />
           )}
 
           {/* Step 2: Choose Address list */}
-          {currentStep === "choose-address" && (
+          {step === "choose-address" && (
             <AddressSelectStep
-              selectedAddressId={flowState.selectedAddress?.id}
+              selectedAddressId={selectedAddress?.id}
               onSelectAddress={handleSelectAddress}
-              onCancel={() => setFlowState((prev) => ({ ...prev, step: "details" }))}
+              onCancel={() => setStep("details")}
               title="Choose Shipping Address"
               subtitle="Select where you want your item to be shipped."
             />
           )}
 
           {/* Step 4: Review and Pay */}
-          {currentStep === "review" && (
+          {step === "review" && (
             <ReviewPaymentStep
-              orderNumber={flowState.orderNumber}
-              title={flowState.title}
-              finalBid={flowState.finalBid}
-              depositAmount={flowState.depositAmount}
-              amountDue={flowState.amountDue}
-              selectedAddress={flowState.selectedAddress}
-              selectedPayment={flowState.selectedPayment}
+              orderNumber={orderNumber}
+              title={title}
+              finalBid={finalBid}
+              depositAmount={depositAmount}
+              amountDue={amountDue}
+              selectedAddress={selectedAddress}
+              selectedPayment={selectedPayment}
               onConfirm={handlePaymentSubmit}
-              onCancel={() => setFlowState((prev) => ({ ...prev, step: "details" }))}
+              onCancel={() => setStep("details")}
               isSubmitting={completePaymentMutation.isPending}
             />
           )}
 
           {/* Step 5: Success Receipt */}
-          {currentStep === "success" && (
+          {step === "success" && (
             <PaymentSuccessStep
-              paymentResponse={flowState.paymentResponse}
+              paymentResponse={paymentResponse}
               onClose={handleClose}
             />
           )}
@@ -227,9 +211,10 @@ export function CompletePaymentModal({
         isOpen={isPaymentSheetOpen}
         onClose={() => setIsPaymentSheetOpen(false)}
         onSaveCard={handleSavePaymentMethod}
+        selectedPaymentMethodId={selectedPayment?.id}
         mode="payment"
-        amount={flowState.amountDue}
-        deliveryAddress={flowState.selectedAddress}
+        amount={amountDue}
+        deliveryAddress={selectedAddress}
       />
     </>
   );

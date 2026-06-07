@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { clearTokens, setTokens, getAccessToken } from "@/lib/auth/token";
+import { ROUTES } from "@/config/routes.config";
 
 // --- Types -------------------------------------------------------
 
@@ -68,6 +69,7 @@ export const useAuthStore = create<AuthStore>()(
           accessToken: null,
           isAuthenticated: false,
         });
+        window.location.href = ROUTES.HOME;
       },
 
       setUser: (user) => set({ user }),

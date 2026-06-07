@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -11,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InputWithIcon } from "@/components/ui/input-with-icon";
 import { PasswordInput } from "@/components/ui/password-input";
 import { FileInputWithButton } from "@/components/ui/file-input-with-button";
+import { AppAlert } from "@/components/feedback/app-alert";
 import { registerSchema, type RegisterFormValues } from "../validations/register.schema";
 import { ROUTES } from "@/config/routes.config";
 import { useRegisterMutation } from "../api";
@@ -25,12 +27,14 @@ import { useNationalIdOcr } from "../hooks/useNationalIdOcr";
 export function RegisterForm() {
   const registerMutation = useRegisterMutation();
   const { ocrPhase, scanFile } = useNationalIdOcr();
+  const [ocrErrorMessage, setOcrErrorMessage] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
-    getValues,
+    setValue,
+    setError,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -52,33 +56,68 @@ export function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      let nationalId = data.nationalId;
-
-      // If a card image was uploaded, run OCR first and use the detected ID (if found)
-      const cardFile = data.nationalCardFile;
-      if (cardFile instanceof File && cardFile.type.startsWith("image/")) {
-        const detectedId = await scanFile(cardFile);
-        if (detectedId) {
-          nationalId = detectedId;
-        }
-      }
-
-      await registerMutation.mutateAsync({ ...data, nationalId });
-    } catch (error) {
+      setOcrErrorMessage(null);
+      await registerMutation.mutateAsync(data);
+    } catch (error: any) {
       console.error("Registration submission error:", error);
+      // Catch backend validation errors and map them contextually to form fields
+      if (error && typeof error === "object" && "errors" in error && error.errors) {
+        Object.entries(error.errors as Record<string, string[]>).forEach(([field, messages]) => {
+          const message = messages[0];
+          if (!message) return;
+
+          if (field.includes("Identity.NameMismatch") || field.toLowerCase().includes("name")) {
+            setError("fullName", { type: "server", message });
+            if (field.includes("Identity.")) {
+              setOcrErrorMessage(message);
+            }
+          } else if (
+            field.includes("Identity.NationalIdMismatch") ||
+            field.includes("Identity.InvalidNationalIdFormat") ||
+            field.toLowerCase().includes("nationalid")
+          ) {
+            setError("nationalId", { type: "server", message });
+            if (field.includes("Identity.")) {
+              setOcrErrorMessage(message);
+            }
+          } else if (
+            field.includes("Identity.ExtractionFailed") ||
+            field.includes("Identity.ImageRequired") ||
+            field.toLowerCase().includes("file") ||
+            field.toLowerCase().includes("card")
+          ) {
+            setError("nationalCardFile", { type: "server", message });
+            if (field.includes("Identity.")) {
+              setOcrErrorMessage(message);
+            }
+          } else if (field.toLowerCase().includes("email")) {
+            setError("email", { type: "server", message });
+          } else if (field.toLowerCase().includes("phone")) {
+            setError("phoneNumber", { type: "server", message });
+          } else if (field.toLowerCase().includes("password")) {
+            setError("password", { type: "server", message });
+          }
+        });
+      }
     }
   };
 
-  const submitLabel = isScanning
-    ? "Scanning ID..."
-    : registerMutation.isPending
-      ? "Signing up..."
-      : "Sign up";
+  const submitLabel = registerMutation.isPending
+    ? "Signing up..."
+    : "Sign up";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full max-w-[600px] mx-auto px-4 lg:px-8 pt-20">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-6">Create Your Account</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-4">Create Your Account</h1>
+        {ocrErrorMessage && (
+          <AppAlert
+            type="warning"
+            title="Identity Matching Required"
+            message={ocrErrorMessage}
+            className="mb-6"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
@@ -184,7 +223,18 @@ export function RegisterForm() {
                 id="nationalCard"
                 placeholder="Upload your national id"
                 className="border-foreground"
-                onFileSelect={(file) => field.onChange(file)}
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                isProcessing={isScanning}
+                onFileSelect={async (file) => {
+                  field.onChange(file);
+                  setOcrErrorMessage(null);
+                  if (file && file.type.startsWith("image/")) {
+                    const detectedId = await scanFile(file);
+                    if (detectedId) {
+                      setValue("nationalId", detectedId, { shouldValidate: true });
+                    }
+                  }
+                }}
               />
             )}
           />

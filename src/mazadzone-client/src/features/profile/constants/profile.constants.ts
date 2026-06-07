@@ -9,11 +9,18 @@ export const getAccountInfoFields = (
   profile: UserProfile
 ): FormFieldConfig[] => [
   {
-    id: "profileFullName",
-    label: "Full Name",
-    placeholder: profile.fullName || "Enter full name",
-    name: "fullName",
-    disabled: isPending,
+    id: "profilePhone",
+    label: "Phone Number",
+    placeholder: profile.phoneNumber || "Enter phone number",
+    name: "phoneNumber",
+    readOnly: true,
+  },
+  {
+    id: "profileNationalId",
+    label: "National ID",
+    value: profile.nationalId ?? "1234567890",
+    disabled: true,
+    hint: "National ID cannot be changed",
   },
   {
     id: "profileEmail",
@@ -21,21 +28,6 @@ export const getAccountInfoFields = (
     placeholder: profile.email || "Enter email address",
     name: "email",
     disabled: isPending,
-  },
-  {
-    id: "profilePhone",
-    label: "Phone Number",
-    placeholder: profile.phoneNumber || "Enter phone number",
-    name: "phoneNumber",
-    disabled: isPending,
-  },
-
-  {
-    id: "profileNationalId",
-    label: "National ID",
-    value: profile.nationalId ?? "1234567890",
-    disabled: true,
-    hint: "National ID cannot be changed",
   },
 ];
 
@@ -79,5 +71,3 @@ export const getAddressFields = (isPending: boolean): AddressFieldConfig[] => [
     disabled: isPending,
   },
 ];
-
-

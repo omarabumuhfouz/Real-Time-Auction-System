@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Check, AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CreditCard, Loader2, Plus, Shield } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -10,24 +10,24 @@ import {
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCardForm } from "./CreditCardForm";
 import { type CreditCardFormValues } from "../validations/creditCard.schema";
-import { type PayoutDetails } from "../types";
+import { type PayoutDetails, type PaymentCardBrand, type SavedPaymentMethod } from "../types";
 import { useAddPaymentMethod } from "../api/payment.mutations";
+import { useGetSavedPaymentMethods } from "../api/payment.queries";
 import { useAuthStore } from "@/stores/auth.store";
+import type { PaymentCardBrandCode } from "../api/payment.contracts";
+import type { ApiError } from "@/types/api.types";
+import { cn } from "@/lib/utils";
 
 export interface PaymentMethodDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSavePayout?: (details: PayoutDetails) => void;
-  onSaveCard?: (card: {
-    id: string;
-    cardType: "VISA" | "MASTERCARD" | "AMEX";
-    lastFourDigits: string;
-    expiryDate: string;
-    cardholderName: string;
-    isDefault: boolean;
-  }) => void;
+  onSaveCard?: (card: SavedPaymentMethod) => void;
+  selectedPaymentMethodId?: string | null;
   mode: "payment" | "payout";
   amount?: number;
   deliveryAddress?: {
@@ -43,26 +43,46 @@ export function PaymentMethodDrawer({
   onClose,
   onSavePayout,
   onSaveCard,
+  selectedPaymentMethodId,
   mode,
   amount = 0,
   deliveryAddress,
 }: PaymentMethodDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [billingSameAsDelivery, setBillingSameAsDelivery] = useState(true);
+  const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { user } = useAuthStore();
   const addPaymentMethodMutation = useAddPaymentMethod();
+  const {
+    data: savedPaymentMethods = [],
+    isLoading: isLoadingSavedPaymentMethods,
+    isError: isSavedPaymentMethodsError,
+  } = useGetSavedPaymentMethods();
 
-  const getCardBrand = (num: string): "VISA" | "MASTERCARD" | "AMEX" => {
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    const apiError = error as Partial<ApiError> | null;
+    if (apiError?.message) {
+      return apiError.message;
+    }
+
+    return "An unexpected error occurred while saving your payment method.";
+  };
+
+  const getCardBrand = (num: string): PaymentCardBrand => {
     const cleanNum = num.replace(/\s/g, "");
     if (cleanNum.startsWith("4")) return "VISA";
     if (/^5[1-5]/.test(cleanNum)) return "MASTERCARD";
     if (/^3[47]/.test(cleanNum)) return "AMEX";
-    return "VISA";
+    return "UNKNOWN";
   };
 
-  const getCardBrandEnum = (brand: string): number => {
+  const getCardBrandEnum = (brand: PaymentCardBrand): PaymentCardBrandCode => {
     switch (brand) {
       case "VISA":
         return 1;
@@ -70,9 +90,36 @@ export function PaymentMethodDrawer({
         return 2;
       case "AMEX":
         return 3;
+      case "MADA":
+        return 4;
       default:
         return 0; // Unknown
     }
+  };
+
+  const handleClose = () => {
+    setShowNewCardForm(false);
+    setSubmitError(null);
+    onClose();
+  };
+
+  const handleUseSavedCard = (paymentMethod: SavedPaymentMethod) => {
+    if (mode === "payout" && onSavePayout) {
+      onSavePayout({
+        type: "card",
+        paymentMethodId: paymentMethod.id,
+        cardNumber: `•••• ${paymentMethod.lastFourDigits}`,
+        lastFourDigits: paymentMethod.lastFourDigits,
+        cardType: paymentMethod.cardType,
+        expiryDate: paymentMethod.expiryDate,
+        cvv: "",
+        cardholderName: paymentMethod.cardholderName,
+      });
+      handleClose();
+      return;
+    }
+
+    onSaveCard?.(paymentMethod);
   };
 
   const handleFormSave = async (data: CreditCardFormValues) => {
@@ -96,13 +143,15 @@ export function PaymentMethodDrawer({
         cardholderName: user?.fullName || "Cardholder Name",
         brand: cardBrandEnum,
         gatewayToken: `pm_mock_${Math.random().toString(36).substring(2, 10)}`,
-        isDefault: true,
+        isDefault: savedPaymentMethods.length === 0,
       });
 
       if (mode === "payout" && onSavePayout) {
         onSavePayout({
           type: "card",
+          paymentMethodId: response.id,
           cardNumber: data.cardNumber,
+          lastFourDigits: response.last4Digits,
           cardType: cardBrand,
           expiryDate: data.expiryDate,
           cvv: data.cvv,
@@ -118,13 +167,15 @@ export function PaymentMethodDrawer({
           isDefault: response.isDefault,
         });
       }
-      onClose();
-    } catch (e: any) {
-      const errMsg = e.message || "An unexpected error occurred while saving your payment method.";
+      handleClose();
+    } catch (error) {
+      const errMsg = getErrorMessage(error);
       setSubmitError(errMsg);
-      console.error("Failed to add payment method to user profile:", e.message || e);
-      if (e.errors) {
-        console.error("Validation errors details:", JSON.stringify(e.errors, null, 2));
+      console.error("Failed to add payment method to user profile:", error);
+
+      const apiError = error as Partial<ApiError> | null;
+      if (apiError?.errors) {
+        console.error("Validation errors details:", JSON.stringify(apiError.errors, null, 2));
       }
     } finally {
       setIsSubmitting(false);
@@ -132,9 +183,24 @@ export function PaymentMethodDrawer({
   };
 
   const isPayoutMode = mode === "payout";
+  const shouldShowSavedCards =
+    !showNewCardForm &&
+    (isLoadingSavedPaymentMethods || isSavedPaymentMethodsError || savedPaymentMethods.length > 0);
+  const shouldShowNewCardForm =
+    showNewCardForm ||
+    (!isLoadingSavedPaymentMethods &&
+      !isSavedPaymentMethodsError &&
+      savedPaymentMethods.length === 0);
+  const formCancelHandler =
+    savedPaymentMethods.length > 0
+      ? () => {
+          setShowNewCardForm(false);
+          setSubmitError(null);
+        }
+      : handleClose;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-[500px] bg-card border-l border-border p-6 flex flex-col justify-start overflow-y-auto z-[100]"
@@ -208,22 +274,154 @@ export function PaymentMethodDrawer({
             </div>
           )}
 
-          {/* Credit Card Form Component */}
-          <div className="pt-2">
-            <CreditCardForm
-              onSave={handleFormSave}
-              onCancel={onClose}
-              isSubmitting={isSubmitting}
-              mode={mode}
-              authorizationAmount={amount}
-              submitButtonText={isPayoutMode ? "Save Payout Method" : "Save & Authorize Payment"}
-              infoBannerText={
-                isPayoutMode
-                  ? undefined
-                  : "Your card will be saved securely. The remaining 90% of your bid will be authorized and charged upon confirmation."
-              }
-            />
-          </div>
+          {shouldShowSavedCards && (
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-foreground">Saved payment methods</h4>
+                <p className="text-xs text-muted-foreground">
+                  {isPayoutMode
+                    ? "Choose which saved card you want to use for seller payouts."
+                    : "Choose which saved card you want to use for this payment."}
+                </p>
+              </div>
+
+              {isLoadingSavedPaymentMethods ? (
+                <div className="flex items-center justify-center rounded-xl border border-border bg-muted/10 py-8 text-sm text-muted-foreground">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading saved cards...
+                </div>
+              ) : isSavedPaymentMethodsError ? (
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+                  We couldn&apos;t load your saved payment methods right now.
+                </div>
+              ) : (
+                <RadioGroup value={selectedPaymentMethodId ?? ""} className="gap-3">
+                  {savedPaymentMethods.map((paymentMethod) => {
+                    const isSelected = paymentMethod.id === selectedPaymentMethodId;
+
+                    return (
+                      <div
+                        key={paymentMethod.id}
+                        onClick={() => handleUseSavedCard(paymentMethod)}
+                        className={cn(
+                          "cursor-pointer rounded-xl border p-4 transition-all",
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/10",
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <RadioGroupItem
+                            value={paymentMethod.id}
+                            id={`payment-method-${paymentMethod.id}`}
+                            className="mt-1 border-muted-foreground data-[state=checked]:border-primary data-[state=checked]:text-primary"
+                          />
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-0.5">
+                                <Label
+                                  htmlFor={`payment-method-${paymentMethod.id}`}
+                                  className="cursor-pointer text-sm font-bold text-foreground"
+                                >
+                                  {paymentMethod.cardType} •••• {paymentMethod.lastFourDigits}
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                  {paymentMethod.cardholderName}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Expires {paymentMethod.expiryDate}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-end gap-1">
+                                {paymentMethod.isDefault && (
+                                  <span className="rounded border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                                    Default
+                                  </span>
+                                )}
+                                {isSelected && (
+                                  <span className="inline-flex items-center gap-1 rounded border border-emerald-200/60 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-400">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Selected
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-lg bg-muted/25 px-3 py-2">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <CreditCard className="h-4 w-4" />
+                                <span>
+                                  {isPayoutMode
+                                    ? "Use this card as your seller payout method."
+                                    : "Use this card for the current flow."}
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={isSelected ? "secondary" : "outline"}
+                                className="h-8 cursor-pointer text-xs font-semibold"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleUseSavedCard(paymentMethod);
+                                }}
+                              >
+                                {isSelected ? "Keep selected" : isPayoutMode ? "Use for payouts" : "Use this card"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </RadioGroup>
+              )}
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full cursor-pointer font-semibold"
+                onClick={() => {
+                  setShowNewCardForm(true);
+                  setSubmitError(null);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isPayoutMode ? "Add another payout card" : "Add another card"}
+              </Button>
+              {isPayoutMode && (
+                <div className="rounded-xl border border-border bg-muted/15 p-3 text-xs text-muted-foreground">
+                  <p className="font-semibold text-foreground">Important</p>
+                  <p className="mt-1">
+                    This payout method will be used to receive your earnings after a successful sale.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {shouldShowNewCardForm && (
+            <div className="pt-2">
+              {!isPayoutMode && savedPaymentMethods.length > 0 && (
+                <div className="mb-4 rounded-xl border border-border bg-muted/15 p-3 text-xs text-muted-foreground">
+                  Add a new saved card without losing your existing ones.
+                </div>
+              )}
+              <CreditCardForm
+                onSave={handleFormSave}
+                onCancel={formCancelHandler}
+                isSubmitting={isSubmitting}
+                mode={mode}
+                authorizationAmount={amount}
+                submitButtonText={isPayoutMode ? "Save Payout Method" : "Save Card"}
+                infoBannerText={
+                  isPayoutMode
+                    ? undefined
+                    : "Your card will be saved securely so you can choose it in future bidding and checkout flows."
+                }
+              />
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>

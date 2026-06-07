@@ -6,7 +6,9 @@
 import { api } from "@/lib/api/client";
 import type {
   CreateOrderRequest,
+  GetWonOrdersQueryParams,
   OrderDetailsDto,
+  PagedListOfWonOrderSummaryDto,
   PagedListOfOrderSummaryDto,
   SearchOrdersQueryParams,
 } from "./order.contracts";
@@ -19,6 +21,19 @@ export async function searchOrders(
 ): Promise<PagedListOfOrderSummaryDto> {
   const response = await api.get<PagedListOfOrderSummaryDto>(
     "/orders/search",
+    { params },
+  );
+  return response.data;
+}
+
+/**
+ * Retrieves the authenticated bidder's won orders from the backend.
+ */
+export async function getWonOrders(
+  params?: GetWonOrdersQueryParams,
+): Promise<PagedListOfWonOrderSummaryDto> {
+  const response = await api.get<PagedListOfWonOrderSummaryDto>(
+    "/orders/won",
     { params },
   );
   return response.data;
