@@ -36,5 +36,7 @@ export interface ProfileSettingsDto {
   street: string;
   building: string;
   landmark: string;
+  verificationStatus: string;
+  extractedFullName: string | null;
+  verificationRejectionReason: string | null;
 }
-

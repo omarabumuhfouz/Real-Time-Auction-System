@@ -33,7 +33,7 @@ public static class ExportDisputes
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/export", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Export disputes to CSV")
            .WithDescription("Generates and downloads a CSV file of filtered disputes bypassing pagination limits.")
            .Produces(StatusCodes.Status200OK, contentType: "text/csv")

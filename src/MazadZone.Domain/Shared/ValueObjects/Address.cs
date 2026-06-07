@@ -3,12 +3,13 @@ namespace MazadZone.Domain.Shared.ValueObjects;
 using MazadZone.Domain.Shared;
 using MazadZone.Domain.Shared.Errors;
 
-public  record Address
+public record Address
 (
     string City,
     string Street,
     string Building,
-    string Landmark
+    string Landmark,
+    bool IsDefault = true 
 )
 {
     public static Result<Address> Create( string city, string street, string building, string landmark)

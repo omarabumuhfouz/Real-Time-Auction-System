@@ -1,3 +1,5 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Repositories;
 
@@ -7,14 +9,14 @@ public sealed class NotifySellerOnOrderConfirmedDomainEventHandler
     : INotificationHandler<OrderConfirmedDomainEvent>
 {
     private readonly ISellerRepository _sellerRepository;
-    private readonly INotificationRepository _notificationService;
+    private readonly ISender _sender;
 
     public NotifySellerOnOrderConfirmedDomainEventHandler(
         ISellerRepository sellerRepository,
-        INotificationRepository notificationService)
+        ISender sender)
     {
         _sellerRepository = sellerRepository;
-        _notificationService = notificationService;
+        _sender = sender;
     }
 
     public async Task Handle(OrderConfirmedDomainEvent notification, CancellationToken ct)
@@ -27,10 +29,11 @@ public sealed class NotifySellerOnOrderConfirmedDomainEventHandler
                       Payment has been secured. You can now proceed to ship the item to the bidder. 
                       Please update the order status to 'Shipped' once you have the tracking information.";
 
-        await _notificationService.NotifySellerAsync(
-            seller.Id.Value,
+        await _sender.Send(new CreateNotificationCommand(
+            seller.Id,
+            NotificationMethods.ReceiveNotification,
             title,
-            message,
-            ct);
+            message
+        ));
     }
 }

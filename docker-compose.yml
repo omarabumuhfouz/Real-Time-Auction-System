@@ -4,27 +4,32 @@ services:
     container_name: mazadzone-seq
     environment:
       - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
     ports:
-      - "5341:5341" # Ingestion port
-      - "8081:80"   # UI port
+      - "5341:5341" 
+      - "8081:80"  
     volumes:
       - seq-data:/data
     networks:
-      - backend_network
+      backend_network:
+        aliases:
+          - seq
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: mazadzone-sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong@Passw0rd! # Must be strong to boot
+      - SA_PASSWORD=YourStrong@Passw0rd!
       - MSSQL_PID=Developer
     ports:
       - "2222:1433" 
     volumes:
       - sql-data:/var/opt/mssql
     networks:
-      - backend_network
+      backend_network:
+        aliases:
+          - sqlserver
     restart: unless-stopped
 
   redis:
@@ -35,27 +40,50 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - backend_network
+      backend_network:
+        aliases:
+          - redis
 
-  # api:
-  #   build:
-  #     context: . # Execute build from the solution root
-  #     dockerfile: MazadZone.Api/Dockerfile
-  #   container_name: mazadzone-api
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #     # Use internal Docker hostnames (sqlserver, redis) for the connection strings
-  #     - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MazadZoneDb;User Id=sa;Password=YourStrong@Passw0rd!;TrustServerCertificate=True;
-  #     - ConnectionStrings__Redis=redis:6379
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - sqlserver
-  #     - redis
-  #     - seq
-  #   networks:
-  #     - frontend_network
-  #     - backend_network # API sits in both so it can bridge the outside world to the DB
+  api:
+    build:
+      context: . 
+      dockerfile: src/MazadZone.Api/Dockerfile
+    container_name: mazadzone-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MazadZoneDb=Server=sqlserver,1433;Database=MazadZoneDb;User Id=sa;Password=YourStrong@Passw0rd!;TrustServerCertificate=True;
+      - ConnectionStrings__Redis=redis:6379
+    ports:
+      - "5108:8080"
+    depends_on:
+      - sqlserver
+      - redis
+      - seq
+    networks:
+      frontend_network:
+        aliases:
+          - mazadzone-api # <--- Registered explicit network naming visibility
+      backend_network:
+        aliases:
+          - mazadzone-api
+
+  client:
+    build:
+      context: ./src/mazadzone-client
+      dockerfile: Dockerfile
+    container_name: mazadzone-client
+    ports:
+      - "3000:3000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # For Server-Side Rendering (Internal Docker Network)
+      - NEXT_PUBLIC_SERVER_API_URL=http://mazadzone-api:8080
+      # For Browser-Side requests (Your local laptop environment)
+      - NEXT_PUBLIC_CLIENT_API_URL=http://localhost:5108
+    depends_on:
+      - api
+    networks:
+      - frontend_network
 
 volumes:
   seq-data:
@@ -67,4 +95,3 @@ networks:
     driver: bridge
   backend_network:
     driver: bridge
-    # internal: true 

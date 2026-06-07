@@ -1,4 +1,7 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Application.Features.Orders.Commands.Deliver;
+using MazadZone.Domain.Notifications;
 using MazadZone.Domain.Sellers;
 using Tests.Application.Features.Sellers;
 
@@ -19,9 +22,8 @@ public class NotifySellerOnOrderDeliveredDomainEventHandlerTests : OrderBaseTest
         await Handler.Handle(domainEvent, default);
 
         // Assert
-        // Ensure no notification is attempted if we can't find the seller
-        await _notificationRepository.DidNotReceiveWithAnyArgs()
-            .NotifySellerAsync(default!, default!, default!, default);
+        // We broadly verify that the Send method was never called with any parameters whatsoever.
+        await _sender.DidNotReceiveWithAnyArgs().Send(Arg.Any<object>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -29,7 +31,6 @@ public class NotifySellerOnOrderDeliveredDomainEventHandlerTests : OrderBaseTest
     {
         // Arrange
         var domainEvent = OrderHelper.CreateOrderDeliveredEvent();
-
         var seller = SellerHelper.CreateValidSeller();
 
         _sellerRepository.GetByAuctionIdAsync(domainEvent.AuctionId, Arg.Any<CancellationToken>())
@@ -39,11 +40,13 @@ public class NotifySellerOnOrderDeliveredDomainEventHandlerTests : OrderBaseTest
         await Handler.Handle(domainEvent, default);
 
         // Assert
-        // We verify the notification is sent to the correct SellerId
-        await _notificationRepository.Received(1).NotifySellerAsync(
-            seller.Id.Value,
-            Arg.Any<string>(),
-            Arg.Any<string>(), 
-            Arg.Any<CancellationToken>());
+        // Verify the correct MediatR command was sent with the correct targeted Seller ID
+        await _sender.Received(1).Send(
+            Arg.Is<CreateNotificationCommand>(c => 
+                c.UserId == seller.Id &&
+                c.Method == NotificationMethods.ReceiveNotification
+            ), 
+            Arg.Any<CancellationToken>()
+        );
     }
 }

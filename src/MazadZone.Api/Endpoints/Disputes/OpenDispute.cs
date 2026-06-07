@@ -14,7 +14,7 @@ public static class OpenDispute
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/", HandleAsync)
-        //    .RequireAuthorization(Policies.AdminOnly)
+           .RequireAuthorization(Policies.BidderOnly)
            .WithSummary("Open a dispute for an order")
            .WithDescription("Initiates a formal dispute for an order, which typically pauses any pending payouts and flags the transaction for administrative review. A valid reason must be provided in the request body. Returns a 409 Conflict if the order is already disputed, or if it is in a state that cannot be disputed (e.g., canceled).")
            .Accepts<OpenDisputeRequest>("application/json")

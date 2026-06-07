@@ -15,7 +15,7 @@ import { BidRowsSkeleton } from "./BidRowsSkeleton";
 import { EmptyBidsState } from "./EmptyBidsState";
 import { ErrorBidsState } from "./ErrorBidsState";
 
-const FILTERS = ["All", "Leading", "Outbid", "Won", "Lost"] as const;
+const FILTERS = ["All", "Leading", "Outbid", "Ended"] as const;
 type FilterType = typeof FILTERS[number];
 
 /**

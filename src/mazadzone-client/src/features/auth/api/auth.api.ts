@@ -44,9 +44,29 @@ export async function logout(request: LogoutRequest): Promise<void> {
 export async function registerBidder(
   request: RegisterBidderRequest,
 ): Promise<RegisterBidderDto> {
+  const formData = new FormData();
+  formData.append("email", request.email);
+  formData.append("password", request.password);
+  formData.append("phoneNumber", request.phoneNumber);
+  formData.append("nationalId", request.nationalId);
+  formData.append("firstName", request.firstName);
+  formData.append("secondName", request.secondName);
+  formData.append("thirdName", request.thirdName);
+  formData.append("lastName", request.lastName);
+  formData.append("city", request.city);
+  formData.append("street", request.street);
+  formData.append("building", request.building);
+  formData.append("landmark", request.landmark);
+  formData.append("file", request.file);
+
   const response = await api.post<RegisterBidderDto>(
     "/api/v1/bidders/register",
-    request,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
   );
   return response.data;
 }

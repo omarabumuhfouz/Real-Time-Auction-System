@@ -34,6 +34,7 @@ public class DatabaseSeeder : IDatabaseSeeder
     private readonly AppDbContext _dbContext;
     private readonly ILogger<DatabaseSeeder> _logger;
     private readonly IPasswordService _passwordService;
+    private readonly IAuctionJobScheduler _auctionJobScheduler;
 
     // ─── Shared password for ALL seeded users (sellers + bidders) ──────────────
     private const string PlainTextPassword = "MazadZone123!";
@@ -41,14 +42,22 @@ public class DatabaseSeeder : IDatabaseSeeder
     public DatabaseSeeder(
         AppDbContext dbContext,
         ILogger<DatabaseSeeder> logger,
-        IPasswordService passwordService)
+        IPasswordService passwordService,
+        IAuctionJobScheduler auctionJobScheduler)
     {
         _dbContext = dbContext;
         _logger = logger;
         _passwordService = passwordService;
+        _auctionJobScheduler = auctionJobScheduler;
     }
 
     // ── Reflection helpers ─────────────────────────────────────────────────────
+
+    private static string TruncateString(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "N/A";
+        return value.Length > maxLength ? value.Substring(0, maxLength).Trim() : value.Trim();
+    }
 
     private static void ClearDomainEvents(object entity)
     {
@@ -125,6 +134,20 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         // ── 5. Orders, Payments, Feedbacks, Disputes ───────────────────────────
         await SeedOrdersAndPayments(orderItems, bidderEntities, disputeTypes);
+
+        _logger.LogInformation("Scheduling Hangfire jobs for seeded pending and active auctions...");
+        foreach (var auction in allAuctions)
+        {
+            if (auction.Status == AuctionStatus.Pending)
+            {
+                _auctionJobScheduler.ScheduleAuctionStarting(auction.Id.Value, auction.StartTime);
+                _auctionJobScheduler.ScheduleAuctionClosing(auction.Id.Value, auction.EndTime);
+            }
+            else if (auction.Status == AuctionStatus.Active)
+            {
+                _auctionJobScheduler.ScheduleAuctionClosing(auction.Id.Value, auction.EndTime);
+            }
+        }
 
         _logger.LogInformation(
             "🎉 MazadZone seeding complete — {AuctionCount} auctions, {SellerCount} sellers, {BidderCount} bidders.",
@@ -256,6 +279,7 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         var sellerUsers = new List<User>();
         var sellers = new List<Seller>();
+        var bidders = new List<Bidder>();
 
         for (int i = 0; i < sellerProfiles.Length; i++)
         {
@@ -292,11 +316,11 @@ public class DatabaseSeeder : IDatabaseSeeder
 
             sellerUsers.Add(user);
             sellers.Add(seller);
+            bidders.Add(bidder);
         }
 
         // ── 30 Bidders ─────────────────────────────────────────────────────────
         var bidderUsers = new List<User>();
-        var bidders = new List<Bidder>();
 
         var bidderFirstNames = new[]
         {
@@ -361,6 +385,54 @@ public class DatabaseSeeder : IDatabaseSeeder
         bool AddFeedbackReply,
         DisputeStatus? TargetDisputeStatus);
 
+    private static Category? ResolveCorrectCategory(string title, List<Category> subCats)
+    {
+        string titleLower = title.ToLowerInvariant();
+        if (titleLower.Contains("iphone") || titleLower.Contains("pixel") || titleLower.Contains("s24") || titleLower.Contains("oneplus") || titleLower.Contains("xiaomi") || titleLower.Contains("fold"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Smartphones", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("macbook") || titleLower.Contains("xps") || titleLower.Contains("rog") || titleLower.Contains("thinkpad") || titleLower.Contains("spectre") || titleLower.Contains("raider") || titleLower.Contains("swift") || titleLower.Contains("surface"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Laptops", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("sony") || titleLower.Contains("canon") || titleLower.Contains("nikon") || titleLower.Contains("gopro") || titleLower.Contains("osmo") || titleLower.Contains("fujifilm") || titleLower.Contains("mini 4 pro"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Cameras", StringComparison.OrdinalIgnoreCase));
+            
+        if (titleLower.Contains("leica") || titleLower.Contains("polaroid") || titleLower.Contains("braun") || titleLower.Contains("olympus"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Antiques", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("porsche") || titleLower.Contains("mercedes") || titleLower.Contains("bmw m4") || titleLower.Contains("audi rs") || titleLower.Contains("ferrari") || titleLower.Contains("toyota") || titleLower.Contains("range rover") || titleLower.Contains("lamborghini"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Cars", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("panigale") || titleLower.Contains("duke") || titleLower.Contains("cb1000r") || titleLower.Contains("scrambler") || titleLower.Contains("bullet 350") || titleLower.Contains("ninja"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Motorcycles", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("brembo") || titleLower.Contains("akrapovič") || titleLower.Contains("mirror caps") || titleLower.Contains("wheels") || titleLower.Contains("hre"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Spare Parts", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("rolex") || titleLower.Contains("seamaster") || titleLower.Contains("carrera calibre") || titleLower.Contains("seiko") || titleLower.Contains("patek") || titleLower.Contains("watch") || titleLower.Contains("royal oak") || titleLower.Contains("navitimer") || titleLower.Contains("birkin"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Watches", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("oil on canvas") || titleLower.Contains("calligraphy") || titleLower.Contains("watercolour") || titleLower.Contains("nude figure"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Paintings", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("messi") || titleLower.Contains("ronaldo") || titleLower.Contains("basketball") || titleLower.Contains("glove"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Memorabilia", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("wh-1000xm5"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Audio", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("moncler"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Clothing", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("nike"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Shoes", StringComparison.OrdinalIgnoreCase));
+        
+        if (titleLower.Contains("racket"))
+            return subCats.FirstOrDefault(c => c.Name.Value.Contains("Sports Equipment", StringComparison.OrdinalIgnoreCase));
+        
+        return null;
+    }
+
     private (List<Auction> auctions, List<OrderAuctionItem> orderItems)
         BuildAuctions(
             DateTime now,
@@ -418,16 +490,16 @@ public class DatabaseSeeder : IDatabaseSeeder
             var auction = Auction.Create(
                 sellerId: seller.Id,
                 status:   entry.ItemStatus,
-                condition: Description.Create(entry.Condition).Value,
+                condition: Description.Create(TruncateString(entry.Condition, 500)).Value,
                 shippingAddress: shippingAddr,
                 startBidAmount:  entry.StartBid,
                 minBidAmount:    entry.MinBid,
                 startTime: start,
                 endTime:   end,
-                title:       entry.Title,
-                description: entry.Description,
+                title:       TruncateString(entry.Title, 45),
+                description: TruncateString(entry.Description, 500),
                 images: BuildImages(entry.ImageUrl),
-                categoryId: entry.Category.Id
+                categoryId: (ResolveCorrectCategory(entry.Title, subCats) ?? entry.Category).Id
             ).Value;
 
             allAuctions.Add(auction);
@@ -448,16 +520,16 @@ public class DatabaseSeeder : IDatabaseSeeder
             var auction = Auction.Create(
                 sellerId: seller.Id,
                 status:   entry.ItemStatus,
-                condition: Description.Create(entry.Condition).Value,
+                condition: Description.Create(TruncateString(entry.Condition, 500)).Value,
                 shippingAddress: shippingAddr,
                 startBidAmount:  entry.StartBid,
                 minBidAmount:    entry.MinBid,
                 startTime: start,
                 endTime:   end,
-                title:       entry.Title,
-                description: entry.Description,
+                title:       TruncateString(entry.Title, 45),
+                description: TruncateString(entry.Description, 500),
                 images: BuildImages(entry.ImageUrl),
-                categoryId: entry.Category.Id
+                categoryId: (ResolveCorrectCategory(entry.Title, subCats) ?? entry.Category).Id
             ).Value;
 
             // Transition to Active
@@ -513,16 +585,16 @@ public class DatabaseSeeder : IDatabaseSeeder
             var auction = Auction.Create(
                 sellerId: seller.Id,
                 status:   entry.ItemStatus,
-                condition: Description.Create(entry.Condition).Value,
+                condition: Description.Create(TruncateString(entry.Condition, 500)).Value,
                 shippingAddress: shippingAddr,
                 startBidAmount:  entry.StartBid,
                 minBidAmount:    entry.MinBid,
                 startTime: start,
                 endTime:   end,
-                title:       entry.Title,
-                description: entry.Description,
+                title:       TruncateString(entry.Title, 45),
+                description: TruncateString(entry.Description, 500),
                 images: BuildImages(entry.ImageUrl),
-                categoryId: entry.Category.Id
+                categoryId: (ResolveCorrectCategory(entry.Title, subCats) ?? entry.Category).Id
             ).Value;
 
             auction.MarkAsActive(start.AddSeconds(30));
@@ -563,16 +635,16 @@ public class DatabaseSeeder : IDatabaseSeeder
             var auction = Auction.Create(
                 sellerId: seller.Id,
                 status:   entry.ItemStatus,
-                condition: Description.Create(entry.Condition).Value,
+                condition: Description.Create(TruncateString(entry.Condition, 500)).Value,
                 shippingAddress: shippingAddr,
                 startBidAmount:  entry.StartBid,
                 minBidAmount:    entry.MinBid,
                 startTime: start,
                 endTime:   end,
-                title:       entry.Title,
-                description: entry.Description,
+                title:       TruncateString(entry.Title, 45),
+                description: TruncateString(entry.Description, 500),
                 images: BuildImages(entry.ImageUrl),
-                categoryId: entry.Category.Id
+                categoryId: (ResolveCorrectCategory(entry.Title, subCats) ?? entry.Category).Id
             ).Value;
 
             auction.MarkAsActive(start.AddSeconds(30));
@@ -591,16 +663,16 @@ public class DatabaseSeeder : IDatabaseSeeder
             var auction = Auction.Create(
                 sellerId: seller.Id,
                 status:   entry.ItemStatus,
-                condition: Description.Create(entry.Condition).Value,
+                condition: Description.Create(TruncateString(entry.Condition, 500)).Value,
                 shippingAddress: shippingAddr,
                 startBidAmount:  entry.StartBid,
                 minBidAmount:    entry.MinBid,
                 startTime: start,
                 endTime:   end,
-                title:       entry.Title,
-                description: entry.Description,
+                title:       TruncateString(entry.Title, 45),
+                description: TruncateString(entry.Description, 500),
                 images: BuildImages(entry.ImageUrl),
-                categoryId: entry.Category.Id
+                categoryId: (ResolveCorrectCategory(entry.Title, subCats) ?? entry.Category).Id
             ).Value;
 
             // Cancel while Pending (seller can only cancel pending auctions)
@@ -622,16 +694,16 @@ public class DatabaseSeeder : IDatabaseSeeder
             var auction = Auction.Create(
                 sellerId: seller.Id,
                 status:   entry.ItemStatus,
-                condition: Description.Create(entry.Condition).Value,
+                condition: Description.Create(TruncateString(entry.Condition, 500)).Value,
                 shippingAddress: shippingAddr,
                 startBidAmount:  entry.StartBid,
                 minBidAmount:    entry.MinBid,
                 startTime: start,
                 endTime:   end,
-                title:       entry.Title,
-                description: entry.Description,
+                title:       TruncateString(entry.Title, 45),
+                description: TruncateString(entry.Description, 500),
                 images: BuildImages(entry.ImageUrl),
-                categoryId: entry.Category.Id
+                categoryId: (ResolveCorrectCategory(entry.Title, subCats) ?? entry.Category).Id
             ).Value;
 
             auction.MarkAsActive(start.AddSeconds(30));
@@ -771,8 +843,21 @@ public class DatabaseSeeder : IDatabaseSeeder
         decimal MinBid,
         string ImageUrl);
 
-    private static List<Image> BuildImages(string url) =>
-        new() { Image.Create(url, "Main product view", true).Value };
+    private static List<Image> BuildImages(string url)
+    {
+        if (url != null && url.Contains("unsplash.com"))
+        {
+            var photoId = "default";
+            var parts = url.Split('/');
+            var lastPart = parts.LastOrDefault()?.Split('?').FirstOrDefault();
+            if (lastPart != null && lastPart.StartsWith("photo-"))
+            {
+                photoId = lastPart;
+            }
+            url = $"https://picsum.photos/seed/{photoId}/600/450";
+        }
+        return new() { Image.Create(url, "Main product view", true).Value };
+    }
 
     private static readonly Faker _f = new("en");
 

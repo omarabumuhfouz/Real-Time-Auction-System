@@ -34,6 +34,7 @@ export interface FormFieldConfig {
   type?: string;
   name?: keyof ProfileFormValues;
   disabled?: boolean;
+  readOnly?: boolean;
   value?: string;
   hint?: string;
 }
@@ -46,5 +47,4 @@ export interface AddressFieldConfig {
   name: keyof Omit<AddressFormValues, "isDefault">;
   disabled?: boolean;
 }
-
 

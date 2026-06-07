@@ -1,5 +1,3 @@
-import type { OrderActivity } from "./orders.types";
-
 export type CheckoutStep = "details" | "choose-address" | "review" | "success";
 
 export interface CheckoutAddress {
@@ -15,7 +13,7 @@ export interface CheckoutAddress {
 
 export interface CheckoutPaymentMethod {
   id: string;
-  cardType: "VISA" | "MASTERCARD" | "AMEX";
+  cardType: "VISA" | "MASTERCARD" | "AMEX" | "MADA" | "UNKNOWN";
   lastFourDigits: string;
   expiryDate: string;
   cardholderName: string;

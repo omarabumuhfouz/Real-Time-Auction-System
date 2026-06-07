@@ -1,3 +1,5 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Repositories;
 
@@ -9,12 +11,11 @@ namespace MazadZone.Application.Features.Orders.Commands.Deliver;
 public sealed class NotifyBidderOnOrderDeliveredDomainEventHandler 
     : INotificationHandler<OrderDeliveredDomainEvent>
 {
-    private readonly INotificationRepository _notificationService;
+    private readonly ISender _sender;
 
-    public NotifyBidderOnOrderDeliveredDomainEventHandler(
-        INotificationRepository notificationService)
+    public NotifyBidderOnOrderDeliveredDomainEventHandler(ISender sender)
     {
-        _notificationService = notificationService;
+        _sender = sender;
     }
 
     public async Task Handle(OrderDeliveredDomainEvent notification, CancellationToken ct)
@@ -24,9 +25,11 @@ public sealed class NotifyBidderOnOrderDeliveredDomainEventHandler
         var message = $@"Great news! Your item from Order #{notification.OrderId.Value} has been delivered. 
         Please take a moment to leave feedback for the seller. Your reviews help keep the MazadZone community safe and reliable!";
 
-        await _notificationService.NotifyBidderAsync(
-            notification.BidderId.Value,
-            title,
-            message);
+        await _sender.Send(new CreateNotificationCommand(
+                            notification.BidderId,
+                            NotificationMethods.ReceiveNotification,
+                            title,
+                            message
+                        ));
     }
 }

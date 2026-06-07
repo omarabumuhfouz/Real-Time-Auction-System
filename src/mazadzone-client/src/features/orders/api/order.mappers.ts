@@ -10,6 +10,7 @@ import type {
   AddressDto,
   OrderDetailsDto,
   OrderSummaryDto,
+  WonOrderSummaryDto,
 } from "./order.contracts";
 
 /**
@@ -46,6 +47,34 @@ export function mapOrderSummaryDtoToActivity(
       title: "Auction Listing",
       imageUrl: "",
     },
+  };
+}
+
+/**
+ * Maps WonOrderSummaryDto from `/orders/won` into the My Orders row model.
+ */
+export function mapWonOrderSummaryDtoToActivity(
+  dto: WonOrderSummaryDto,
+  auction?: {
+    id?: string;
+    title?: string;
+    imageUrl?: string;
+  },
+): OrderActivity {
+  return {
+    id: dto.orderId,
+    orderNumber: `ORD-${dto.orderId.substring(0, 8).toUpperCase()}`,
+    status: mapBackendStatusToOrderStatus(dto.status),
+    deliveryStatus: dto.status,
+    finalBid: dto.finalBidAmount,
+    date: dto.orderDate,
+    auction: {
+      id: auction?.id ?? dto.orderId,
+      title: auction?.title ?? dto.itemTitle,
+      imageUrl: auction?.imageUrl ?? "",
+    },
+    sellerId: dto.sellerId,
+    sellerName: dto.sellerName,
   };
 }
 

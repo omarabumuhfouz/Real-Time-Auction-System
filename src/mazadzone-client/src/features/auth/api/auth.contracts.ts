@@ -39,7 +39,11 @@ export interface RegisterBidderRequest {
   secondName: string;
   thirdName: string;
   lastName: string;
-  address: AddressDto;
+  city: string;
+  street: string;
+  building: string;
+  landmark: string;
+  file: File;
 }
 
 export interface BidderProfileDto {

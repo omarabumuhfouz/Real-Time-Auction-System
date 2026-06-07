@@ -1,3 +1,5 @@
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 using MazadZone.Domain.Orders.Events;
 using MazadZone.Domain.Repositories;
 
@@ -9,19 +11,24 @@ namespace MazadZone.Application.Features.Orders.Commands.Create;
 public sealed class NotifyBidderOnOrderCreatedDomainEventHandler 
     : INotificationHandler<OrderCreatedDomainEvent>
 {
-    private readonly INotificationRepository _notificationService;
+    private readonly ISender _sender;
 
-    public NotifyBidderOnOrderCreatedDomainEventHandler(
-        INotificationRepository notificationService)
+    public NotifyBidderOnOrderCreatedDomainEventHandler(ISender sender)
     {
-        _notificationService = notificationService;
+        _sender = sender;
     }
 
     public async Task Handle(OrderCreatedDomainEvent notification, CancellationToken ct)
     {
-        await _notificationService.NotifyBidderAsync(
-            notification.BidderId.Value,
-           title: "Auction Won! Action Required",
-            message: "Congratulations! You have the winning bid. Please confirm your shipping and payment details to finalize your order.");
+
+           var title = "Auction Won! Action Required";
+           var message = "Congratulations! You have the winning bid. Please confirm your shipping and payment details to finalize your order.";
+
+        await _sender.Send(new CreateNotificationCommand(
+                    notification.BidderId,
+                    NotificationMethods.ReceiveNotification,
+                    title,
+                    message
+                ));
     }
 }

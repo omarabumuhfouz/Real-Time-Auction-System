@@ -12,7 +12,6 @@ import {
   Gavel,
   UserPlus,
   Tag,
-  Paperclip,
   Send,
   CheckCheck,
   Shield,
@@ -43,6 +42,7 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const sendChatMutation = useSendChatMessage();
+  const sendLockRef = useRef(false);
 
   // Local Chat State
   const [messages, setMessages] = useState<Message[]>([
@@ -66,7 +66,7 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
   }, [messages, sendChatMutation.isPending]);
 
   // Fetch active auctions to populate dynamic recommendation carousel
-  const { data: auctionsData, isLoading: isLoadingAuctions } = useGetAuctions({
+  const { data: auctionsData } = useGetAuctions({
     status: "Active",
     pageSize: 5,
   });
@@ -114,7 +114,10 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
 
   // Handle message send logic
   const handleSendMessage = (textToSend: string) => {
-    if (!textToSend.trim() || !isAuthenticated || sendChatMutation.isPending) return;
+    const trimmedMessage = textToSend.trim();
+    if (!trimmedMessage || !isAuthenticated || sendChatMutation.isPending || sendLockRef.current) return;
+
+    sendLockRef.current = true;
 
     const timeString = new Date().toLocaleTimeString([], {
       hour: "2-digit",
@@ -126,7 +129,7 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
     const userMsg: Message = {
       id: userMsgId,
       sender: "user",
-      text: textToSend,
+      text: trimmedMessage,
       timestamp: timeString,
     };
 
@@ -135,15 +138,15 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
 
     // Detect if search terms trigger scroller visualization
     const triggersAuctions =
-      textToSend.toLowerCase().includes("soon") ||
-      textToSend.toLowerCase().includes("electronics") ||
-      textToSend.toLowerCase().includes("macbook") ||
-      textToSend.toLowerCase().includes("iphone") ||
-      textToSend.toLowerCase().includes("browse") ||
-      textToSend.toLowerCase().includes("ending");
+      trimmedMessage.toLowerCase().includes("soon") ||
+      trimmedMessage.toLowerCase().includes("electronics") ||
+      trimmedMessage.toLowerCase().includes("macbook") ||
+      trimmedMessage.toLowerCase().includes("iphone") ||
+      trimmedMessage.toLowerCase().includes("browse") ||
+      trimmedMessage.toLowerCase().includes("ending");
 
     // Call actual backend RAG API
-    sendChatMutation.mutate(textToSend, {
+    sendChatMutation.mutate(trimmedMessage, {
       onSuccess: (data) => {
         const assistantMsg: Message = {
           id: `assistant-${Date.now()}`,
@@ -157,11 +160,11 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
         };
         setMessages((prev) => [...prev, assistantMsg]);
       },
-      onError: (err: any) => {
+      onError: (err: { statusCode?: number; message?: string }) => {
         let errorMsgText = "Sorry, I had trouble reaching the live auction agent right now. Please try again in a bit.";
         if (err?.statusCode === 401) {
           errorMsgText = "Your session has expired. Please sign in again to chat with the assistant.";
-        } else if (err?.message) {
+        } else if (err?.statusCode && err.statusCode < 500 && err?.message) {
           errorMsgText = `Sorry, I had trouble reaching the live auction agent: ${err.message}`;
         }
 
@@ -175,6 +178,9 @@ export function AssistantChatWindow({ onClose, onMinimize }: AssistantChatWindow
           }),
         };
         setMessages((prev) => [...prev, errMsg]);
+      },
+      onSettled: () => {
+        sendLockRef.current = false;
       },
     });
   };

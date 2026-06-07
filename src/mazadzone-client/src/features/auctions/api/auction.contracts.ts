@@ -59,7 +59,6 @@ export interface ImageModelDto {
 }
 
 export interface CreateAuctionRequest {
-  sellerId: string;
   shippingAddress: AddressDto;
   startBidAmount: number;
   minBidAmount: number;
@@ -84,6 +83,7 @@ export interface GetAuctionsQueryParams {
   Status?: string;
   SortBy?: string;
   SortDirection?: string;
+  ItemStatus?: string;
 }
 
 export interface PagedListOfAuctionsListDto {
@@ -101,4 +101,6 @@ export interface CategoryDto {
   name: string;
   subCategories?: CategoryDto[];
   subcategories?: CategoryDto[];
+  children?: CategoryDto[];
 }
+

@@ -27,6 +27,10 @@ export function BecomeSellerPayoutMethod({
   onOpenDrawer
 }: BecomeSellerPayoutMethodProps) {
   const [showWhyBanner, setShowWhyBanner] = useState(true);
+  const payoutLastFourDigits =
+    payoutDetails?.lastFourDigits ||
+    payoutDetails?.cardNumber?.replace(/\D/g, "").slice(-4) ||
+    "";
 
   const handleRemove = () => {
     onPayoutAdded(null);
@@ -91,7 +95,7 @@ export function BecomeSellerPayoutMethod({
                 </span>
               </div>
               <p className="text-xs md:text-sm text-muted-foreground font-semibold mt-1">
-                {`${payoutDetails.cardType || "Card"} ending in ${payoutDetails.cardNumber?.replace(/\s/g, "").slice(-4)}`}
+                {`${payoutDetails.cardType || "Card"} ending in ${payoutLastFourDigits}`}
               </p>
             </div>
           </div>

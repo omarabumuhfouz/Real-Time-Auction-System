@@ -8,7 +8,7 @@ public static class Cancel
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/cancel", HandleAsync)
-        //    .RequireAuthorization()
+           .RequireAuthorization()
            .WithSummary("Cancel an order")
            .WithDescription("Cancels an existing order. This operation is typically restricted by domain rules—for example, an order might only be cancellable if it is still in a 'Pending' state. Returns a 409 Conflict if the order has already been shipped, delivered")
            .Produces(StatusCodes.Status204NoContent)

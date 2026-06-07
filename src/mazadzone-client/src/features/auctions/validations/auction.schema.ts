@@ -1,11 +1,9 @@
 import { z } from "zod";
 import { AuctionCategory, AuctionSubcategory, AuctionCondition } from "../types/auction.types";
 
-export const parseDotFormattedPrice = (formattedStr: string): number => {
-  if (!formattedStr) return 0;
-  const cleanDigits = formattedStr.replace(/\./g, "");
-  return parseFloat(cleanDigits) / 100;
-};
+import { parseDotFormattedPrice } from "@/utils/currency.utils";
+
+export { parseDotFormattedPrice };
 
 /**
  * Zod schema for the "Create Auction" form.

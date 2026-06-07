@@ -10,7 +10,7 @@ public static class BulkActivate
     {
         // Using PUT to a collection-level sub-resource
         app.MapPut("/users/bulk-activate", HandleAsync)
-           // .RequireAuthorization("AdminOnly")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Bulk activate multiple user accounts")
            .WithDescription("Reactivates multiple previously suspended or inactive user accounts. Returns a 409 Conflict if any user in the batch is already active (transaction aborted).")
            .Produces(StatusCodes.Status204NoContent)

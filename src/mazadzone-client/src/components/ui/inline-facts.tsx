@@ -15,34 +15,30 @@ export function InlineFacts({ facts, className }: InlineFactsProps) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-x-1 gap-y-2 rounded-lg border border-border bg-card/50 px-4 py-3",
+        "grid grid-cols-3 divide-x divide-border/60 rounded-xl border border-border/80 bg-card py-3.5 shadow-2xs text-center w-full",
         className,
       )}
     >
-      {facts.map((fact, i) => (
-        <div key={fact.label} className="flex items-center gap-1">
-          {/* Separator dot (skip for the first item) */}
-          {i > 0 && (
-            <span className="text-border mx-2 hidden sm:inline" aria-hidden="true">
-              ·
-            </span>
-          )}
+      {facts.map((fact) => (
+        <div key={fact.label} className="flex flex-col items-center justify-center px-1.5">
           <span
             className={cn(
-              "text-xs font-medium",
+              "text-[9px] md:text-[10px] font-extrabold uppercase tracking-wider select-none",
               fact.muted
-                ? "text-muted-foreground/50"
+                ? "text-muted-foreground/45"
                 : "text-muted-foreground",
             )}
           >
-            {fact.label}:
+            {fact.label}
           </span>
           <span
             className={cn(
-              "text-sm font-bold",
+              "text-base md:text-lg font-black mt-1.5 tracking-tight",
               fact.muted
-                ? "text-foreground/40"
-                : "text-foreground",
+                ? "text-foreground/45"
+                : fact.label.toLowerCase().includes("bid") || fact.label.toLowerCase().includes("price")
+                  ? "text-primary"
+                  : "text-foreground",
             )}
           >
             {fact.value}

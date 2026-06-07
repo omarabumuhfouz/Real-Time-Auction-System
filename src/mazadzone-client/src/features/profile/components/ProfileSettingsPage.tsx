@@ -1,7 +1,6 @@
 "use client";
 
 import { PageWrapper } from "@/components/layout/page-wrapper";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountInfoForm } from "./AccountInfoForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
@@ -52,11 +51,11 @@ export function ProfileSettingsPage() {
         {/* Account Info Card */}
         <AccountInfoForm profile={profile} />
 
-        {/* Change Password Card */}
-        <ChangePasswordForm />
-
         {/* Address Book Card */}
         <AddressBook />
+
+        {/* Change Password Card */}
+        <ChangePasswordForm />
       </div>
     </PageWrapper>
   );

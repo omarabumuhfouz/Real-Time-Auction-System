@@ -4,7 +4,6 @@ import { useState } from "react";
 import { OrderActivity } from "../../types/orders.types";
 import { formatCurrency } from "@/utils/currency.utils";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ROUTES } from "@/config/routes.config";
 import { OrderStatusBadge } from "./OrderStatusBadge";
@@ -37,7 +36,7 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-  const detailHref = ROUTES.ORDERS.DETAIL(activity.id);
+  const detailHref = ROUTES.AUCTIONS.DETAIL(activity.auction.id);
   const isPending = activity.status === "Pending";
   const isDelivered = activity.status === "Delivered";
 
@@ -67,22 +66,16 @@ export function OrderActivityItem({ activity }: OrderActivityItemProps) {
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <span>
-                  Order #: <span className="font-medium text-gray-700">{activity.orderNumber}</span>
-                </span>
                 {activity.sellerId && activity.sellerName && (
-                  <>
-                    <span className="text-gray-300 font-light">|</span>
-                    <span>
-                      Seller:{" "}
-                      <Link
-                        href={`/users/${activity.sellerId}`}
-                        className="font-bold text-gray-700 hover:text-primary transition-colors cursor-pointer"
-                      >
-                        {activity.sellerName}
-                      </Link>
-                    </span>
-                  </>
+                  <span>
+                    Seller:{" "}
+                    <Link
+                      href={`/users/${activity.sellerId}`}
+                      className="font-bold text-gray-700 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      {activity.sellerName}
+                    </Link>
+                  </span>
                 )}
               </div>
             </div>

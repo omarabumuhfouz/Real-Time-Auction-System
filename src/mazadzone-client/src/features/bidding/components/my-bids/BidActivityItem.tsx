@@ -20,19 +20,21 @@ interface BidActivityItemProps {
 }
 
 export function BidActivityItem({ activity }: BidActivityItemProps) {
-  const isEnded = activity.status === "Won" || activity.status === "Lost" || (activity.status as string) === "Ended";
+  const isAuctionEnded = activity.auction.status === "Ended";
   const isOutbid = activity.status === "Outbid";
+  const canPlaceNewBid = isOutbid && activity.auction.status === "Active";
+  const isWon = activity.status === "Won";
   const detailHref = ROUTES.AUCTIONS.DETAIL(activity.auction.id);
   const actionHref =
-    activity.status === "Won" ? ROUTES.ORDERS.LIST : detailHref;
+    isWon ? ROUTES.ORDERS.LIST : detailHref;
   const actionLabel =
-    activity.status === "Won"
+    isWon
       ? "View Orders"
-      : isEnded
+      : canPlaceNewBid
+        ? "Place New Bid"
+        : isAuctionEnded
         ? "View Details"
-        : isOutbid
-          ? "Place New Bid"
-          : "View Auction";
+        : "View Auction";
   const currentBid = activity.auction.pricing.currentBid || activity.auction.pricing.startingPrice;
 
   return (
@@ -68,9 +70,10 @@ export function BidActivityItem({ activity }: BidActivityItemProps) {
       {/* 3. Time Left */}
       <div className="flex justify-center items-center w-full md:w-auto md:flex-1">
         <CountdownTimer
+          startDate={activity.auction.timing.startDate}
           endDate={activity.auction.timing.endDate}
           variant="minimal"
-          status={activity.status}
+          status={activity.auction.status}
           className="text-gray-600 font-medium"
         />
       </div>
@@ -79,10 +82,10 @@ export function BidActivityItem({ activity }: BidActivityItemProps) {
       <ActivityItemActions className="md:pr-6">
         <Button
           asChild
-          variant={isOutbid ? "default" : "secondary"}
+          variant={canPlaceNewBid ? "default" : "secondary"}
           className={cn(
             "font-semibold rounded-xl text-lg w-full md:w-48 h-14 cursor-pointer transition-colors",
-            isOutbid
+            canPlaceNewBid
               ? "bg-primary text-white hover:bg-primary/90"
               : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-none"
           )}

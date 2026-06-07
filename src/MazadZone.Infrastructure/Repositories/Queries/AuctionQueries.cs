@@ -8,6 +8,7 @@ using MazadZone.Application.Features.Users.DTOs;
 using MazadZone.Application.Services;
 using MazadZone.Domain.Auctions;
 using MazadZone.Domain.Auctions.Enums;
+using MazadZone.Domain.Categories;
 using MazadZone.Domain.Orders;
 using MazadZone.Domain.Users.ValueObjects;
 using MazadZone.Infrastructure.Persistence;
@@ -59,7 +60,7 @@ public partial class AuctionQueries(
     {
         var auctions = _context.Auctions
             .AsNoTracking()
-            .Where(a => a.SellerId.Equals(sellerId) && a.Status == AuctionStatus.Active)
+            .Where(a => a.SellerId == sellerId && a.Status == AuctionStatus.Active)
             .Select(a => new AuctionBiddersDto(
                 a.Id.Value,
                 a.Item.Title,
@@ -246,7 +247,7 @@ public partial class AuctionQueries(
 
         if (parameters.CategoryId.HasValue)
         {
-            query = query.Where(a => a.Item.CategoryId == parameters.CategoryId.Value);
+            query = query.Where(a => a.Item.CategoryId == CategoryId.From(parameters.CategoryId.Value));
         }
 
         var tab = parameters.Tab?.Trim().ToLowerInvariant() ?? "all";

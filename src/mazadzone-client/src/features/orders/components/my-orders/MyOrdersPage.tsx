@@ -33,16 +33,18 @@ export function MyOrdersPage() {
   const pageSize = 5;
 
   // Retrieve auth context dynamically
-  const user = useAuthStore((state) => state.user);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const userId = user?.id || "";
-
   // Real authentication redirect
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push(ROUTES.AUTH.LOGIN || "/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isHydrated, router]);
 
   // Construct URL query parameters memoized to prevent infinite fetches
   const queryParams = useMemo(() => ({
@@ -53,9 +55,12 @@ export function MyOrdersPage() {
   }), [activeFilter, sortBy, page]);
 
   // Fetch orders from API / mock hook using current authenticated user's ID
-  const { data: response, isLoading, isError, refetch } = useGetMyOrders(userId, queryParams);
+  const { data: response, isLoading, isError, refetch } = useGetMyOrders(
+    queryParams,
+    { enabled: isHydrated && isAuthenticated },
+  );
 
-  if (!isAuthenticated) return null;
+  if (!isHydrated || !isAuthenticated) return null;
 
   if (isLoading) {
     return (

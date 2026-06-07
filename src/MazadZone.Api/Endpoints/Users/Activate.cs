@@ -7,7 +7,7 @@ public static class Activate
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPut("/{id:guid}/activate", HandleAsync)
-        //    .RequireAuthorization("AdminOnly")
+           .RequireAuthorization(Policies.AdminOnly)
            .WithSummary("Activate a user account")
            .WithDescription("Reactivates a previously suspended or inactive user account, restoring their access to the platform. Returns a 409 Conflict if the user is already active.")
            .Produces(StatusCodes.Status204NoContent)

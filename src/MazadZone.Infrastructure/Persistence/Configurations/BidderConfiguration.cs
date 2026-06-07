@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MazadZone.Infrastructure.Persistence.Extensions;
 using MazadZone.Domain.Users;
+using MazadZone.Domain.Shared;
+using MazadZone.Domain.Shared.Errors;
 
 namespace MazadZone.Infrastructure.Persistence.Configurations;
 
@@ -69,10 +71,40 @@ internal sealed class BidderConfiguration : IEntityTypeConfiguration<Bidder>
                         .IsRequired(false);
         });
 
-        builder.ComplexProperty(b => b.DefaultShippingAddress, addressBuilder =>
-           {
-               addressBuilder.ConfigureAddressMapping();
-           });
+        builder.OwnsMany(b => b.Addresses, addressBuilder =>
+        {
+            // 1. Define the separate table name
+            addressBuilder.ToTable("BidderAddresses");
+
+            // 2. Create a "Shadow Property" for the Primary Key 
+            // (Because Value Objects don't have IDs in your domain model)
+            addressBuilder.Property<int>("Id").ValueGeneratedOnAdd();
+            addressBuilder.HasKey("Id");
+
+            // 3. Define the Foreign Key back to the Bidder
+            addressBuilder.WithOwner().HasForeignKey("BidderId");
+
+            // 4. Map the Address properties (applying your domain constraints)
+            addressBuilder.Property(a => a.City)
+                .HasMaxLength(AddressErrors.MaxCityLength) // Assuming this is defined in your constants
+                .IsRequired();
+
+            addressBuilder.Property(a => a.Street)
+                .HasMaxLength(SharedConstainst.MaxStreetLength)
+                .IsRequired();
+
+            addressBuilder.Property(a => a.Building)
+                .HasMaxLength(SharedConstainst.MaxBuildingLength)
+                .IsRequired();
+
+            addressBuilder.Property(a => a.Landmark)
+                .HasMaxLength(SharedConstainst.MaxLandmarkLength)
+                .IsRequired();
+        });
+
+        // 5. Tell EF Core to read/write directly to the backing field
+        builder.Metadata.FindNavigation(nameof(Bidder.Addresses))!
+               .SetPropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasOne<User>()
             .WithOne()

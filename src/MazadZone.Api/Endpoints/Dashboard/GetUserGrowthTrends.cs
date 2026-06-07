@@ -7,7 +7,7 @@ public static class GetUserGrowthTrends
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/users/growth", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Get User Growth Trends (Chart Data)")
            .WithDescription("Retrieves total new users/sellers, growth percentages, and grouped data points for rendering line charts.")
            .Produces<UserGrowthTrendsDto>(StatusCodes.Status200OK)

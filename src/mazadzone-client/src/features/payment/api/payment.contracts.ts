@@ -1,20 +1,24 @@
+export type PaymentCardBrandCode = 0 | 1 | 2 | 3 | 4;
+
 export interface AddPaymentMethodRequest {
   last4Digits: string;
   expiryMonth: number;
   expiryYear: number;
   cardholderName: string;
-  brand: number; // CardBrand enum (1 = Visa, 2 = Mastercard, 3 = AmericanExpress, 4 = Mada, 0 = Unknown)
+  brand: PaymentCardBrandCode;
   gatewayToken: string;
   isDefault: boolean;
 }
 
-export interface AddPaymentMethodResponse {
+export interface PaymentMethodResponse {
   id: string;
   last4Digits: string;
   expiryMonth: number;
   expiryYear: number;
   cardholderName: string;
-  brand: number;
-  gatewayToken: string;
+  brand: PaymentCardBrandCode;
   isDefault: boolean;
+  createdOnUtc: string;
 }
+
+export type AddPaymentMethodResponse = PaymentMethodResponse;

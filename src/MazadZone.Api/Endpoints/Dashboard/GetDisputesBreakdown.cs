@@ -7,7 +7,7 @@ public static class GetDisputesBreakdown
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/disputes/breakdown", HandleAsync)
-           // .RequireAuthorization("AdminOnly") 
+           .RequireAuthorization(Policies.AdminOnly) 
            .WithSummary("Get Open Disputes Breakdown")
            .WithDescription("Retrieves the total number of open disputes grouped by type, calculating the percentage change versus the previous period.")
            .Produces<OpenDisputesBreakdownDto>(StatusCodes.Status200OK)

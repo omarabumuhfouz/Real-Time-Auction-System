@@ -28,8 +28,13 @@ export function AuctionCardSkeleton({ className }: AuctionCardSkeletonProps) {
         <div className="h-5 w-3/5 animate-pulse rounded bg-muted" />
       </div>
 
+      {/* Condition placeholder */}
+      <div className="flex justify-end mt-4 mb-1">
+        <div className="h-4 w-12 animate-pulse rounded bg-muted" />
+      </div>
+
       {/* Countdown placeholder */}
-      <div className="mt-2 flex gap-2">
+      <div className="flex gap-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-12 w-14 animate-pulse rounded bg-muted" />
         ))}

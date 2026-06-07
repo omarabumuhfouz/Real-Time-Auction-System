@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Plus, MoreVertical, MapPin, AlertTriangle } from "lucide-react";
-import { useGetAddresses, useCreateAddress, useGetProfile } from "../api/profile.queries";
-import { AddressDialog } from "./AddressDialog";
+import { Loader2, MapPin, AlertTriangle } from "lucide-react";
+import { useGetAddresses, useGetProfile } from "../api/profile.queries";
 import { type Address } from "../types/profile.types";
+import { ROUTES } from "@/config/routes.config";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -34,10 +34,7 @@ export function AddressSelectStep({
   subtitle = "Select where you want your item to be shipped.",
 }: AddressSelectStepProps) {
   const { data: profileAddresses = [], isLoading, isError } = useGetAddresses();
-  const createMutation = useCreateAddress();
-  
   const [localSelectedId, setLocalSelectedId] = useState<string>(selectedAddressId || "");
-  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
 
   const { data: profile } = useGetProfile();
 
@@ -59,15 +56,7 @@ export function AddressSelectStep({
     }
   };
 
-  const handleAddNewAddressSubmit = async (values: Omit<Address, "id">) => {
-    try {
-      const newAddress = await createMutation.mutateAsync(values);
-      setLocalSelectedId(newAddress.id);
-      setIsAddressDialogOpen(false);
-    } catch (err) {
-      console.error("Failed to add address in shared select flow:", err);
-    }
-  };
+
 
   if (isError) {
     return (
@@ -115,21 +104,14 @@ export function AddressSelectStep({
           ))}
         </div>
       ) : profileAddresses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border rounded-xl bg-muted/10 space-y-3">
+        <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border rounded-xl bg-muted/10 space-y-2">
           <MapPin className="h-8 w-8 text-muted-foreground/60" />
           <div>
             <p className="text-sm font-bold text-foreground">No saved addresses</p>
-            <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1">
-              Add a shipping address to complete your order setup.
+            <p className="text-xs text-muted-foreground max-w-[240px] mx-auto mt-1">
+              Please registered your shipping address in profile settings.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsAddressDialogOpen(true)}
-            className="flex items-center gap-1 text-xs font-bold text-primary hover:underline cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add Address
-          </button>
         </div>
       ) : (
         <RadioGroup
@@ -175,32 +157,31 @@ export function AddressSelectStep({
                     )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded-full hover:bg-muted"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </button>
+
               </div>
             );
           })}
         </RadioGroup>
       )}
 
-      {/* Add New Link at the bottom */}
-      {!isLoading && profileAddresses.length > 0 && (
-        <button
+
+
+      {/* Note for editing/adding address */}
+      <div className="text-xs text-muted-foreground bg-muted/30 border border-border p-3.5 rounded-xl flex flex-col gap-2 mt-4">
+        <span className="font-semibold text-foreground">Note:</span>
+        <span>Your shipping address can only be edited inside your profile settings page.</span>
+        <Button
           type="button"
-          onClick={() => setIsAddressDialogOpen(true)}
-          className="flex items-center gap-1.5 text-sm font-bold text-primary hover:underline cursor-pointer mt-1"
+          variant="outline"
+          size="sm"
+          className="w-fit font-bold text-xs mt-0.5 cursor-pointer"
+          onClick={() => {
+            window.open(ROUTES.PROFILE.VIEW, "_blank");
+          }}
         >
-          <Plus className="h-4 w-4 stroke-[2.5]" />
-          Add new address
-        </button>
-      )}
+          Go to Profile Settings
+        </Button>
+      </div>
 
       {/* Action Buttons */}
       <div className="pt-4 space-y-3 border-t border-border/40">
@@ -220,13 +201,6 @@ export function AddressSelectStep({
           Cancel
         </button>
       </div>
-
-      <AddressDialog
-        isOpen={isAddressDialogOpen}
-        onClose={() => setIsAddressDialogOpen(false)}
-        onSubmit={handleAddNewAddressSubmit}
-        isPending={createMutation.isPending}
-      />
     </div>
   );
 }

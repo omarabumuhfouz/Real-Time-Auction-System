@@ -5,13 +5,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { OrderActivity } from "../types/orders.types";
-import { searchOrders, getOrderDetails } from "./order.api";
+import { getWonOrders, getOrderDetails } from "./order.api";
 import { orderKeys } from "./order.keys";
 import {
-  mapOrderSummaryDtoToActivity,
+  mapWonOrderSummaryDtoToActivity,
   mapOrderDetailsDtoToActivity,
 } from "./order.mappers";
 import { useGetAuctionById } from "@/features/auctions";
+import { getAuctionById as getAuctionByIdApi } from "@/features/auctions";
 
 // Re-export query keys
 export { orderKeys as ORDERS_KEYS };
@@ -25,31 +26,66 @@ export interface OrderActivityResponse {
   hasNextPage: boolean;
 }
 
+function mapOrderFilterToApiStatus(filter?: string): string | undefined {
+  if (!filter || filter === "All") {
+    return undefined;
+  }
+
+  if (filter === "Cancelled") {
+    return "Canceled";
+  }
+
+  return filter;
+}
+
 /**
  * Hook to retrieve user won orders dynamically from backend.
- * Uses searchOrders endpoint to query for matching UserId.
+ * Uses the dedicated won-orders endpoint for the authenticated bidder.
  */
 export const useGetMyOrders = (
-  userId: string,
   params: {
     filter?: string;
     sortBy?: string;
     page?: number;
     pageSize?: number;
   } = {},
+  options?: {
+    enabled?: boolean;
+  },
 ) => {
   return useQuery<OrderActivityResponse>({
-    queryKey: orderKeys.list({ userId, ...params }),
+    queryKey: orderKeys.list({ scope: "won", ...params }),
     queryFn: async () => {
-      const raw = await searchOrders({
-        UserId: userId,
-        Status: params.filter === "All" ? undefined : params.filter,
-        PageSize: params.pageSize ?? 5,
-        PageNumber: params.page ?? 1,
+      const raw = await getWonOrders({
+        status: mapOrderFilterToApiStatus(params.filter),
+        pageSize: params.pageSize ?? 5,
+        page: params.page ?? 1,
       });
 
+      const items = await Promise.all(
+        raw.items.map(async (wonOrder) => {
+          try {
+            const orderDetails = await getOrderDetails(wonOrder.orderId);
+            const auction = await getAuctionByIdApi(orderDetails.auctionId);
+
+            return mapWonOrderSummaryDtoToActivity(wonOrder, {
+              id: orderDetails.auctionId,
+              title: auction.itemTitle || wonOrder.itemTitle,
+              imageUrl: auction.imageUrls?.[0] ?? "",
+            });
+          } catch (error) {
+            console.warn(
+              `Failed to enrich won order ${wonOrder.orderId} with auction data:`,
+              error,
+            );
+
+            return mapWonOrderSummaryDtoToActivity(wonOrder);
+          }
+        }),
+      );
+
       return {
-        items: raw.items.map(mapOrderSummaryDtoToActivity),
+        items,
         page: raw.pageNumber,
         totalPages: raw.totalPages ?? Math.ceil(raw.totalCount / raw.pageSize),
         totalCount: raw.totalCount,
@@ -57,7 +93,7 @@ export const useGetMyOrders = (
         hasNextPage: raw.hasNextPage ?? false,
       };
     },
-    enabled: !!userId,
+    enabled: options?.enabled ?? true,
   });
 };
 

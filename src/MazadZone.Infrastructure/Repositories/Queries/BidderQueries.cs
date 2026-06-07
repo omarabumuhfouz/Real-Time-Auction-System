@@ -33,10 +33,10 @@ public class BidderQueries : ResilientRepository, IBidderQueries
     bv.IsVerified,
     u.CreatedOnUtc AS MemberSince,
     u.LastLogin,
-    b.City,
-    b.Street,
-    b.Building,
-    b.Landmark,
+    ba.City,
+    ba.Street,
+    ba.Building,
+    ba.Landmark,
     
     -- Handle potential nulls
     COALESCE(b.TotalPidsPlaced, 0) AS TotalBidsPlaced,
@@ -46,8 +46,8 @@ public class BidderQueries : ResilientRepository, IBidderQueries
 FROM Bidders b
 JOIN Users u ON b.Id = u.Id -- Added missing ON condition
 LEFT JOIN BidderVerifications bv ON b.Id = bv.BidderId
-WHERE b.Id = @bidderId;
-        ";
+JOIN BidderAddresses ba ON b.Id = ba.BidderId
+WHERE b.Id = @bidderId;";
 
         return await ExecuteResilientAsync(connection =>
             connection.QueryFirstOrDefaultAsync<BidderProfileDto>(query, new

@@ -1,30 +1,30 @@
 using MazadZone.Domain.Repositories;
-using MazadZone.Domain.Orders.Events; 
+using MazadZone.Domain.Orders.Events;
+using MazadZone.Application.Features.Notifications.Commands.CreateNotification;
+using MazadZone.Application.Features.Notifications.Enums;
 
 namespace MazadZone.Application.Features.Orders.Events.NotifyBidderOnFeedbackReplied;
 
 public class NotifyBidderOnFeedbackRepliedEventHandler 
     : INotificationHandler<FeedbackRepliedDomainEvent>
 {
-    private readonly INotificationRepository _notificationRepository;
-    private readonly ILogger<NotifyBidderOnFeedbackRepliedEventHandler> _logger;
+    private readonly ISender _sender;
 
-    public NotifyBidderOnFeedbackRepliedEventHandler(
-        INotificationRepository notificationRepository,
-        ILogger<NotifyBidderOnFeedbackRepliedEventHandler> logger
-    )
+    public NotifyBidderOnFeedbackRepliedEventHandler(ISender sender)
     {
-        _notificationRepository = notificationRepository;
-        _logger = logger;
+        _sender = sender;
     }
 
     public async Task Handle(FeedbackRepliedDomainEvent notification, CancellationToken ct)
     {
-        await _notificationRepository.NotifyBidderAsync(
-            bidderId: notification.BidderId.Value,
-            title: "Seller Replied to Your Feedback",
-            message: $"The seller left a response to your feedback on Order #{notification.OrderId.Value}.",
-            ct: ct
-        );
+        var title = "Seller Replied to Your Feedback";
+        var message = $"The seller left a response to your feedback on Order #{notification.OrderId.Value}.";
+        
+        await _sender.Send(new CreateNotificationCommand(
+                                    notification.BidderId,
+                                    NotificationMethods.ReceiveNotification,
+                                    title,
+                                    message
+                            ));
     }
 }

@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "radix-ui";
 import { useGetAddresses, useGetProfile } from "@/features/profile";
+import { useGetSavedPaymentMethods } from "@/features/payment";
 import { cn } from "@/lib/utils";
-import { usePlaceBid, useGetSavedPaymentMethods } from "../../api/bidding.queries";
+import { usePlaceBid } from "../../api/bidding.queries";
 import { useAppToast } from "@/lib/toast/app-toast";
-import type { PlaceBidFlowState, PlaceBidModalProps, DeliveryAddress, SavedPaymentMethod } from "../../types/place-bid.types";
+import type {
+  PlaceBidModalProps,
+  DeliveryAddress,
+  SavedPaymentMethod,
+  PlaceBidResponse,
+} from "../../types/place-bid.types";
 
 import { AddressSelectStep } from "@/features/profile";
 import { PaymentMethodDrawer } from "@/features/payment";
@@ -31,98 +37,84 @@ export function PlaceBidModal({
   const { data: profile } = useGetProfile();
   const appToast = useAppToast();
 
-  // State orchestrator
-  const [flowState, setFlowState] = useState<PlaceBidFlowState>({
-    step: "place-bid",
-    auctionId,
-    auctionTitle,
-    currentBid,
-    minIncrement,
-    bidAmount: currentBid + minIncrement,
-    selectedAddress: null,
-    selectedPayment: null,
-    bidResponse: null,
-  });
-
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
+  const [step, setStep] = useState<"place-bid" | "choose-address" | "review" | "success">("place-bid");
+  const [bidAmountOverride, setBidAmountOverride] = useState<number | null>(null);
+  const [selectedAddressOverride, setSelectedAddressOverride] = useState<
+    DeliveryAddress | null | undefined
+  >(undefined);
+  const [selectedPaymentOverride, setSelectedPaymentOverride] = useState<
+    SavedPaymentMethod | null | undefined
+  >(undefined);
+  const [bidResponse, setBidResponse] = useState<PlaceBidResponse | null>(null);
 
-  // Reset or initialize state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const defaultAddr = profileAddresses.find((a) => a.isDefault) || profileAddresses[0] || null;
-      const mappedAddr = defaultAddr
-        ? {
-            id: defaultAddr.id,
-            label: defaultAddr.title,
-            fullName: profile?.fullName || "",
-            phoneNumber: profile?.phoneNumber || "",
-            streetAddress: defaultAddr.streetAddress,
-            building: defaultAddr.building,
-            city: defaultAddr.city,
-            isDefault: defaultAddr.isDefault,
-          }
-        : null;
+  const defaultAddressSource =
+    profileAddresses.find((address) => address.isDefault) || profileAddresses[0] || null;
+  const defaultSelectedAddress: DeliveryAddress | null = defaultAddressSource
+    ? {
+        id: defaultAddressSource.id,
+        label: defaultAddressSource.title,
+        fullName: profile?.fullName || "",
+        phoneNumber: profile?.phoneNumber || "",
+        streetAddress: defaultAddressSource.streetAddress,
+        building: defaultAddressSource.building,
+        city: defaultAddressSource.city,
+        isDefault: defaultAddressSource.isDefault,
+      }
+    : null;
 
-      // Fetch default payment method
-      const defaultPayment = savedPaymentMethods.find((p) => p.isDefault) || savedPaymentMethods[0] || null;
+  const defaultSelectedPayment =
+    savedPaymentMethods.find((paymentMethod) => paymentMethod.isDefault) ||
+    savedPaymentMethods[0] ||
+    null;
 
-      setFlowState({
-        step: "place-bid",
-        auctionId,
-        auctionTitle,
-        currentBid,
-        minIncrement,
-        bidAmount: currentBid + minIncrement,
-        selectedAddress: mappedAddr,
-        selectedPayment: defaultPayment,
-        bidResponse: null,
-      });
-    }
-  }, [isOpen, auctionId, auctionTitle, currentBid, minIncrement, profileAddresses, savedPaymentMethods]);
+  const selectedAddress =
+    selectedAddressOverride === undefined
+      ? defaultSelectedAddress
+      : selectedAddressOverride;
+  const selectedPayment =
+    selectedPaymentOverride === undefined
+      ? defaultSelectedPayment
+      : selectedPaymentOverride;
+  const bidAmount = bidAmountOverride ?? currentBid + minIncrement;
 
   const handleClose = () => {
-    // When the dialog closes, reset and close
+    setStep("place-bid");
+    setBidAmountOverride(null);
+    setSelectedAddressOverride(undefined);
+    setSelectedPaymentOverride(undefined);
+    setBidResponse(null);
+    setIsPaymentSheetOpen(false);
     onClose();
   };
 
   const handleSelectAddress = (address: DeliveryAddress) => {
-    setFlowState((prev) => ({
-      ...prev,
-      selectedAddress: address,
-      step: "place-bid", // Go back to place bid
-    }));
+    setSelectedAddressOverride(address);
+    setStep("place-bid");
   };
 
   const handleSavePaymentMethod = (paymentMethod: SavedPaymentMethod) => {
-    setFlowState((prev) => ({
-      ...prev,
-      selectedPayment: paymentMethod,
-    }));
+    setSelectedPaymentOverride(paymentMethod);
     setIsPaymentSheetOpen(false);
   };
 
   const handlePlaceBidSubmit = async () => {
-    if (!flowState.selectedAddress) return;
+    if (!selectedAddress) return;
 
     try {
       const response = await placeBidMutation.mutateAsync({
-        auctionId: flowState.auctionId,
-        bidAmount: flowState.bidAmount,
-        addressId: flowState.selectedAddress.id,
-        paymentMethodId: flowState.selectedPayment?.id,
+        auctionId,
+        bidAmount,
+        addressId: selectedAddress.id,
+        paymentMethodId: selectedPayment?.id,
       });
 
-      setFlowState((prev) => ({
-        ...prev,
-        bidResponse: response,
-        step: "success",
-      }));
+      setBidResponse(response);
+      setStep("success");
     } catch (err) {
       appToast.fromApiError(err, "Could not place your bid. Please try again.");
     }
   };
-
-  const currentStep = flowState.step;
 
   return (
     <>
@@ -130,62 +122,65 @@ export function PlaceBidModal({
         <DialogContent
           className={cn(
             "w-full bg-card border-border p-6 shadow-xl rounded-xl gap-0 z-50 focus-visible:outline-none transition-all duration-200",
-            currentStep === "place-bid" ? "max-w-lg" : "max-w-md"
+            step === "place-bid" ? "sm:max-w-xl" : "sm:max-w-lg"
           )}
-          showCloseButton={currentStep !== "success"}
+          showCloseButton={step !== "success"}
         >
           <VisuallyHidden.Root>
             <DialogTitle>Place Bid Dialog</DialogTitle>
+            <DialogDescription>
+              Configure and place a bid on the selected auction listing.
+            </DialogDescription>
           </VisuallyHidden.Root>
           {/* Step 1: Place Bid Form */}
-          {currentStep === "place-bid" && (
+          {step === "place-bid" && (
             <PlaceBidStep
-              auctionTitle={flowState.auctionTitle}
-              currentBid={flowState.currentBid}
-              minIncrement={flowState.minIncrement}
-              bidAmount={flowState.bidAmount}
-              onBidAmountChange={(amt) => setFlowState((prev) => ({ ...prev, bidAmount: amt }))}
-              selectedAddress={flowState.selectedAddress}
-              selectedPayment={flowState.selectedPayment}
-              onChangeAddress={() => setFlowState((prev) => ({ ...prev, step: "choose-address" }))}
+              auctionTitle={auctionTitle}
+              currentBid={currentBid}
+              minIncrement={minIncrement}
+              bidAmount={bidAmount}
+              onBidAmountChange={setBidAmountOverride}
+              selectedAddress={selectedAddress}
+              selectedPayment={selectedPayment}
+              onChangeAddress={() => setStep("choose-address")}
               onAddPayment={() => setIsPaymentSheetOpen(true)}
-              onContinue={() => setFlowState((prev) => ({ ...prev, step: "review" }))}
+              onContinue={() => setStep("review")}
               onCancel={handleClose}
             />
           )}
 
           {/* Step 2: Choose Address List */}
-          {currentStep === "choose-address" && (
+          {step === "choose-address" && (
             <AddressSelectStep
-              selectedAddressId={flowState.selectedAddress?.id}
+              selectedAddressId={selectedAddress?.id}
               onSelectAddress={handleSelectAddress}
-              onCancel={() => setFlowState((prev) => ({ ...prev, step: "place-bid" }))}
+              onCancel={() => setStep("place-bid")}
               title="Choose Delivery Address"
               subtitle="Select where you want your item to be delivered."
             />
           )}
 
           {/* Step 4: Review and Confirm Details */}
-          {currentStep === "review" && (
+          {step === "review" && (
             <ReviewConfirmStep
-              auctionTitle={flowState.auctionTitle}
-              bidAmount={flowState.bidAmount}
-              currentBid={flowState.currentBid}
-              minIncrement={flowState.minIncrement}
-              selectedAddress={flowState.selectedAddress}
-              selectedPayment={flowState.selectedPayment}
+              auctionTitle={auctionTitle}
+              bidAmount={bidAmount}
+              currentBid={currentBid}
+              minIncrement={minIncrement}
+              selectedAddress={selectedAddress}
+              selectedPayment={selectedPayment}
               onConfirm={handlePlaceBidSubmit}
-              onCancel={() => setFlowState((prev) => ({ ...prev, step: "place-bid" }))}
-              onChangeAddress={() => setFlowState((prev) => ({ ...prev, step: "choose-address" }))}
+              onCancel={() => setStep("place-bid")}
+              onChangeAddress={() => setStep("choose-address")}
               onChangePayment={() => setIsPaymentSheetOpen(true)}
               isSubmitting={placeBidMutation.isPending}
             />
           )}
 
           {/* Step 5: Bid Success */}
-          {currentStep === "success" && (
+          {step === "success" && (
             <BidSuccessStep
-              bidResponse={flowState.bidResponse}
+              bidResponse={bidResponse}
               onViewAuction={handleClose}
               onClose={handleClose}
             />
@@ -198,9 +193,10 @@ export function PlaceBidModal({
         isOpen={isPaymentSheetOpen}
         onClose={() => setIsPaymentSheetOpen(false)}
         onSaveCard={handleSavePaymentMethod}
+        selectedPaymentMethodId={selectedPayment?.id}
         mode="payment"
-        amount={flowState.bidAmount * 0.1}
-        deliveryAddress={flowState.selectedAddress}
+        amount={bidAmount * 0.1}
+        deliveryAddress={selectedAddress}
       />
     </>
   );

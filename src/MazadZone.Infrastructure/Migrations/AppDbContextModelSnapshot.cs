@@ -82,6 +82,9 @@ namespace MazadZone.Infrastructure.Migrations
                                 .HasColumnType("nvarchar(50)")
                                 .HasColumnName("City");
 
+                            b1.Property<bool>("IsDefault")
+                                .HasColumnType("bit");
+
                             b1.Property<string>("Landmark")
                                 .IsRequired()
                                 .HasMaxLength(50)
@@ -204,8 +207,8 @@ namespace MazadZone.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
 
                     b.HasKey("Id");
 
@@ -252,35 +255,6 @@ namespace MazadZone.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("UnpaidAuctions");
-
-                    b.ComplexProperty<Dictionary<string, object>>("DefaultShippingAddress", "MazadZone.Domain.Bidders.Bidder.DefaultShippingAddress#Address", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("Building")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Building");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("City");
-
-                            b1.Property<string>("Landmark")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Landmark");
-
-                            b1.Property<string>("Street")
-                                .IsRequired()
-                                .HasMaxLength(150)
-                                .HasColumnType("nvarchar(150)")
-                                .HasColumnName("Street");
-                        });
 
                     b.HasKey("Id");
 
@@ -526,6 +500,9 @@ namespace MazadZone.Infrastructure.Migrations
                                 .HasColumnType("nvarchar(50)")
                                 .HasColumnName("City");
 
+                            b1.Property<bool>("IsDefault")
+                                .HasColumnType("bit");
+
                             b1.Property<string>("Landmark")
                                 .IsRequired()
                                 .HasMaxLength(50)
@@ -615,10 +592,15 @@ namespace MazadZone.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_PaymentMethods_UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("PaymentMethods", (string)null);
                 });
@@ -1072,6 +1054,52 @@ namespace MazadZone.Infrastructure.Migrations
                                 .HasForeignKey("BidderId");
                         });
 
+                    b.OwnsMany("MazadZone.Domain.Shared.ValueObjects.Address", "Addresses", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<Guid>("BidderId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Building")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)");
+
+                            b1.Property<bool>("IsDefault")
+                                .HasColumnType("bit");
+
+                            b1.Property<string>("Landmark")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("nvarchar(150)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("BidderId");
+
+                            b1.ToTable("BidderAddresses", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("BidderId");
+                        });
+
+                    b.Navigation("Addresses");
+
                     b.Navigation("Verification")
                         .IsRequired();
                 });
@@ -1190,10 +1218,14 @@ namespace MazadZone.Infrastructure.Migrations
             modelBuilder.Entity("MazadZone.Domain.Users.Entities.PaymentMethod", b =>
                 {
                     b.HasOne("MazadZone.Domain.Users.User", null)
-                        .WithMany("PaymentMethods")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("MazadZone.Domain.Users.User", null)
+                        .WithMany("PaymentMethods")
+                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("MazadZone.Domain.Users.HashedRefreshToken", b =>

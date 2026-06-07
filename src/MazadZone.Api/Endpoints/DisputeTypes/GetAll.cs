@@ -12,7 +12,7 @@ public static class GetAll
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/", HandleAsync)
-        //    .RequireAuthorization()
+           .RequireAuthorization()
            .WithSummary("Get all Dispute Types")
            .WithDescription("Retrieves a complete list of all configured dispute types in the system.")
            .Produces<IReadOnlyList<DisputeTypeDto>>(StatusCodes.Status200OK)
