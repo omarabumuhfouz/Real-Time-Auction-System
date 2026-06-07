@@ -67,10 +67,10 @@ public class UserQueries : ResilientRepository, IUserQueries
                 u.Email,
                 u.PhoneNumber,
                 bv.NationalId AS NationalId,
-                b.City,
-                b.Street,
-                b.Building,
-                b.Landmark,
+                ba.City,
+                ba.Street,
+                ba.Building,
+                ba.Landmark,
                 CASE bv.Status 
                     WHEN 1 THEN 'Pending' 
                     WHEN 2 THEN 'Verified' 
@@ -82,6 +82,7 @@ public class UserQueries : ResilientRepository, IUserQueries
             FROM Users u
             LEFT JOIN Bidders b ON b.Id = u.Id
             LEFT JOIN BidderVerifications bv ON bv.BidderId = b.Id
+            JOIN BidderAddresses ba ON ba.BidderId = b.Id
             WHERE u.Id = @UserId;
             ";
 

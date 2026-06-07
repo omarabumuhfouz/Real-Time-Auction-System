@@ -8,7 +8,7 @@ public sealed record SellerOrderSummaryDto
     public string OrderStatus { get; init; } = string.Empty;
     public DateTime OrderDateUtc { get; init; }
     public decimal TotalAmount { get; init; }
-    public string BuyerName { get; init; } = string.Empty;
+    public string BidderName { get; init; } = string.Empty;
 }
 
 public sealed record SellerOrdersResponse
