@@ -14,15 +14,6 @@ export const disputeKeys = {
   types: ["dispute-types"] as const,
 };
 
-// Default dispute types list to fallback on if backend yields empty
-export const DEFAULT_DISPUTE_TYPES: DisputeTypeDto[] = [
-  { id: "1", name: "Damaged Item", description: "Item arrived broken, non-functional, or significantly damaged during transit.", isActive: true },
-  { id: "2", name: "Not as Described", description: "The item significantly differs from listing photos, descriptions, or parameters.", isActive: true },
-  { id: "3", name: "Non-Delivery", description: "Seller did not ship the item, or shipment was completely lost in transit.", isActive: true },
-  { id: "4", name: "Late Shipment", description: "Item was shipped or delivered significantly after the agreed timeline.", isActive: true },
-  { id: "5", name: "Fraudulent Listing", description: "Listing has stolen photos, fake brand credentials, or is an outright scam.", isActive: true }
-];
-
 /**
  * Mutation to file a dispute for an order.
  */
@@ -43,15 +34,7 @@ export function useFileDispute() {
 export function useGetDisputeTypes() {
   return useQuery<DisputeTypeDto[]>({
     queryKey: disputeKeys.types,
-    queryFn: async () => {
-      try {
-        const data = await fetchDisputeTypes();
-        return data.length > 0 ? data : DEFAULT_DISPUTE_TYPES;
-      } catch (error) {
-        console.warn("Failed to fetch dispute types from backend, falling back to mock defaults:", error);
-        return DEFAULT_DISPUTE_TYPES;
-      }
-    },
+    queryFn: fetchDisputeTypes,
     staleTime: 5 * 60 * 1000,
   });
 }

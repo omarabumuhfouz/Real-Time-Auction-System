@@ -1,6 +1,7 @@
 import { parseUtcDate } from "@/utils/date.utils";
 import type { BidActivity, BidStatus } from "../types/bidding.types";
 import type { MyBidAuctionDto } from "./bidding.contracts";
+import { AuctionStatus, type AuctionStatus as AuctionStatusValue } from "@/features/auctions";
 
 /**
  * Maps backend enum integers to standard frontend BidStatus strings.
@@ -20,16 +21,63 @@ function mapIntegerToBidStatus(statusNum: number): BidStatus {
   }
 }
 
+function mapDtoToAuctionStatus(dto: MyBidAuctionDto): AuctionStatusValue {
+  const startDate = parseUtcDate(dto.startTime);
+  const endDate = parseUtcDate(dto.endTime);
+  const now = Date.now();
+
+  if (!Number.isNaN(endDate.getTime()) && now >= endDate.getTime()) {
+    return AuctionStatus.ENDED;
+  }
+
+  if (!Number.isNaN(startDate.getTime()) && now < startDate.getTime()) {
+    return AuctionStatus.UPCOMING;
+  }
+
+  if (dto.auctionStatus === 1) {
+    return AuctionStatus.UPCOMING;
+  }
+
+  if (dto.auctionStatus === 3 || dto.auctionStatus === 4) {
+    return AuctionStatus.ENDED;
+  }
+
+  return AuctionStatus.ACTIVE;
+}
+
+function normalizeBidStatusForAuction(
+  bidStatus: BidStatus,
+  auctionStatus: AuctionStatusValue,
+): BidStatus {
+  if (auctionStatus === AuctionStatus.ENDED) {
+    if (bidStatus === "Leading") {
+      return "Won";
+    }
+
+    if (bidStatus === "Outbid") {
+      return "Lost";
+    }
+  }
+
+  return bidStatus;
+}
+
 /**
  * Maps raw backend MyBidAuctionDto to presentation-safe BidActivity ViewModels.
  */
 export function mapMyBidAuctionDtoToBidActivity(
   dto: MyBidAuctionDto,
 ): BidActivity {
+  const auctionStatus = mapDtoToAuctionStatus(dto);
+  const bidStatus = normalizeBidStatusForAuction(
+    mapIntegerToBidStatus(dto.yourBidStatus),
+    auctionStatus,
+  );
+
   return {
     id: `bid-${dto.auctionId}-${dto.yourBidAmount}`,
     yourBid: dto.yourBidAmount,
-    status: mapIntegerToBidStatus(dto.yourBidStatus),
+    status: bidStatus,
     auction: {
       id: dto.auctionId,
       title: dto.itemTitle,
@@ -39,14 +87,7 @@ export function mapMyBidAuctionDtoToBidActivity(
       condition: "New",
       description: "",
       conditionDescription: "",
-      status:
-        dto.auctionStatus === 1
-          ? "Upcoming"
-          : dto.auctionStatus === 2
-            ? "Active"
-            : dto.auctionStatus === 3 || dto.auctionStatus === 4
-              ? "Ended"
-              : "Active",
+      status: auctionStatus,
       pricing: {
         startingPrice: dto.currentBidAmount,
         currentBid: dto.currentBidAmount > 0 ? dto.currentBidAmount : null,

@@ -27,6 +27,10 @@ export function mapRegisterFormToRequest(
   const building = addressParts[2] || "1";
   const landmark = addressParts.slice(3).join(" ") || "";
 
+  if (!form.nationalCardFile) {
+    throw new Error("National card file is required");
+  }
+
   return {
     email: form.email,
     password: form.password,
@@ -36,12 +40,11 @@ export function mapRegisterFormToRequest(
     secondName,
     thirdName,
     lastName,
-    address: {
-      city,
-      street,
-      building,
-      landmark,
-    },
+    city,
+    street,
+    building,
+    landmark,
+    file: form.nationalCardFile,
   };
 }
 

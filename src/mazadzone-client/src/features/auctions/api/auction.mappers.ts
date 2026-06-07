@@ -10,6 +10,7 @@ import type {
   AuctionSummary,
   AuctionStatus,
   CreateAuctionInput,
+  AuctionCondition,
 } from "../types/auction.types";
 import type {
   AuctionDto,
@@ -29,6 +30,11 @@ export function mapFiltersToQueryParams(
     statusParam = "Pending";
   }
 
+  let itemStatusParam: string | undefined = filters?.condition;
+  if (itemStatusParam === "Like New") {
+    itemStatusParam = "LikeNew";
+  }
+
   return {
     Page: filters?.page ?? 1,
     PageSize: filters?.pageSize ?? 12,
@@ -40,6 +46,7 @@ export function mapFiltersToQueryParams(
     Status: statusParam || undefined,
     SortBy: filters?.sortBy || undefined,
     SortDirection: filters?.sortDirection || undefined,
+    ItemStatus: itemStatusParam || undefined,
   };
 }
 
@@ -62,6 +69,22 @@ function mapBackendStatusToAuctionStatus(status?: string): AuctionStatus {
 }
 
 /**
+ * Normalizes backend condition strings to UI-friendly AuctionCondition values.
+ * e.g. "LikeNew", "Like_New", "LIKE_NEW", "like-new", "Like New" -> "Like New"
+ */
+export function mapBackendConditionToAuctionCondition(
+  cond?: string,
+): AuctionCondition {
+  if (!cond) return "New";
+  const normalized = cond.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  if (normalized === "new") return "New";
+  if (normalized === "likenew") return "Like New";
+  if (normalized === "good") return "Good";
+  if (normalized === "fair") return "Fair";
+  return "New";
+}
+
+/**
  * Maps raw AuctionsListDto from a search or list request into an AuctionSummary card ViewModel.
  */
 export function mapAuctionsListDtoToSummary(
@@ -73,7 +96,7 @@ export function mapAuctionsListDtoToSummary(
     imageUrl: dto.imageUrl,
     category: "Tech and Electronics",
     subcategory: "Others",
-    condition: (dto.itemStatus as any) || "New",
+    condition: mapBackendConditionToAuctionCondition(dto.itemStatus),
     description: "",
     conditionDescription: dto.condtion || "",
     status: mapBackendStatusToAuctionStatus(dto.status),
@@ -104,7 +127,7 @@ export function mapAuctionDtoToSummary(dto: AuctionDto): AuctionSummary {
     imageUrl: dto.imageUrls?.[0] ?? "",
     category: "Tech and Electronics",
     subcategory: "Others",
-    condition: (dto.status as any) || "New",
+    condition: mapBackendConditionToAuctionCondition(dto.status),
     description: dto.itemDescription || "",
     conditionDescription: dto.condition || "",
     status: mapBackendStatusToAuctionStatus(dto.auctionStatus),

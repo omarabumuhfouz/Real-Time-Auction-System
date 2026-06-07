@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useNotificationStore } from "../store/notification.store";
+import { triggerWinDialogFromNotification } from "../store/win-dialog.store";
 import { useGetNotifications, useMarkAsRead, useMarkAllAsRead } from "../api";
 import { NotificationItem } from "./NotificationItem";
 import { EmptyNotifications } from "./EmptyNotifications";
@@ -58,6 +59,10 @@ export function NotificationsPage() {
     if (!notification.isRead) {
       markAsRead.mutate(notification.id);
       localMarkAsRead(notification.id);
+    }
+
+    if (notification.type === "auction_won") {
+      triggerWinDialogFromNotification(notification);
     }
   };
 

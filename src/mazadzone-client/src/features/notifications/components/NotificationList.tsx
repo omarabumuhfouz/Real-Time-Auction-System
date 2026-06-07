@@ -19,6 +19,7 @@ import { useAuthStore } from "@/stores/auth.store";
 
 import { useEffect } from "react";
 import { useNotificationStore } from "../store/notification.store";
+import { triggerWinDialogFromNotification } from "../store/win-dialog.store";
 
 import Link from "next/link";
 
@@ -66,6 +67,10 @@ export const NotificationList = () => {
       localMarkAsRead(notification.id);
       // 3. Mutate backend in background
       markAsRead.mutate(notification.id);
+    }
+
+    if (notification.type === "auction_won") {
+      triggerWinDialogFromNotification(notification);
     }
   };
 

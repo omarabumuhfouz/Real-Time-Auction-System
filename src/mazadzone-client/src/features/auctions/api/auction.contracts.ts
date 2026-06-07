@@ -83,6 +83,7 @@ export interface GetAuctionsQueryParams {
   Status?: string;
   SortBy?: string;
   SortDirection?: string;
+  ItemStatus?: string;
 }
 
 export interface PagedListOfAuctionsListDto {

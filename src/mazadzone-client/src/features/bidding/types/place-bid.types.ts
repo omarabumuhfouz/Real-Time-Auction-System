@@ -38,7 +38,7 @@ export interface DeliveryAddress {
 // Saved payment method
 // ---------------------------------------------------------------------------
 
-export type CardBrand = "VISA" | "MASTERCARD" | "AMEX";
+export type CardBrand = "VISA" | "MASTERCARD" | "AMEX" | "MADA" | "UNKNOWN";
 
 export interface SavedPaymentMethod {
   id: string;

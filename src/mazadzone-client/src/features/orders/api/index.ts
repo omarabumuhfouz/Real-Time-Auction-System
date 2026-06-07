@@ -18,6 +18,7 @@ export {
 // Pure REST API methods
 export {
   searchOrders,
+  getWonOrders,
   getOrderDetails,
   createOrder,
   payRemainingAmount,
@@ -30,6 +31,7 @@ export {
 // Pure mappers
 export {
   mapOrderSummaryDtoToActivity,
+  mapWonOrderSummaryDtoToActivity,
   mapOrderDetailsDtoToActivity,
   mapCheckoutAddressToAddressDto,
 } from "./order.mappers";

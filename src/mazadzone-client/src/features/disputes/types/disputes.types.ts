@@ -1,7 +1,9 @@
 export interface CreateDisputeInput {
   orderId: string;
+  disputeTypeId: string;
   title: string;
   description: string;
+  evidenceFiles?: File[];
 }
 
 export interface Dispute {
