@@ -69,6 +69,14 @@ public sealed class Bidder : AggregateRoot<UserId>, IAuditableEntity, IVerifiabl
         return Result.Success();
     }
 
+    public Result AddAddress(Address newAddress)
+    {
+        // if (_addresses.Any(a => a.Equals(newAddress))) return BidderErrors.AddressAlreadyExists;
+
+        _addresses.Add(newAddress);
+        return Result.Success();
+    }
+
     public void Verify()
     {
         Verification.Approve(Verification.NationalId, Verification.ExtractedFullName ?? string.Empty);

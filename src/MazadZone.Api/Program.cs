@@ -40,6 +40,7 @@ try
         {
             policy.WithOrigins("http://localhost:3000")
                 .AllowAnyMethod()
+                .AllowAnyHeader()
                 .AllowCredentials();
         });
     });

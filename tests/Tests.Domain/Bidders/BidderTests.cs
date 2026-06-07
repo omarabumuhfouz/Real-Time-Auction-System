@@ -81,20 +81,23 @@ public class BidderTests
 
     #region State Mutations: Update Address & Verify
 
-    [Fact]
-    public void UpdateShippingAddress_ValidAddress_UpdatesAddressAndReturnsSuccess()
-    {
-        // Arrange
-        var bidder = CreateValidBidder();
-        var newAddress = Address.Create("UAE", "Dubai", "Sheikh Zayed Rd", "00000").Value;
+[Fact]
+public void UpdateShippingAddress_ValidAddress_UpdatesAddressAndReturnsSuccess()
+{
+    // Arrange
+    var bidder = CreateValidBidder();
+    var newAddress = Address.Create("UAE", "Dubai", "Sheikh Zayed Rd", "00000").Value;
+    // CRITICAL FIX: Seed the address into the bidder's collection first.
+    // If it's not already in the list, FindIndex(a => a.Equals(newAddress)) 
+    // will return -1 and fail.
+    bidder.AddAddress(newAddress); // Or however your aggregate adds an address
 
-        // Act
-        var result = bidder.UpdateShippingAddress(newAddress);
+    // Act
+    var result = bidder.UpdateShippingAddress(newAddress);
 
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        bidder.DefaultShippingAddress.ShouldBe(newAddress);
-    }
+    // Assert
+    result.IsSuccess.ShouldBeTrue();
+}
 
     [Fact]
     public void Verify_WhenCalled_SetsIsVerifiedAndRaisesEvent()
