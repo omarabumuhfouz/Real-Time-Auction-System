@@ -43,12 +43,12 @@ public sealed class ExportSellerDataQueryHandler : IQueryHandler<ExportSellerDat
 
             case "orders":
                 var ordersRes = await _queries.GetSellerOrdersAsync(request.SellerId, filterWithoutPaging, cancellationToken);
-                sb.AppendLine("OrderId,AuctionId,AuctionTitle,BuyerName,OrderStatus,OrderDateUtc,TotalAmount");
+                sb.AppendLine("OrderId,AuctionId,AuctionTitle,BidderName,OrderStatus,OrderDateUtc,TotalAmount");
                 if (ordersRes?.Orders != null)
                 {
                     foreach (var o in ordersRes.Orders)
                     {
-                        sb.AppendLine($"{o.OrderId},{o.AuctionId},\"{Escape(o.AuctionTitle)}\",\"{Escape(o.BuyerName)}\",{o.OrderStatus},{o.OrderDateUtc:O},{o.TotalAmount}");
+                        sb.AppendLine($"{o.OrderId},{o.AuctionId},\"{Escape(o.AuctionTitle)}\",\"{Escape(o.BidderName)}\",{o.OrderStatus},{o.OrderDateUtc:O},{o.TotalAmount}");
                     }
                 }
                 break;

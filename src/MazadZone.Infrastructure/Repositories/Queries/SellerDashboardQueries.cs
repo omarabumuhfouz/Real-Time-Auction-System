@@ -177,11 +177,11 @@ public class SellerDashboardQueries : ResilientRepository, ISellerDashboardQueri
                 o.Status AS OrderStatus, 
                 o.CreatedOnUtc AS OrderDateUtc, 
                 o.TotalAmount, 
-                u.FirstName + ' ' + u.LastName AS BuyerName 
+                u.FirstName + ' ' + u.LastName AS BidderName 
             FROM Orders o 
             INNER JOIN Auctions a ON o.AuctionId = a.Id 
             INNER JOIN Items it ON it.AuctionId = a.Id 
-            INNER JOIN Users u ON o.BuyerId = u.Id 
+            INNER JOIN Users u ON o.BidderId = u.Id 
             {whereClause} 
             ORDER BY {orderBy} {dir} 
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
