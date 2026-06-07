@@ -60,8 +60,30 @@ services:
       - redis
       - seq
     networks:
+      frontend_network:
+        aliases:
+          - mazadzone-api # <--- Registered explicit network naming visibility
+      backend_network:
+        aliases:
+          - mazadzone-api
+
+  client:
+    build:
+      context: ./src/mazadzone-client
+      dockerfile: Dockerfile
+    container_name: mazadzone-client
+    ports:
+      - "3000:3000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # For Server-Side Rendering (Internal Docker Network)
+      - NEXT_PUBLIC_SERVER_API_URL=http://mazadzone-api:8080
+      # For Browser-Side requests (Your local laptop environment)
+      - NEXT_PUBLIC_CLIENT_API_URL=http://localhost:5108
+    depends_on:
+      - api
+    networks:
       - frontend_network
-      - backend_network
 
 volumes:
   seq-data:
